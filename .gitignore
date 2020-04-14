@@ -1,0 +1,12 @@
+### python
+*.pyc
+onestop-python-client/build/
+onestop-python-client/dist/
+onestop-python-client/*.egg-info
+
+### IntelliJ
+.idea/
+.idea_modules/
+/out/
+*.iws
+*.iml
