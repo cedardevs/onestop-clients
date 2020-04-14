@@ -1,0 +1,8 @@
+README.md
+setup.py
+onestop_client/__init__.py
+onestop_client/consumer.py
+onestop_python_test.egg-info/PKG-INFO
+onestop_python_test.egg-info/SOURCES.txt
+onestop_python_test.egg-info/dependency_links.txt
+onestop_python_test.egg-info/top_level.txt

@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pyconsumer
+spec:
+  containers:
+  - name: pyconsumer
+    tty: true #need this to get the output with `kubectl logs pyconsumer`
+    command:
+    - python
+    - smeFunc.py
+    args:
+    - "-b $(KAFKA_BROKERS)"
+    - "-s $(SCHEMA_REGISTRY)"
+    - "-t $(TOPIC)"
+    - "-g $(GROUP_ID)"
+    image: cedardevs/onestop-pyconsumer:latest
+    imagePullPolicy: Never
+    env:
+      - name: SCHEMA_REGISTRY
+        value: "http://onestop-dev-cp-schema-registry:8081"
+      - name: KAFKA_BROKERS
+        value: "onestop-dev-cp-kafka:9092"
+      - name: TOPIC
+        value: "psi-registry-collection-parsed-changelog"
+      - name: GROUP_ID
+        value: "sme-test"
