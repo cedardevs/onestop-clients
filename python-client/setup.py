@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="onestop-python-", # Replace with your own username
+    name="onestop-python-client-cedardevs", # Replace with your own username
     version="0.0.1",
     author="CEDARDEVS",
     author_email="cedar.cires@colorado.edu",
