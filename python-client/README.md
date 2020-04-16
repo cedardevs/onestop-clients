@@ -1,4 +1,4 @@
-#OneStop Clients
+# OneStop Clients
 
 This python package provides an API to connect to OneStop's event stream (aka Inventory Manager). At this early stage there is only a single module for consuming messages from the kafka brokers that back OneStop.
 
