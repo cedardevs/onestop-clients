@@ -3,7 +3,10 @@ import argparse
 
 def handler(key, value):
     print(key)
-    print(value['discovery']['fileIdentifier'])
+    if (value['type'] == 'collection'):
+        print(value['discovery']['fileIdentifier'])
+    else:
+        print(value['fileInformation']['name'])
 
 
 if __name__ == '__main__':
