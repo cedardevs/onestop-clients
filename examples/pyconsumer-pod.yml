@@ -14,14 +14,17 @@ spec:
     - "-s $(SCHEMA_REGISTRY)"
     - "-t $(TOPIC)"
     - "-g $(GROUP_ID)"
+    - "-o $(OFFSET)"
     image: cedardevs/onestop-pyconsumer:latest
-    imagePullPolicy: Never
+    imagePullPolicy: Always
     env:
       - name: SCHEMA_REGISTRY
         value: "http://onestop-dev-cp-schema-registry:8081"
       - name: KAFKA_BROKERS
         value: "onestop-dev-cp-kafka:9092"
       - name: TOPIC
-        value: "psi-registry-collection-parsed-changelog"
+        value: "psi-registry-granule-parsed-changelog"
       - name: GROUP_ID
         value: "sme-test"
+      - name: OFFSET
+        value: "earliest"
