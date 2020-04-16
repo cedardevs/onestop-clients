@@ -1,8 +1,9 @@
 from onestop_client import consume
 import argparse
 
-def handler(msg):
-    print(msg)
+def handler(key, value):
+    print(key)
+    print(value['discovery']['fileIdentifier'])
 
 
 if __name__ == '__main__':
@@ -15,6 +16,8 @@ if __name__ == '__main__':
                         help="Topic name")
     parser.add_argument('-g', dest="group.id", required=True,
                         help="Consumer group")
+    parser.add_argument('-o', dest="auto.offset.reset", required=True,
+                        help="offset")
     config = vars(parser.parse_args())
     topics = [config.pop('topic')]
-    consume(config, topics, lambda msg: handler(msg))
+    consume(config, topics, lambda k, v: handler(k, v))
