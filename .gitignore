@@ -1,8 +1,8 @@
 ### python
 *.pyc
-onestop-python-client/build/
-onestop-python-client/dist/
-onestop-python-client/*.egg-info
+python-client/build/
+python-client/dist/
+python-client/*.egg-info
 
 ### IntelliJ
 .idea/
