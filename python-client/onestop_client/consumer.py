@@ -20,19 +20,14 @@ def consume(config, topics, handler):
     c_conf = {key: value.strip()
                 for key, value in config.items() if not key.startswith("schema.registry")}
 
-    print(c_conf)
-
     c = Consumer(c_conf)
     for topic in topics:
         topic = topic.strip()
-        print(topic)
 
     c.subscribe(topics)
 
     sr_conf = {key.replace("schema.registry.", ""): value.strip()
                 for key, value in config.items() if key.startswith("schema.registry")}
-
-    print(sr_conf)
 
     sr = CachedSchemaRegistryClient(sr_conf)
     ser = MessageSerializer(sr)
