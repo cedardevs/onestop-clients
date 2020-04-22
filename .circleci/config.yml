@@ -8,9 +8,6 @@ jobs:
           dockerfile: /Dockerfile
           treat-warnings-as-errors: true
   cli-docker-build:
-    environment:
-      DOCKER_PASSWORD: 'foamcat4eva!'
-      DOCKER_LOGIN: 'cedardeployer'
     executor: docker/docker
     steps:
       - setup_remote_docker
