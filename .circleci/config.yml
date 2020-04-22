@@ -1,0 +1,78 @@
+jobs:
+  lint:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/dockerlint:
+          dockerfile: /Dockerfile
+          treat-warnings-as-errors: true
+  cli-docker-build:
+    environment:
+      DOCKER_PASSWORD: 'foamcat4eva!'
+      DOCKER_LOGIN: 'cedardeployer'
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/check
+      - docker/build:
+          image: cedardevs/onestop-cli
+      - docker/push:
+          digest-path: /tmp/digest.txt
+          image: cedardevs/onestop-cli
+      - run:
+          command: |
+            echo "Digest is: $(</tmp/digest.txt)"jobs:
+
+orbs:
+  docker: circleci/docker@1.0.1
+version: 2.1
+workflows:
+  main:
+    jobs:
+      - lint
+      - cli-docker-build
+
+#  cli-test:
+#    executor:
+#      name: go/default
+#      tag: '1.13'
+#    environment: # environment variables for the build itself
+#      TEST_RESULTS: /tmp/test-results # path to where test results will be saved
+#
+#    steps: # steps that comprise the `build` job
+#      - checkout # check out source code to working directory
+#      - run: mkdir -p $TEST_RESULTS # create the test results directory
+#      - run: cd cli/; ls -la; pwd;
+#      - restore_cache: # restores saved cache if no changes are detected since last run
+#          keys:
+#            - go-mod-v4-{{ checksum "cli/go.sum" }}
+#      - go/test:
+#          covermode: atomic
+#          failfast: true
+#          race: true
+#      - save_cache:
+#          key: go-mod-v4-{{ checksum "go.sum" }}
+#          paths:
+#            - "/go/pkg/mod"
+
+#orbs:
+#  go: circleci/go@1.1.1
+#  docker: circleci/docker@1.0.1
+#workflows:
+#  main:
+#    jobs:
+##      - cli-test
+#      - cli-docker-build
+#
+##      - cli-build:
+##          filters:
+##            branches:
+##              only: master
+##      - publish-latest:
+##          requires:
+##            - build
+##          filters:
+##            branches:
+##              only: master
