@@ -1,0 +1,3 @@
+confluent-kafka==1.3.0
+avro-python3==1.9.2.1
+onestop-python-client-cedardevs
