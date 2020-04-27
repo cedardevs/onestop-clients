@@ -21,7 +21,7 @@ jobs:
           key: go-mod-v4-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
-  cli-docker-build:
+  cli-build:
     executor: docker/docker
     steps:
       - setup_remote_docker
@@ -37,6 +37,22 @@ jobs:
           command: |
             echo "Digest is: $(</tmp/digest.txt)"jobs:
 
+  client-build:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/check
+      - docker/build:
+          dockerfile: /python-client/Dockerfile
+          image: cedardevs/onestop-client
+      #      - docker/push:
+      #          digest-path: /tmp/digest.txt
+      #          image: cedardevs/onestop-cli
+      - run:
+          command: |
+            echo "Digest is: $(</tmp/digest.txt)"jobs:
+
 orbs:
   go: circleci/go@1.1.1
   docker: circleci/docker@1.0.1
@@ -45,5 +61,6 @@ workflows:
   main:
     jobs:
       - cli-test
-      - cli-docker-build
+      - cli-build
+      - client-build
 
