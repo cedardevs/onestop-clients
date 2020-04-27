@@ -1,5 +1,5 @@
 FROM python:3
-ADD smeFunc.py /
+#ADD smeFunc.py /
 RUN pip install confluent-kafka
 RUN pip install confluent-kafka[avro]
 RUN pip install onestop-python-client-cedardevs
