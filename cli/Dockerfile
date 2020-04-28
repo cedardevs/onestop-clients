@@ -1,7 +1,7 @@
 FROM golang:1.13-alpine AS builder
 
-COPY . "/go/src/github.com/cedardevs/onestop-clients"
-WORKDIR "/go/src/github.com/cedardevs/onestop-clients"
+COPY . "/go/src/github.com/cedardevs/onestop-clients/cli"
+WORKDIR "/go/src/github.com/cedardevs/onestop-clients/cli"
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git
 RUN go get -u github.com/danielgtaylor/openapi-cli-generator
