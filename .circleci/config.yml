@@ -44,7 +44,7 @@ jobs:
       - docker/build:
           dockerfile: /example/Dockerfile
           image: cedardevs/onestop-client
-            - docker/push:
+#            - docker/push:
 #                digest-path: /tmp/digest.txt
 #                image: cedardevs/onestop-cli
 
