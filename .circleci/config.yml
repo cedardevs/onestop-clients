@@ -29,12 +29,15 @@ jobs:
       - checkout
       - docker/check
       - docker/build:
-#          dockerfile: /cli/Dockerfile
           path: cli
           image: cedardevs/onestop-cli
+          tag: latest
       - docker/push:
+          digest-path: /tmp/digest.txt
           image: cedardevs/onestop-cli
-# clients build
+          tag: latest
+
+  # clients build
   client-build:
     executor: docker/docker
     steps:
