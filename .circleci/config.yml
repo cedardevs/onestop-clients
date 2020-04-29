@@ -23,9 +23,9 @@ jobs:
             - "/go/pkg/mod"
 # cli build
   cli-build:
-    executor: docker/docker
+    executor: docker/machine
     steps:
-      - setup_remote_docker
+#      - setup_remote_docker
       - checkout
       - docker/check
       - docker/build:
