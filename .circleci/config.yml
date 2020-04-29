@@ -23,9 +23,9 @@ jobs:
             - "/go/pkg/mod"
 # cli build
   cli-build:
-    executor: docker/machine
+    executor: docker/docker
     steps:
-#      - setup_remote_docker
+      - setup_remote_docker
       - checkout
       - docker/check
       - docker/build:
@@ -42,7 +42,7 @@ jobs:
       - checkout
       - docker/check
       - docker/build:
-          dockerfile: /example/Dockerfile
+          dockerfile: /examples/Dockerfile
           image: cedardevs/onestop-client
 #            - docker/push:
 #                digest-path: /tmp/digest.txt

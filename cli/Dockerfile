@@ -32,11 +32,11 @@ ENV GO111MODULE=on \
 
 # uses and caches modules so the download command
 # will only be executed if something changed either on go.mod or go.sum
-COPY go.mod .
-COPY go.sum .
-
-RUN go mod download
-
+#COPY go.mod .
+#COPY go.sum .
+#
+#RUN go mod download
+#
 COPY . .
 
 RUN go build ./cmd/onestop
