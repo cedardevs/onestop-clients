@@ -29,10 +29,9 @@ jobs:
       - checkout
       - docker/check
       - docker/build:
-          dockerfile: /cli/Dockerfile
+#          dockerfile: /cli/Dockerfile
           image: cedardevs/onestop-cli
       - docker/push:
-          digest-path: /tmp/digest.txt
           image: cedardevs/onestop-cli
 # clients build
   client-build:
