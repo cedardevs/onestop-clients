@@ -29,7 +29,8 @@ jobs:
       - checkout
       - docker/check
       - docker/build:
-          dockerfile: /cli/Dockerfile
+#          dockerfile: /cli/Dockerfile
+          path: cli
           image: cedardevs/onestop-cli
       - docker/push:
           image: cedardevs/onestop-cli
