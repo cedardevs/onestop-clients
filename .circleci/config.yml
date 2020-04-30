@@ -58,9 +58,10 @@ jobs:
       - run:
           name: "What branch am I on now?"
           command: echo $CIRCLE_BRANCH
-      - docker/push:
-          image: cedardevs/python-client
-          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+#no need to push this image yet
+#      - docker/push:
+#          image: cedardevs/python-client
+#          tag: ${CIRCLE_BRANCH}-SNAPSHOT
       - slack/status:
           fail_only: false
 
