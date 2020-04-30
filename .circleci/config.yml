@@ -37,7 +37,7 @@ jobs:
           command: echo $CIRCLE_BRANCH
       - docker/push:
           image: cedardevs/onestop-cli
-          tag: {CIRCLE_BRANCH}-SNAPSHOT
+          tag: ${CIRCLE_BRANCH}
 
   # clients build
   client-build:
