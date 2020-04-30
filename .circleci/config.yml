@@ -39,7 +39,7 @@ jobs:
           image: cedardevs/onestop-cli
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
 
-  # clients build
+# clients build
   client-build:
     executor: docker/docker
     steps:
@@ -49,9 +49,13 @@ jobs:
       - docker/build:
           path: examples
           image: cedardevs/onestop-client
-#            - docker/push:
-#                digest-path: /tmp/digest.txt
-#                image: cedardevs/onestop-cli
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+     - run:
+          name: "What branch am I on now?"
+          command: echo $CIRCLE_BRANCH
+      - docker/push:
+          image: cedardevs/onestop-cli
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
 
 orbs:
   go: circleci/go@1.1.1
