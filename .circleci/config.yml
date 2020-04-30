@@ -32,10 +32,12 @@ jobs:
           path: cli
           image: cedardevs/onestop-cli
           tag: latest
+      - run:
+          name: "What branch am I on now?"
+          command: echo $CIRCLE_BRANCH
       - docker/push:
-          digest-path: /tmp/digest.txt
           image: cedardevs/onestop-cli
-          tag: latest
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
 
   # clients build
   client-build:
