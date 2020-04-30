@@ -21,8 +21,7 @@ jobs:
           paths:
             - "/go/pkg/mod"
       - slack/status:
-          color: '#42e2f4'
-          message: clients repo notification
+          fail_only: false
 
 # cli build
   cli-build:
@@ -42,8 +41,8 @@ jobs:
           image: cedardevs/onestop-cli
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
       - slack/status:
-          color: '#42e2f4'
-          message: clients repo notification
+          fail_only: false
+
 
 # clients build
   client-build:
@@ -60,11 +59,11 @@ jobs:
           name: "What branch am I on now?"
           command: echo $CIRCLE_BRANCH
       - docker/push:
-          image: cedardevs/python-cli
+          image: cedardevs/python-client
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
       - slack/status:
-          color: '#42e2f4'
-          message: clients repo notification
+          fail_only: false
+
 orbs:
   slack: circleci/slack@3.4.2
   go: circleci/go@1.1.1
