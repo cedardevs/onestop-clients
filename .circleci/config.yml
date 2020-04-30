@@ -50,7 +50,7 @@ jobs:
           path: examples
           image: cedardevs/python-client
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
-     - run:
+      - run:
           name: "What branch am I on now?"
           command: echo $CIRCLE_BRANCH
       - docker/push:
