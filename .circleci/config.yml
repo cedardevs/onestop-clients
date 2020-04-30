@@ -31,13 +31,13 @@ jobs:
       - docker/build:
           path: cli
           image: cedardevs/onestop-cli
-          tag: latest
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
       - run:
           name: "What branch am I on now?"
           command: echo $CIRCLE_BRANCH
       - docker/push:
           image: cedardevs/onestop-cli
-          tag: ${CIRCLE_BRANCH}
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
 
   # clients build
   client-build:
