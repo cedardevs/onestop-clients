@@ -48,16 +48,26 @@ jobs:
       - docker/check
       - docker/build:
           path: examples
-          image: cedardevs/onestop-client
+          image: cedardevs/python-client
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
      - run:
           name: "What branch am I on now?"
           command: echo $CIRCLE_BRANCH
       - docker/push:
-          image: cedardevs/onestop-cli
+          image: cedardevs/python-cli
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
 
+# slack notification
+  slack-notifier:
+    docker:
+      - image: <docker image>
+    steps:
+      - slack/notify:
+          color: '#42e2f4'
+          message: clients repo notification
+
 orbs:
+  slack: circleci/slack@3.4.2
   go: circleci/go@1.1.1
   docker: circleci/docker@1.0.1
 version: 2.1
@@ -67,4 +77,5 @@ workflows:
       - cli-test
       - cli-build
       - client-build
+      - slack-notifier
 
