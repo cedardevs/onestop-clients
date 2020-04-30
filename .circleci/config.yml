@@ -38,6 +38,9 @@ jobs:
       - docker/push:
           image: cedardevs/onestop-cli
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
+      - slack/notify:
+          color: '#42e2f4'
+          message: clients repo notification
 
 # clients build
   client-build:
@@ -57,14 +60,14 @@ jobs:
           image: cedardevs/python-cli
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
 
-# slack notification
-  slack-notifier:
-    docker:
-      - image: <docker image>
-    steps:
-      - slack/notify:
-          color: '#42e2f4'
-          message: clients repo notification
+## slack notification
+#  slack-notifier:
+#    docker:
+#      - image: <docker image>
+#    steps:
+#      - slack/notify:
+#          color: '#42e2f4'
+#          message: clients repo notification
 
 orbs:
   slack: circleci/slack@3.4.2
