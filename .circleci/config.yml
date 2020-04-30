@@ -21,6 +21,10 @@ jobs:
           key: go-mod-v4-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
+      - slack/notify:
+          color: '#42e2f4'
+          message: clients repo notification
+
 # cli build
   cli-build:
     executor: docker/docker
@@ -59,7 +63,9 @@ jobs:
       - docker/push:
           image: cedardevs/python-cli
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
-
+      - slack/notify:
+          color: '#42e2f4'
+          message: clients repo notification
 ## slack notification
 #  slack-notifier:
 #    docker:
@@ -80,5 +86,4 @@ workflows:
       - cli-test
       - cli-build
       - client-build
-      - slack-notifier
 
