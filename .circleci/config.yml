@@ -24,8 +24,9 @@ jobs:
           fail_only: false
 
   cli-generation:
-    docker:
-      - image: circleci/golang
+    executor:
+      name: go/default
+      tag: '1.13'
     environment:
       - GOOS: 'linux'
       - GOARCH: 'amd64'
@@ -39,7 +40,7 @@ jobs:
             echo "Generating CLI" &&
             cd cli &&
             go get -u github.com/danielgtaylor/openapi-cli-generator &&
-            wget https://raw.githubusercontent.com/cedardevs/onestop/master/search/src/main/resources/static/openapi.yaml  -p resources &&
+            wget https://raw.githubusercontent.com/cedardevs/onestop/master/search/src/main/resources/static/openapi.yaml &&
             openapi-cli-generator generate openapi.yaml &&
             sed -i 's/package main/package generated/g' openapi.go &&
             sed -i 's/openapiRegister/OpenapiRegister/g' openapi.go &&
@@ -58,12 +59,12 @@ jobs:
       - run:
           name: generate openapi go file
           command: |
-            echo "Generating CLI" &&
+            echo "copying openapi go" &&
             cd cli &&
-            go get -u github.com/danielgtaylor/openapi-cli-generator &&
+            docker run golang go get -u github.com/danielgtaylor/openapi-cli-generator &&
             wget https://raw.githubusercontent.com/cedardevs/onestop/master/search/src/main/resources/static/openapi.yaml &&
             openapi-cli-generator generate openapi.yaml &&
-            sed -i 's/package main/package generated/g' openapi.go &&
+            sed -i 's/package main/package generated/g' openapi.go
             sed -i 's/openapiRegister/OpenapiRegister/g' openapi.go &&
             mv openapi.go internal/app/generated/
       - docker/check
@@ -111,7 +112,7 @@ workflows:
   main:
     jobs:
       - cli-test
-      - cli-generation
+#      - cli-generation
       - cli-build
       - client-build
 
