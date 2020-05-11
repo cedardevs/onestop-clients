@@ -23,50 +23,12 @@ jobs:
       - slack/status:
           fail_only: false
 
-  cli-generation:
-    executor:
-      name: go/default
-      tag: '1.13'
-    environment:
-      - GOOS: 'linux'
-      - GOARCH: 'amd64'
-      - GCO_ENABLED: 0
-    working_directory: ~/cli
-    steps:
-      - checkout
-      - run:
-          name: generate openapi
-          command: |
-            echo "Generating CLI" &&
-            cd cli &&
-            go get -u github.com/danielgtaylor/openapi-cli-generator &&
-            wget https://raw.githubusercontent.com/cedardevs/onestop/master/search/src/main/resources/static/openapi.yaml &&
-            openapi-cli-generator generate openapi.yaml &&
-            sed -i 's/package main/package generated/g' openapi.go &&
-            sed -i 's/openapiRegister/OpenapiRegister/g' openapi.go &&
-            mv openapi.go internal/app/generated/
-      - persist_to_workspace:
-          root: ~/cli
-          paths:
-            - cli/internal/app/generated/openapi.go
-
 # cli build
   cli-build:
     executor: docker/docker
     steps:
       - setup_remote_docker
       - checkout
-      - run:
-          name: generate openapi go file
-          command: |
-            echo "copying openapi go" &&
-            cd cli &&
-            docker run golang go get -u github.com/danielgtaylor/openapi-cli-generator &&
-            wget https://raw.githubusercontent.com/cedardevs/onestop/master/search/src/main/resources/static/openapi.yaml &&
-            openapi-cli-generator generate openapi.yaml &&
-            sed -i 's/package main/package generated/g' openapi.go
-            sed -i 's/openapiRegister/OpenapiRegister/g' openapi.go &&
-            mv openapi.go internal/app/generated/
       - docker/check
       - docker/build:
           path: cli
@@ -80,7 +42,6 @@ jobs:
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
       - slack/status:
           fail_only: false
-
 
 # clients build
   client-build:
@@ -112,7 +73,6 @@ workflows:
   main:
     jobs:
       - cli-test
-#      - cli-generation
       - cli-build
       - client-build
 
