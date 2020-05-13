@@ -1,31 +1,18 @@
-import sys
 
-from confluent_kafka import Producer
+from kafka import KafkaProducer
+# from confluent_kafka.avro.serializer.message_serializer import MessageSerializer
+# from confluent_kafka.avro.cached_schema_registry_client import CachedSchemaRegistryClient
 
-if __name__ == '__main__':
-    topic = 'topic'
-    conf = {
-        'bootstrap.servers': 'localhost:9092',
-        'session.timeout.ms': 6000,
-        'default.topic.config': {'auto.offset.reset': 'smallest'}
-    }
+import json
 
-    p = Producer(**conf)
+#TODO: 1. serialize using avro
+#      2. use config values for topic name
 
-    def delivery_callback(err, msg):
-        if err:
-            sys.stderr.write('%% Message failed delivery: %s\n' % err)
-        else:
-            sys.stderr.write('%% Message delivered to %s [%d]\n' %
-                             (msg.topic(), msg.partition()))
-
-    for line in sys.stdin:
-        try:
-            p.produce(topic, line.rstrip(), callback=delivery_callback)
-        except BufferError as e:
-            sys.stderr.write('%% Local producer queue is full (%d messages awaiting delivery): try again\n' %
-                             len(p))
-        p.poll(0)
-
-    sys.stderr.write('%% Waiting for %d deliveries\n' % len(p))
-    p.flush()
+class Producer(object):
+    def __init__(self, kafka_brokers):
+        self.producer = KafkaProducer(
+            value_serializer=lambda v: json.dumps(v).encode('utf-8'), #replace by avro
+            bootstrap_servers=kafka_brokers
+        )
+    def sendSqsToKafka(self, json_data):
+        self.producer.send('topic-name', json_data) # topic env var and avro message
