@@ -11,11 +11,9 @@ def on_delivery(err, msg, obj):
         This allows the original contents to be included for debugging purposes.
     """
     if err is not None:
-        print('Message {} delivery failed for user {} with error {}'.format(
-            obj.id, obj.name, err))
+        print('Message {} delivery failed for user {} with error {}')
     else:
-        print('Message {} successfully produced to {} [{}] at offset {}'.format(
-            obj.id, msg.topic(), msg.partition(), msg.offset()))
+        print('Message {} successfully produced to {} [{}] at offset {}')
 
 def error_cb(err):
     print('Error: %s' % err)
@@ -23,8 +21,8 @@ def error_cb(err):
 if __name__ == '__main__':
 
     topic = "psi-granule-input-unknown"
-    bootstrap_servers = "localhost:30886"
-    schema_registry = "http://localhost:32234"
+    bootstrap_servers = "onestop-dev-cp-kafka:9092"
+    schema_registry = "http://onestop-dev-cp-schema-registry:8081"
 
     base_conf = {
         'bootstrap.servers': bootstrap_servers,
@@ -34,7 +32,10 @@ if __name__ == '__main__':
 
     producer = AvroProducer(base_conf)
 
-    test = { "test" : "test" }
+    test = {
+        "id" : "abc123",
+        "test" : "test"
+        }
 
     key = "3244b32e-83a6-4239-ba15-199344ea5d9"
     avsc_dir = os.path.dirname(os.path.realpath(__file__))
@@ -42,5 +43,5 @@ if __name__ == '__main__':
     id, schema, version = producer._serializer.registry_client.get_latest_schema(topic + "-value")
     print('Sending message for schema : ', id)
     while True:
-        producer.produce(topic=topic, value=test, value_schema=schema, callback=lambda err, msg, obj=test: on_delivery(err, msg, obj))
+        producer.produce(topic=topic, key=key, key_schema=key_schema, value=test, value_schema=schema, callback=lambda err, msg, obj=test: on_delivery(err, msg, obj))
         producer.poll(1)
