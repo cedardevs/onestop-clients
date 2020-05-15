@@ -17,6 +17,8 @@ def on_delivery(err, msg, obj):
         print('Message {} successfully produced to {} [{}] at offset {}'.format(
             obj.id, msg.topic(), msg.partition(), msg.offset()))
 
+def error_cb(err):
+    print('Error: %s' % err)
 
 if __name__ == '__main__':
 
@@ -26,6 +28,7 @@ if __name__ == '__main__':
 
     base_conf = {
         'bootstrap.servers': bootstrap_servers,
+        'error_cb': error_cb,
         'schema.registry.url': schema_registry
          }
 
