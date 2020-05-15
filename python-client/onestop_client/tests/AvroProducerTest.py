@@ -26,11 +26,6 @@ if __name__ == '__main__':
     bootstrap_servers = "localhost:30886"
     schema_registry = "http://localhost:32234"
 
-    sr_conf = {'url': schema_registry}
-
-    sr = CachedSchemaRegistryClient(sr_conf)
-    ser = MessageSerializer(sr)
-
     base_conf = {
         'bootstrap.servers': bootstrap_servers,
         'schema.registry.url': schema_registry
@@ -43,7 +38,7 @@ if __name__ == '__main__':
     key = "3244b32e-83a6-4239-ba15-199344ea5d9"
     avsc_dir = os.path.dirname(os.path.realpath(__file__))
     key_schema = avro.load(os.path.join(avsc_dir, "primitive_string.avsc"))
-    id, schema, version = sr.get_latest_schema(topic + "-value")
+    id, schema, version = producer._serializer.registry_client.get_latest_schema(topic + "-value")
     print('Sending message for schema : ', id)
     while True:
         producer.produce(topic=topic, value=test, value_schema=schema, callback=lambda err, msg, obj=test: on_delivery(err, msg, obj))
