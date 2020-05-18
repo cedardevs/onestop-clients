@@ -51,8 +51,8 @@ def produce(config, topic, data):
     id, schema, version = sr.get_latest_schema(topic + "-value")
     print('Sending message for schema : ', id)
     print(schema.name)
-
-    for key, value in data:
+    
+    for key, value in data.items():
         serializedMessage = ser.encode_record_with_schema(topic, schema, data)
         producer.produce(topic=topic, key=key, value=serializedMessage)
         producer.flush()
