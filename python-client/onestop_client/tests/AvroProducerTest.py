@@ -1,6 +1,6 @@
-
-from confluent_kafka.avro import AvroProducer
-
+from confluent_kafka import Producer
+from confluent_kafka.avro.serializer.message_serializer import MessageSerializer
+from confluent_kafka.avro.cached_schema_registry_client import CachedSchemaRegistryClient
 from confluent_kafka import avro
 import os
 
@@ -26,22 +26,30 @@ if __name__ == '__main__':
 
     base_conf = {
         'bootstrap.servers': bootstrap_servers,
-        'error_cb': error_cb,
-        'schema.registry.url': schema_registry
+        'error_cb': error_cb
          }
 
-    producer = AvroProducer(base_conf)
+    producer = Producer(base_conf)
 
     test = {
-        "id" : "abc123",
-        "test" : "test"
-        }
+        "type": "granule",
+        "content": "",
+        "contentType": "application/json",
+        "method": "PUT",
+        "source": "unknown",
+        "operation": "ADD"
+    }
+
+    sr_conf = {'url': schema_registry}
+
+    sr = CachedSchemaRegistryClient(sr_conf)
+    ser = MessageSerializer(sr)
 
     key = "3244b32e-83a6-4239-ba15-199344ea5d9"
-    avsc_dir = os.path.dirname(os.path.realpath(__file__))
-    key_schema = avro.load(os.path.join(avsc_dir, "primitive_string.avsc"))
-    id, schema, version = producer._serializer.registry_client.get_latest_schema(topic + "-value")
+    id, schema, version = sr.get_latest_schema(topic + "-value")
     print('Sending message for schema : ', id)
-    while True:
-        producer.produce(topic=topic, key=key, key_schema=key_schema, value=test, value_schema=schema, callback=lambda err, msg, obj=test: on_delivery(err, msg, obj))
-        producer.poll(1)
+    serializedMessage = ser.encode_record_with_schema(topic, schema, test)
+
+    producer.produce(topic=topic, key=key, value=serializedMessage, callback=lambda err, msg, obj=test: on_delivery(err, msg, obj))
+    producer.poll(1)
+    producer.flush()
