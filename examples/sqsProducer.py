@@ -12,7 +12,7 @@ if __name__ == '__main__':
         'schema.registry.url' : schema_registry
     }
 
-    key = "3244b32e-83a6-4239-ba15-199344ea5d9"
+    key = "12398ad3-2acf-4125-98d4-0f3418677123"
     test = {
         "type": "granule",
         "content": "",
