@@ -53,6 +53,7 @@ def produce(config, topic, data):
     print(schema.name)
 
     for key, value in data.items():
+        print('Sending message with id: ', key)
         serializedMessage = ser.encode_record_with_schema(topic, schema, value)
         producer.produce(topic=topic, key=key, value=serializedMessage)
         producer.flush()
