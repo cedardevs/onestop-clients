@@ -15,7 +15,7 @@ if __name__ == '__main__':
     key = "12398ad3-2acf-4125-98d4-0f3418677123"
     test = {
         "type": "granule",
-        "content": "{\"test\" : \"test\"}",
+        "content": "{\"discovery\" : \"test\"}",
         "contentType": "application/json",
         "method": "PUT",
         "source": "unknown",
