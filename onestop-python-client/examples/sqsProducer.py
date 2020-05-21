@@ -1,44 +1,68 @@
-from producer.producer import produce, produceRawMessage
-import uuid
 import json
+import logging
+import sys
+import boto3
+import requests
+# This is a custom submodule that is part of a larger module used in the nesdis-pghpc environment.
+import pgutil.logging
+from onestop_client.producer import produce
 
-if __name__ == '__main__':
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+pgutil.logging.attachStreamHandlerToLogger(logging.getLogger())
 
-    topic = "psi-granule-input-unknown"
-    # bootstrap_servers = "onestop-dev-cp-kafka:9092"
-    bootstrap_servers = "localhost:9092"
-    # schema_registry = "http://onestop-dev-cp-schema-registry:8081"
-    schema_registry = "http://localhost:8081"
+if len(sys.argv) != 6:
+    raise Exception("Usage: %s <nodeRoleName> <sqsQueueUrl> <kafkaBrokerHostAndPort> <schemaRegistryUrl> <topic>")
 
-    base_conf = {
-        'bootstrap.servers': bootstrap_servers,
-        'schema.registry.url' : schema_registry
-    }
+roleName = sys.argv[1]
+sqsQueueUrl = sys.argv[2]
+kafkaBrokerHostAndPort = sys.argv[3]
+schemaRegistryUrl = sys.argv[4]
+topic = sys.argv[5]
 
-    # generate a random uuid
-    id = str(uuid.uuid4())
-    key = id #"12398ad3-2acf-4125-98d4-0f3418677456"
+# Use the EC2 instance metadata API to get session credentials based on the node role
+sessionResponse = requests.get("http://169.254.169.254/latest/meta-data/iam/security-credentials/{}".format(roleName))
+sessionJson = sessionResponse.json()
+botoSession = boto3.Session(
+    aws_access_key_id=sessionJson["AccessKeyId"],
+    aws_secret_access_key=sessionJson["SecretAccessKey"],
+    aws_session_token=sessionJson["Token"]
+)
+SQS_RESOURCE = botoSession.resource('sqs')
+jsonMessagesQueue = SQS_RESOURCE.Queue(sqsQueueUrl)
 
-    with open('sampleSqsPayload.json') as f:
-        json_dict = json.loads(f.read())
-        # print(json_dict['Message'])
+while True:
+    sqsMessages = jsonMessagesQueue.receive_messages(MaxNumberOfMessages=10, WaitTimeSeconds=20)
+    logger.debug("Received %d messages." % len(sqsMessages))
 
-    # extract content message from an sqs sample message
-    content_value = json_dict['Message']
+    for sqsMessage in sqsMessages:
+        try:
+            processMessageTimer = pgutil.logging.CodeSegmentTimer("Processing message")
+            jsonStringForOneStop = json.loads(sqsMessage.body)['Message']
+            logger.debug("Retrieved JSON metadata from message body: %s" % jsonStringForOneStop)
+            fileId = json.loads(jsonStringForOneStop)['discovery']['fileIdentifier']
 
-    value = {
-        "type": "granule",
-        "content": content_value,
-        "contentType": "application/json",
-        "method": "PUT",
-        "source": "unknown",
-        "operation": "ADD"
-    }
+            producer_conf = {
+                'bootstrap.servers': kafkaBrokerHostAndPort,
+                'schema.registry.url' : schemaRegistryUrl
+            }
 
-    data = {key: value}
+            rawInputMessage = {
+                "type": "granule",
+                "content": jsonStringForOneStop,
+                "contentType": "application/json",
+                "method": "PUT",
+                "source": "unknown",
+                "operation": "ADD"
+            }
 
-    # user input to produce a structure data
-    # value = produceRawMessage(content_value)
-    # print(value)
+            logger.debug("Will push the metadata to \"%s\"." % topic)
+            messageMap = {fileId : rawInputMessage}
+            produce(producer_conf, topic, rawInputMessage)
 
-    produce(topic, data, base_conf)
+            sqsMessage.delete()
+            logger.debug("The SQS message has been deleted.")
+            processMessageTimer.finishAndPrintTime()
+
+        except:
+            logger.exception("An exception was thrown while processing a message, but this program will continue. The message will not be deleted from the SQS queue. The message was: %s" % sqsMessage.body)

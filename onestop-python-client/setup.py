@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="onestop-python-client-cedardevs", # Replace with your own username
-    version="0.1.2",
+    name="onestop-python-client-cedardevs",
+    version="0.2.2",
     author="CEDARDEVS",
     author_email="cedar.cires@colorado.edu",
     description="A python package for processing messages from the NOAA OneStop event stream (aka Inventory Manager).",
