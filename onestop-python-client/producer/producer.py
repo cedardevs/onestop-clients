@@ -43,68 +43,16 @@ def produceRawMessage(message):
 
     return value
 
-
-# def produceRawGranule(contentValue, contentType, method, source):
-#
-#     value = {
-#         "type": "granule",
-#         "content": contentValue,
-#         "contentType": contentType,
-#         "method": method,
-#         "source": source,
-#         "operation": "ADD"
-#     }
-
-#     # value
-#     # input_message ={key, value}
-#     # producer(topic, input_message)
-#
-# def produceRawCollection(contentValue, contentType, method, source):
-#     value = {
-#         "type": "collection",
-#         "content": contentValue,
-#         "contentType": contentType,
-#         "method": method,
-#         "source": source,
-#         "operation": "ADD"
-#     }
-
-
-# def produceSendRawGranule(input_messages, contentType, method, source):
-#
-#     value = {
-#         "type": "granule",
-#         "content": contentValue,
-#         "contentType": contentType,
-#         "method": method,
-#         "source": source,
-#         "operation": "ADD"
-#     }
-#
-#   produce and send granule mesage
-#
-# def produceSendRawCollection(input_messages, contentType, method, source):
-#     value = {
-#         "type": "collection",
-#         "content": contentValue,
-#         "contentType": contentType,
-#         "method": method,
-#         "source": source,
-#         "operation": "ADD"
-#     }
-##   produce and send collection message
-
-# def produceSpeci
-
 def produce(topic, input_messages, config=None):
-    producer_conf = {key: value.strip()
-                     for key, value in config.items() if not key.startswith("schema.registry")}
 
-    sr_conf = {key.replace("schema.registry.", ""): value.strip()
-               for key, value in config.items() if key.startswith("schema.registry")}
+    if config is not None :
+        producer_conf = {key: value.strip()
+            for key, value in config.items() if not key.startswith("schema.registry")}
 
-    print(producer_conf)
-    if 'bootstrap.servers' not in producer_conf:
+        sr_conf = {key.replace("schema.registry.", ""): value.strip()
+            for key, value in config.items() if key.startswith("schema.registry")}
+
+    if producer_conf is None or 'bootstrap.servers' not in producer_conf:
         if 'KAFKA_BROKERS' in os.environ:
             kafka_brokers = os.environ['KAFKA_BROKERS'].split(',')
 
@@ -114,7 +62,7 @@ def produce(topic, input_messages, config=None):
             raise ValueError(
                 'Required bootstrap.servers not set. Pass bootstrap.servers or KAFKA_BROKERS environment variable not set')
 
-    if 'url' not in sr_conf:
+    if sr_conf is None or 'url' not in sr_conf:
         if 'SCHEMA_REGISTRY_URL' in os.environ:
             schema_registry_url = os.environ['SCHEMA_REGISTRY_URL']
             sr_conf['url'] = schema_registry_url
