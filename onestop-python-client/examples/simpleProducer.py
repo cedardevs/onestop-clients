@@ -1,4 +1,4 @@
-from producer.producer import produce, produceRawMessage
+from producer.producer import produce, list_topics
 import uuid
 import json
 
@@ -15,16 +15,12 @@ if __name__ == '__main__':
         'schema.registry.url' : schema_registry
     }
 
-    # generate a random uuid
-    id = str(uuid.uuid4())
-    key = id #"12398ad3-2acf-4125-98d4-0f3418677456"
-
-    with open('examples/sampleSqsPayload.json') as f:
+    with open('./sampleSqsPayload.json') as f:
         json_dict = json.loads(f.read())
         # print(json_dict['Message'])
-
     # extract content message from an sqs sample message
     content_value = json_dict['Message']
+    fileId = json.loads(content_value)['discovery']['fileIdentifier']
 
     value = {
         "type": "granule",
@@ -35,10 +31,22 @@ if __name__ == '__main__':
         "operation": "ADD"
     }
 
-    data = {key: value}
+    # publish bulk messages
+    data = {}
+    for x in range(10):
+        # generate a random uuid
+        key = str(uuid.uuid4())
+        data[key] = value
+
+    # publish a single data
+    # data = {fileId: value}
+
+    #list topoc
+    list_topics({'bootstrap.servers': bootstrap_servers})
 
     # user input to produce a structure data
     # value = produceRawMessage(content_value)
     # print(value)
 
     produce(topic, data, base_conf)
+
