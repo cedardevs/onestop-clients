@@ -52,7 +52,7 @@ jobs:
       - docker/check
       - docker/build:
           path: examples
-          image: cedardevs/python-client
+          image: cedardevs/onestop-python-client
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
       - run:
           name: "What branch am I on now?"
