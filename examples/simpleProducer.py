@@ -47,6 +47,6 @@ if __name__ == '__main__':
     # user input to produce a structure data
     # value = produceRawMessage(content_value)
     # print(value)
-
+    #
     produce(topic, data, base_conf)
 

@@ -198,16 +198,30 @@ def produce_raw_message(message):
 
 
 def list_topics(conf):
+    """
+        Request list of topics from cluster
+    :param
+        config(dict) - the broker config value for the adminclient
+    :return:
+        list of available topics for granule and collection
+    """
     kadmin = AdminClient(conf)
-    md = kadmin.list_topics(timeout=10)
-
-    print(" {} topics:".format(len(md.topics)))
-    for t in iter(md.topics.values()):
-        if t.error is not None:
-            errstr = ": {}".format(t.error)
-        else:
-            errstr = ""
-# todo list by granule and collection
-        print("  \"{}\" {}".format(t, errstr))
-    # return kadmin.list_topics().topics
+    md = kadmin.list_topics().topics
+    topics = list(md.keys())
+    print(" {} topics:".format(len(topics)))
+    granule_topics = []
+    collection_topics = []
+    for t in topics:
+        if t.startswith('psi-collection'):
+            collection_topics.append(t)
+        elif t.startswith('psi-granule'):
+            granule_topics.append(t)
+    # print out lists
+    print("List of Collection topics :")
+    print("-------------------------")
+    print('\n'.join(collection_topics))
+    print()
+    print("List of Granule topics :")
+    print("---------------------- ")
+    print('\n'.join(granule_topics))
 
