@@ -6,14 +6,18 @@ from confluent_kafka.admin import AdminClient
 import sys
 import os
 import re
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def acked(err, msg):
     if err is not None:
-        print("Failed to deliver message: {0}: {1}"
+        logger.error("Failed to deliver message: {0}: {1}"
               .format(msg.value(), err.str()))
     else:
-        print("Message produced: {0}".format(msg.key()))
+        logger.log("Message produced: {0}".format(msg.key()))
 
 
 def validate_uuid4(uuid_string):
@@ -61,8 +65,8 @@ def producer_config(config=None):
             producer_conf['bootstrap.servers'] = kafka_brokers
 
         else:
-            raise ValueError(
-                'Required bootstrap.servers not set. Pass bootstrap.servers or KAFKA_BROKERS environment variable not set')
+            logger.error('Required bootstrap.servers not set. Pass bootstrap.servers or KAFKA_BROKERS environment variable not set')
+            raise ValueError()
 
     if sr_conf is None or 'url' not in sr_conf:
         if 'SCHEMA_REGISTRY_URL' in os.environ:
@@ -70,7 +74,8 @@ def producer_config(config=None):
             sr_conf['url'] = schema_registry_url
 
         else:
-            raise ValueError('Required schema.registry.url not set. SCHEMA_REGISTRY_URL environment variable not set')
+            logger.error('Required schema.registry.url not set. SCHEMA_REGISTRY_URL environment variable not set')
+            raise ValueError()
 
     return producer_conf, sr_conf
 
@@ -90,10 +95,12 @@ def produce(topic, input_messages, config=None):
 
      """
     if topic is None:
-        raise ValueError('Required topic field must be set')
+        logger.debug('Required topic field must be set')
+        raise ValueError()
 
     if len(input_messages) <= 0:
-        raise ValueError('Required data field must not be empty.')
+        logger.debug('Required data field must not be empty.')
+        raise ValueError()
 
     bootstrap_servers, schema_registry = producer_config(config)
     producer = Producer(bootstrap_servers)
@@ -111,10 +118,10 @@ def produce(topic, input_messages, config=None):
                 # producer.flush() # bad idea, it limits throughput to the broker round trip time
                 producer.poll(1)
             else:
-                print('Invalid UUID String: ', key)
+                logger.error('Invalid UUID String: ', key)
 
     else:
-        print('Schema not found for topic name: ', topic)
+        logger.error('Schema not found for topic name: ', topic)
         sys.exit(1)
 
 

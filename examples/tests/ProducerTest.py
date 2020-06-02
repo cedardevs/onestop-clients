@@ -35,7 +35,7 @@ class TestSQSHandler(SqsMockAWS):
         # add message to queue
         self.sqs_handler.add_message_to_queue("test_query", payload)
 
-        messages = sqsProducer.sqs_received_published()
+        messages = sqsProducer.sqs_receive_publish()
         # messages = self.sqs_handler.receive_messages_from_queue(queue_url="test_query")
 
         message_body = json.loads(messages[0]['Body'])
