@@ -4,7 +4,7 @@ import sys
 import boto3
 import requests
 # This is a custom submodule that is part of a larger module used in the nesdis-pghpc environment.
-# import pgutil.logging
+import pgutil.logging
 from producer.producer import produce
 from argparse import ArgumentParser
 

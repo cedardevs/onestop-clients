@@ -1,4 +1,4 @@
-from producer.producer import produce, list_topics
+from producer.producer import produce, list_topics, produce_and_publish_raw_granule, produce_and_publish_raw_collection
 import uuid
 import json
 
@@ -24,13 +24,13 @@ if __name__ == '__main__':
 
     value = {
         "type": "granule",
-        "content": content_value,
+        "content": str(content_value),
         "contentType": "application/json",
         "method": "PUT",
         "source": "unknown",
         "operation": "ADD"
     }
-
+    print(value)
     # publish bulk messages
     data = {}
     for x in range(10):
@@ -46,7 +46,14 @@ if __name__ == '__main__':
 
     # user input to produce a structure data
     # value = produceRawMessage(content_value)
-    # print(value)
-    #
+
+    print("publish messages using generic producer ...")
     produce(topic, data, base_conf)
+
+    # #def produce_and_publish_raw_collection(topic, key, value, method, config=None):
+    print("publish messages using produce_and_publish_raw_collection ...")
+    produce_and_publish_raw_collection("psi-collection-input-unknown", fileId, content_value, "PUT", base_conf)
+
+    print("publish messages using produce_and_publish_raw_granule ...")
+    produce_and_publish_raw_granule("psi-granule-input-unknown", fileId, content_value, "PUT", base_conf)
 

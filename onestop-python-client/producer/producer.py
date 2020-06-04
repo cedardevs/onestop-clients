@@ -17,7 +17,7 @@ def acked(err, msg):
         logger.error("Failed to deliver message: {0}: {1}"
               .format(msg.value(), err.str()))
     else:
-        logger.log("Message produced: {0}".format(msg.key()))
+       print("Message produced: {0}".format(msg.key()))
 
 
 def validate_uuid4(uuid_string):
@@ -112,7 +112,6 @@ def produce(topic, input_messages, config=None):
     if schema:
         for key, value in input_messages.items():
             if validate_uuid4(key):
-                print('Sending message .... ')
                 serializedMessage = ser.encode_record_with_schema(topic, schema, value)
                 producer.produce(topic=topic, key=key, value=serializedMessage, callback=acked)
                 # producer.flush() # bad idea, it limits throughput to the broker round trip time
@@ -121,21 +120,21 @@ def produce(topic, input_messages, config=None):
                 logger.error('Invalid UUID String: ', key)
 
     else:
-        logger.error('Schema not found for topic name: ', topic)
+        print('Schema not found for topic name: ', topic)
         sys.exit(1)
 
 
-def produce_and_publish_raw_granule(topic, key, value, method, config=None):
+def produce_and_publish_raw_granule(topic, key, content_value, method, config=None):
     value = {
         "type": "granule",
-        "content": value,
+        "content": str(content_value),
         "contentType": "application/json",
-        "method": method,
+        "method": str(method),
         "source": "unknown",
-        "operation": "NO_OP"
+        "operation": "ADD"
     }
 
-    data = {key: value}
+    data = {str(key): value}
 
     produce(topic, data, config)
 
@@ -143,15 +142,14 @@ def produce_and_publish_raw_granule(topic, key, value, method, config=None):
 def produce_and_publish_raw_collection(topic, key, value, method, config=None):
     value = {
         "type": "collection",
-        "content": value,
+        "content": str(value),
         "contentType": "application/xml",
-        "method": method,
+        "method": str(method),
         "source": "unknown",
         "operation": "NO_OP"
     }
 
     data = {key: value}
-
     produce(topic, data, config)
 
 
