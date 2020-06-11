@@ -28,7 +28,7 @@ def sqs_command_line_args():
 def collect_sqs_messages(role_name, sqs_queue_url):
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    # pgutil.logging.attachStreamHandlerToLogger(logging.getLogger())
+    pgutil.logging.attachStreamHandlerToLogger(logging.getLogger())
 
     # Use the EC2 instance metadata API to get session credentials based on the node role
     sessionResponse = requests.get(
