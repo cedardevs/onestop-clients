@@ -51,16 +51,16 @@ jobs:
       - checkout
       - docker/check
       - docker/build:
-          path: examples
+          path: onestop-python-client
           image: cedardevs/onestop-python-client
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
       - run:
           name: "What branch am I on now?"
           command: echo $CIRCLE_BRANCH
 #no need to push this image yet
-#      - docker/push:
-#          image: cedardevs/python-client
-#          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+      - docker/push:
+          image: cedardevs/python-client
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
       - slack/status:
           fail_only: false
 
