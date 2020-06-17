@@ -104,6 +104,13 @@ def produce(topic, input_messages, config=None):
 
     bootstrap_servers, schema_registry = producer_config(config)
     producer = Producer(bootstrap_servers)
+
+    admin_client = AdminClient({'bootstrap.servers': bootstrap_servers})
+    topics = admin_client.list_topics().topics
+
+    if not topics:
+        raise RuntimeError()
+
     sr = CachedSchemaRegistryClient(schema_registry)
     ser = MessageSerializer(sr)
 
@@ -125,6 +132,21 @@ def produce(topic, input_messages, config=None):
 
 
 def produce_and_publish_raw_granule(topic, key, content_value, method, config=None):
+    """
+        structures raw granule input value and key to initiate sending message to Kafka
+    Parameters
+    ----------
+        topic: str
+            topic where the input message publish too
+        key: file id
+        content_value: dict
+            value of input messages
+        method: str
+            An HTTP request method
+        config: dict
+            the config values that needed by the produce
+
+     """
     value = {
         "type": "granule",
         "content": str(content_value),
@@ -140,6 +162,21 @@ def produce_and_publish_raw_granule(topic, key, content_value, method, config=No
 
 
 def produce_and_publish_raw_collection(topic, key, value, method, config=None):
+    """
+        structures raw collection input value and key to initiate sending message to Kafka
+    Parameters
+    ----------
+        topic: str
+            topic where the input message publish too
+        key: file id
+        content_value: dict
+            value of input messages
+        method: str
+            An HTTP request method
+        config: dict
+            the config values that needed by the produce
+
+     """
     value = {
         "type": "collection",
         "content": str(value),
@@ -202,7 +239,7 @@ def produce_raw_message(message):
     return value
 
 
-def list_topics(conf):
+def list_topics(server):
     """
         Request list of topics from cluster
     :param
@@ -210,7 +247,7 @@ def list_topics(conf):
     :return:
         list of available topics for granule and collection
     """
-    kadmin = AdminClient(conf)
+    kadmin = AdminClient(server)
     md = kadmin.list_topics().topics
     topics = list(md.keys())
     print(" {} topics:".format(len(topics)))

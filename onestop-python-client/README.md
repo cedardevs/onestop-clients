@@ -38,7 +38,7 @@ python ./smeFunc.py -b $KAFKA_BROKERS -s $SCHEMA_REGISTRY -t $TOPIC -g $GROUP_ID
 
 or adjust it as needed.
 
-# To publish a new version -
+# packaing and publishing new version 
 First you will need to setup your credentials. Create $HOME/.pypirc and update it with the cedardevs username, pw, and token. It will look like the following-
 ```
 [pypi]
@@ -50,6 +50,7 @@ You'll need a couple tools to create the distribution and then publish it. To in
 ```
 python3 -m pip install --user --upgrade setuptools wheel twine
 ```
+Note: make sure the version on the setup file is changed 
 
 To build the new distribution-
 ```
@@ -64,8 +65,32 @@ Now to push that to the PyPi repo-
 python3 -m twine upload dist/*
 ```
 
-Then you can test it by downloaded it
+#### Install onestop-python-client-cedardevs package  
 
 ```
 pip install onestop-python-client-cedardevs
 ```
+
+importing onestop-python-client-cedardevs package 
+
+producer module have the following functions to import 
+    produce: initiate sending a message to Kafka
+    list_topics: Request list of topics from cluster
+    produce_raw_message: Uses user's inputs to construct a structured input value
+    produce_and_publish_raw_collection: raw collection input value and key to initiate sending message to Kafka
+    produce_and_publish_raw_granule: raw granule input value and key to initiate sending message to Kafka
+    
+ ```
+
+from onestop.producer import ... 
+
+```   
+
+consumer module have the following functions to import: 
+    consume: consume messages from a given topic 
+
+```
+
+from onestop.consumer import ... 
+
+```   

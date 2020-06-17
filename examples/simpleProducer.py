@@ -1,6 +1,6 @@
-from producer.producer import produce, list_topics, produce_and_publish_raw_granule, produce_and_publish_raw_collection
-import uuid
+from onestop.producer import produce, list_topics, produce_and_publish_raw_granule, produce_and_publish_raw_collection
 import json
+import uuid
 
 if __name__ == '__main__':
 
@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
     base_conf = {
         'bootstrap.servers': bootstrap_servers,
-        'schema.registry.url' : schema_registry
+        'schema.registry.url': schema_registry
     }
 
     with open('./sampleSqsPayload.json') as f:
@@ -30,7 +30,6 @@ if __name__ == '__main__':
         "source": "unknown",
         "operation": "ADD"
     }
-    print(value)
     # publish bulk messages
     data = {}
     for x in range(10):

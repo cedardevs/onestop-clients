@@ -1,4 +1,4 @@
-from onestop_client import consume
+from onestop.consumer import consume
 import argparse
 
 def handler(key, value):
