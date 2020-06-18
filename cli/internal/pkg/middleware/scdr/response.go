@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/cedardevs/onestop/cli/internal/pkg/flags"
+	"github.com/cedardevs/onestop-clients/cli/internal/pkg/flags"
 	"github.com/spf13/viper"
 	"strconv"
 	"time"
