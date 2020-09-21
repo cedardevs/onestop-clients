@@ -10,3 +10,5 @@ python-client/*.egg-info
 /out/
 *.iws
 *.iml
+.DS_Store
+examples/.DS_Store
