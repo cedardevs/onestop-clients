@@ -86,7 +86,7 @@ Now to push that to the PyPi repo-
 python3 -m twine upload dist/*
 ```
 
-Then you can test it by downloaded it
+Then you can test it by downloading it
 
 ```
 pip install onestop-python-client-cedardevs
