@@ -16,7 +16,7 @@ To test the import, try-
 
 ```
 $ python3
->>> import onestop_client
+>>> import onestop
 ```
 
 Now we are ready to try a script. Our first example, [smeFunc.py](#examples/smeFunc.py), imports our onestop_client package, and passes to it the id, topic, and message handler function. Our library then handles the work to connect to kafka and deserialize the message.
