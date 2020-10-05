@@ -10,3 +10,11 @@ python-client/*.egg-info
 /out/
 *.iws
 *.iml
+
+### Mac
+.DS_Store
+examples/.DS_Store
+
+### Git
+.gitignore
+
