@@ -51,18 +51,21 @@ def producer_config(config=None):
          }
 
      """
+    p_conf = {} 
     if config is not None:
-        producer_conf = {key: value.strip()
-                         for key, value in config.items() if not key.startswith("schema.registry")}
+        for key, value in config.items(): 
+            if not key.startswith("schema.registry"):
+               if not value is None:
+                   p_conf[key] = value.strip()
 
         sr_conf = {key.replace("schema.registry.", ""): value.strip()
                    for key, value in config.items() if key.startswith("schema.registry")}
 
-    if producer_conf is None or 'bootstrap.servers' not in producer_conf:
+    if p_conf is None or 'bootstrap.servers' not in p_conf:
         if 'KAFKA_BROKERS' in os.environ:
             kafka_brokers = os.environ['KAFKA_BROKERS'].split(',')
 
-            producer_conf['bootstrap.servers'] = kafka_brokers
+            p_conf['bootstrap.servers'] = kafka_brokers
 
         else:
             logger.error('Required bootstrap.servers not set. Pass bootstrap.servers or KAFKA_BROKERS environment variable not set')
@@ -77,10 +80,10 @@ def producer_config(config=None):
             logger.error('Required schema.registry.url not set. SCHEMA_REGISTRY_URL environment variable not set')
             raise ValueError()
 
-    return producer_conf, sr_conf
+    return p_conf, sr_conf
 
 
-def produce(topic, input_messages, config=None):
+def produce(config, topic, input_messages):
     """
         produce initiate sending a message to Kafka, call the produce method passing in the input_messages key/value
         and and callback
@@ -103,17 +106,18 @@ def produce(topic, input_messages, config=None):
         raise ValueError()
 
     bootstrap_servers, schema_registry = producer_config(config)
-    producer = Producer(bootstrap_servers)
 
-    admin_client = AdminClient({'bootstrap.servers': bootstrap_servers})
+    producer = Producer(bootstrap_servers)
+    admin_client = AdminClient(bootstrap_servers)
     topics = admin_client.list_topics().topics
+    #Just to show what's available
+    print(topics)
 
     if not topics:
         raise RuntimeError()
-
+    
     sr = CachedSchemaRegistryClient(schema_registry)
     ser = MessageSerializer(sr)
-
     # get schema
     id, schema, version = sr.get_latest_schema(topic + "-value")
     if schema:
@@ -125,10 +129,10 @@ def produce(topic, input_messages, config=None):
                 producer.poll(1)
             else:
                 logger.error('Invalid UUID String: ', key)
-
+    
     else:
-        print('Schema not found for topic name: ', topic)
-        sys.exit(1)
+         print('Schema not found for topic name: ', topic)
+    sys.exit(1)
 
 
 def produce_and_publish_raw_granule(topic, key, content_value, method, config=None):
@@ -148,7 +152,7 @@ def produce_and_publish_raw_granule(topic, key, content_value, method, config=No
 
      """
     value = {
-        "type": "granule",
+        "type": "collection",
         "content": str(content_value),
         "contentType": "application/json",
         "method": str(method),
@@ -266,4 +270,5 @@ def list_topics(server):
     print("List of Granule topics :")
     print("---------------------- ")
     print('\n'.join(granule_topics))
+
 
