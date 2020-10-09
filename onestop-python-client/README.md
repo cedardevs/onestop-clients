@@ -16,7 +16,7 @@ To test the import, try-
 
 ```
 $ python3
->>> import onestop
+>>> import onestop_client
 ```
 
 Now we are ready to try a script. Our first example, [smeFunc.py](#examples/smeFunc.py), imports our onestop_client package, and passes to it the id, topic, and message handler function. Our library then handles the work to connect to kafka and deserialize the message.
@@ -30,13 +30,24 @@ At the moment, that pod will tail -f /dev/null to stay open so you can exec into
 `
 kubectl exec -it pyconsumer bash
 `
+# In the container
+Manually add smeFunc.py
+Install requests library
+>pip install requests
 
-And then there should be env vars available so you can run this -
+# In the cluster load some test data into the cluster
+./upload.sh IM /Users/dneufeld/repos/onestop-test-data/DEM http://localhost/registry
+
+#Test it out using cli args
+python smeFunc.py -cmd consume -b onestop-dev-cp-kafka:9092 -s http://onestop-dev-cp-schema-registry:8081 -t psi-registry-collection-parsed-changelog -g sme-test -o earliest
+
+
+python smeFunc.py -cmd produce -b onestop-dev-cp-kafka:9092 -s http://onestop-dev-cp-schema-registry:8081 -t psi-collection-input-unknown 
+
+Or you can use env vars available so you can run this -
 ```
 python ./smeFunc.py -b $KAFKA_BROKERS -s $SCHEMA_REGISTRY -t $TOPIC -g $GROUP_ID -o $OFFSET
 ```
-
-or adjust it as needed.
 
 # packaing and publishing new version 
 First you will need to setup your credentials. Create $HOME/.pypirc and update it with the cedardevs username, pw, and token. It will look like the following-
