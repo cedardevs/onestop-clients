@@ -4,7 +4,7 @@ import argparse
 
 def handler(key, value):
     print(key)
-    if (value['type'] == 'collection'):
+    if (value['type'] == 'collection' or not bool(value['fileInformation'])):
         print(value['discovery']['fileIdentifier'])
     else:
         print(value['fileInformation']['name'])
