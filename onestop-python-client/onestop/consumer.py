@@ -1,5 +1,5 @@
 import logging
-from confluent_kafka import Consumer
+from confluent_kafka import Consumer, KafkaError
 from confluent_kafka.avro.serializer.message_serializer import MessageSerializer
 from confluent_kafka.avro.cached_schema_registry_client import CachedSchemaRegistryClient
 
@@ -9,25 +9,35 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S')
 log = logging.getLogger()
 
-
-def consume(config, topics, handler):
+def consume(config, topic, handler):
     """
     Starts a consumer and calls the given handler for each consumed message.
     Assumes that keys are serialized as strings and values are serialized
     as Avro objects with their schemas stored in a Confluent Schema Registry.
     """
-    c_conf = {key: value.strip()
-              for key, value in config.items() if not key.startswith("schema.registry")}
+    c_conf = {}
+    for key, value in config.items(): 
+        if not key.startswith("schema.registry"):
+           if not value is None:
+               c_conf[key] = value.strip()
+
+    if "auto.offset.reset" in c_conf:
+        print("offset provided")
+    else:
+        c_conf['auto.offset.reset'] = 'earliest'
+    
+    if "group.id" in c_conf:
+        print("group id provided")
+    else:
+        c_conf['group.id'] = 'sme_test'
 
     c = Consumer(c_conf)
-    for topic in topics:
-        topic = topic.strip()
 
-    c.subscribe(topics)
+    c.subscribe([topic])
 
     sr_conf = {key.replace("schema.registry.", ""): value.strip()
-               for key, value in config.items() if key.startswith("schema.registry")}
-
+                for key, value in config.items() if key.startswith("schema.registry")}
+    
     sr = CachedSchemaRegistryClient(sr_conf)
     ser = MessageSerializer(sr)
 
