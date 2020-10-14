@@ -51,8 +51,8 @@ func SetScdrFlags() {
 	//not scdr-files specific
 	cli.AddFlag(ScdrFileCmd, flags.MaxFlag, flags.MaxShortFlag, flags.MaxDescription, flags.MaxDefault)
 	cli.AddFlag(ScdrFileCmd, flags.TextQueryFlag, flags.TextQueryShortFlag, flags.QueryDescription, "")
-	cli.AddFlag(ScdrFileCmd, flags.CloudServerFlag, flags.CloudServerShortFlag, flags.CloudServerDescription, false)
-	cli.AddFlag(ScdrFileCmd, flags.TestServerFlag, flags.TestServerShortFlag, flags.TestServerDescription, false)
+	//cli.AddFlag(ScdrFileCmd, flags.CloudServerFlag, flags.CloudServerShortFlag, flags.CloudServerDescription, false)
+	//cli.AddFlag(ScdrFileCmd, flags.TestServerFlag, flags.TestServerShortFlag, flags.TestServerDescription, false)
 	// 	cli.AddFlag(ScdrFileCmd, flags.SortFlag, flags.SortShortFlag, flags.SortDescription, flags.SortDefault)
 	cli.AddFlag(ScdrFileCmd, flags.ChecksumFlag, flags.ChecksumShortFlag, flags.ChecksumDescription, "")
 
@@ -237,15 +237,15 @@ func makeRequests(params *viper.Viper, body string) []string {
 
 func buildRequest(params *viper.Viper, body string) *gentleman.Request {
 	server := viper.GetString("server")
-	if params.GetString("test") == "true" {
-		viper.Set("server-index", 1)
-	} else if params.GetString(flags.CloudFlag) == "true" {
-		viper.Set("server-index", 2)
-	}
+	//if params.GetString("test") == "true" {
+	//	viper.Set("server-index", 1)
+	//} else if params.GetString(flags.CloudFlag) == "true" {
+	//	viper.Set("server-index", 2)
+	//}
 
-	if server == "" {
-		server = scdrServers()[viper.GetInt("server-index")]["url"]
-	}
+	//if server == "" {
+	//	server = scdrServers()[viper.GetInt("server-index")]["url"]
+	//}
 
 	//the summary view with a type includes a count
 	//without the type (parentId) we cannot get count
@@ -274,20 +274,20 @@ func buildRequest(params *viper.Viper, body string) *gentleman.Request {
 
 func scdrServers() []map[string]string {
 	return []map[string]string{
-
-		map[string]string{
-			"description": "NOAA OneStop",
-			"url":         "https://data.noaa.gov/onestop-search",
-		},
-
-		map[string]string{
-			"description": "Development test server (uses test data)",
-			"url":         "https://sciapps.colorado.edu/onestop-search",
-		},
-
-		map[string]string{
-			"description": "Development cloud server (uses test data)",
-			"url":         "http://9bcc428b-default-osclient-d008-199379672.us-east-1.elb.amazonaws.com/onestop-search",
-		},
+		//
+		//		map[string]string{
+		//			"description": "NOAA OneStop",
+		//			"url":         "https://data.noaa.gov/onestop-search",
+		//		},
+		//
+		//		map[string]string{
+		//			"description": "Development test server (uses test data)",
+		//			"url":         "https://sciapps.colorado.edu/onestop-search",
+		//		},
+		//
+		//		map[string]string{
+		//			"description": "Development cloud server (uses test data)",
+		//			"url":         "http://9bcc428b-default-osclient-d008-199379672.us-east-1.elb.amazonaws.com/onestop-search",
+		//		},
 	}
 }
