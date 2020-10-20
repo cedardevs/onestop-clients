@@ -2,8 +2,8 @@ package scdr
 
 import (
 	"fmt"
-	"github.com/cedardevs/onestop/cli/internal/pkg/flags"
-	"github.com/cedardevs/onestop/cli/internal/pkg/middleware/scdr"
+	"github.com/cedardevs/onestop-clients/cli/internal/pkg/flags"
+	"github.com/cedardevs/onestop-clients/cli/internal/pkg/middleware/scdr"
 	"github.com/danielgtaylor/openapi-cli-generator/cli"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"

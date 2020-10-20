@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: onestop-clients
+spec:
+  containers:
+    - name: python-client
+      tty: true #need this to get the output with `kubectl logs pyconsumer`
+      image: cedardevs/onestop-clients:latest
+      imagePullPolicy: Never
+      env:
+        - name: SCHEMA_REGISTRY
+          value: "http://onestop-dev-cp-schema-registry:8081"
+        - name: KAFKA_BROKERS
+          value: "onestop-dev-cp-kafka:9092"
+        - name: TOPIC
+          value: "psi-registry-granule-parsed-changelog"
+        - name: GROUP_ID
+          value: "sme-test"
+        - name: OFFSET
+          value: "earliest"
