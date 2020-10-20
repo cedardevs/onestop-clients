@@ -6,18 +6,6 @@ spec:
   containers:
   - name: pyconsumer
     tty: true #need this to get the output with `kubectl logs pyconsumer`
-    command:
-      - tail
-      - -f
-      - /dev/null
-    # - python
-    # - smeFunc.py
-    # args:
-    # - "-b $(KAFKA_BROKERS)"
-    # - "-s $(SCHEMA_REGISTRY)"
-    # - "-t $(TOPIC)"
-    # - "-g $(GROUP_ID)"
-    # - "-o $(OFFSET)"
     image: cedardevs/onestop-pyconsumer:latest
     imagePullPolicy: Always
     env:

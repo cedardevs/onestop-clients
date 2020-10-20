@@ -1,8 +1,8 @@
 package onestop
 
 import (
-	"github.com/cedardevs/onestop/cli/internal/pkg/flags"
-	"github.com/cedardevs/onestop/cli/internal/pkg/middleware/onestop"
+	"github.com/cedardevs/onestop-clients/cli/internal/pkg/flags"
+	"github.com/cedardevs/onestop-clients/cli/internal/pkg/middleware/onestop"
 	"github.com/danielgtaylor/openapi-cli-generator/cli"
 )
 

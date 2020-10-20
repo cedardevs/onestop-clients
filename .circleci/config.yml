@@ -1,0 +1,113 @@
+jobs:
+  "cli-test": &cli-test
+    docker:
+    - image: circleci/golang:latest
+    #    working_directory: /go/src/github.com/cedardevs/onestop-clients/cli
+    environment:
+      GO111MODULE: "on"
+    steps: &steps
+    - checkout
+    - run: cd cli/; ls -la; pwd;
+    - run: go version
+    - run:
+        name: "Fetch dependencies"
+        command: >
+          cd cli/;
+          go mod download
+    - run:
+        name: "Run gofmt"
+        command: >
+          diff -u <(echo -n) <(gofmt -d -e .)
+    - run:
+        name: "Run go vet"
+        command:  >
+          cd cli/;
+          go vet -v ./...
+    - run:
+        name: "Run go test"
+        command:  >
+          cd cli/;
+          go test -race -count=1 -coverprofile=cover-source.out   -p 1 -covermode=atomic ./...
+    - slack/status:
+        fail_only: false
+
+#  cli-test:
+#    executor:
+#      name: go/default
+#      tag: '1.13'
+#    environment: # environment variables for the build itself
+#      TEST_RESULTS: /tmp/test-results # path to where test results will be saved
+#    steps: # steps that comprise the `build` job
+#      - checkout # check out source code to working directory
+#      - run: mkdir -p $TEST_RESULTS # create the test results directory
+#      - run: cd cli/; ls -la; pwd;
+#      - restore_cache: # restores saved cache if no changes are detected since last run
+#          keys:
+#            - go-mod-v4-{{ checksum "cli/go.sum" }}
+#      - go/test:
+#          covermode: atomic
+#          failfast: false
+#          race: true
+#      - save_cache:
+#          key: go-mod-v4-{{ checksum "go.sum" }}
+#          paths:
+#            - "/go/pkg/mod"
+#      - slack/status:
+#          fail_only: false
+
+# cli build
+  cli-build:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/check
+      - docker/build:
+          path: cli
+          image: cedardevs/onestop-cli
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+      - run:
+          name: "What branch am I on now?"
+          command: echo $CIRCLE_BRANCH
+      - docker/push:
+          image: cedardevs/onestop-cli
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+      - slack/status:
+          fail_only: false
+
+# clients build
+  client-build:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/check
+      - docker/build:
+          path: onestop-python-client
+          image: cedardevs/onestop-python-client
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+      - run:
+          name: "What branch am I on now?"
+          command: echo $CIRCLE_BRANCH
+#no need to push this image yet
+      - docker/push:
+          image: cedardevs/onestop-python-client
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+      - slack/status:
+          fail_only: false
+  # Base test configuration for Go library tests Each distinct version should
+  # inherit this base, and override (at least) the container image used.
+
+orbs:
+  slack: circleci/slack@3.4.2
+  go: circleci/go@1.1.1
+  docker: circleci/docker@1.0.1
+version: 2.1
+workflows:
+  main:
+    jobs:
+#      - "latest"
+      - cli-test
+#      - cli-build
+#      - client-build
+

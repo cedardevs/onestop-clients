@@ -4,14 +4,6 @@ const SearchCollectionCmd = "searchcollection"
 const SearchGranuleCmd = "searchgranule"
 const SearchFlattenedGranuleCmd = "searchflattenedgranule"
 
-const CloudServerFlag = "cloud"
-const CloudServerShortFlag = "c"
-const CloudServerDescription = "Use cloud intance. Warning: --cloud will be replace with --server on next release"
-
-const TestServerFlag = "test"
-const TestServerShortFlag = "u"
-const TestServerDescription = "Use sciapps intance. Warning: --test will be replace with --server on next release"
-
 const TextQueryFlag = "query"
 const TextQueryShortFlag = "q"
 const QueryDescription = "Search flattened granules with text query"
@@ -104,9 +96,6 @@ const KeywordDescription = "Pick files tagged with a label whose value is LABEL.
 // const SortShortFlag = ""
 // const SortDefault = "beginDate"
 // const SortDescription = "Sort results by stagedDate, beginDate, or endDate."
-const CloudFlag = "cloud"
-const CloudUrl = "http://acf3425c8d41b11e9a12912cf37a7528-1694331899.us-east-1.elb.amazonaws.com/onestop-search"
-
 const GapFlag = "gap"
 const GapShortFlag = "i"
 const GapDescription = "Defines the time interval for reporting data gaps. Any data time gap larger than a specified interval will be reported. Valid time units are  \"h\", \"m\", \"s\", \"ms\", \"ns\", \"us\" (or \"µs\"), e.g. 1h30m0.5s This option is only meaningful when combined with the --type option. It is silently ignored if --available is passed or no --type is provided. --gap INTERVAL"

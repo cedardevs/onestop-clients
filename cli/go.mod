@@ -1,4 +1,4 @@
-module github.com/cedardevs/onestop/cli
+module github.com/cedardevs/onestop-clients/cli
 
 go 1.13
 
