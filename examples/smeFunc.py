@@ -29,6 +29,8 @@ if __name__ == '__main__':
     cmd = config.pop('command')
     topic = config.pop('topic')
 
+    print(str(config))
+
     if (cmd=="consume"):
         consume(config, topic, lambda k, v: handler(k, v))
     if (cmd=="produce"):
