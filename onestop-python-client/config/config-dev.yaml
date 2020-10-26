@@ -8,7 +8,7 @@ collection_topic: psi-collection-input-unknown
 granule_topic: psi-granule-input-unknown
 
 security:
-  enabled: True
+  enabled: False
   caLoc: /etc/pki/tls/cert.pem
   keyLoc: /etc/pki/tls/private/kafka-user.key
   certLoc: /etc/pki/tls/certs/kafka-user.crt
