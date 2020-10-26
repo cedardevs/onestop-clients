@@ -11,9 +11,9 @@ import yaml
 class KafkaPublisher:
     conf = None
 
-    def __init__(self, tier):
+    def __init__(self, confLoc):
 
-        with open("../config/config-" + tier + ".yaml") as f:
+        with open(confLoc) as f:
             self.conf = yaml.load(f, Loader=yaml.FullLoader)
             print(str(self.conf))
 
@@ -23,8 +23,10 @@ class KafkaPublisher:
 
         self.collection_topic = self.conf['collection_topic']
         self.granule_topic = self.conf['granule_topic']
-        registry_client = self.register_client(self)
-        self.create_producers(self, registry_client)
+
+    def connect(self):
+        registry_client = self.register_client()
+        self.create_producers(registry_client)
 
     def register_client(self):
 
@@ -33,12 +35,12 @@ class KafkaPublisher:
         if self.security:
             reg_conf['ssl.ca.location'] = self.conf['security']['caLoc']
             reg_conf['ssl.key.location'] = self.conf['security']['keyLoc']
-            reg_conf['ssl.certificate.location'] = self.conf['security']['location']
+            reg_conf['ssl.certificate.location'] = self.conf['security']['certLoc']
 
         registry_client = SchemaRegistryClient(reg_conf)
         return registry_client
 
-    def create_producers(self, security, registry_client):
+    def create_producers(self, registry_client):
 
         self.collectionSchema = registry_client.get_latest_version(self.collection_topic+'-value').schema.schema_str
         self.granuleSchema = registry_client.get_latest_version(self.granule_topic+'-value').schema.schema_str
@@ -46,13 +48,13 @@ class KafkaPublisher:
         self.collection_serializer = AvroSerializer(self.collectionSchema, registry_client)
         self.granule_serializer = AvroSerializer(self.granuleSchema, registry_client)
 
-        producer_conf = {
-            'bootstrap.servers': self.brokers,
-            'security.protocol': 'SSL',
-            'ssl.ca.location': self.conf['security']['caLoc'],
-            'ssl.key.location': self.conf['security']['keyLoc'],
-            'ssl.certificate.location': self.conf['security']['certLoc']
-            }
+        producer_conf = {'bootstrap.servers': self.brokers}
+
+        if self.security:
+            producer_conf['security.protocol'] = 'SSL'
+            producer_conf['ssl.ca.location'] = self.conf['security']['caLoc']
+            producer_conf['ssl.key.location'] = self.conf['security']['keyLoc']
+            producer_conf['ssl.certificate.location'] = self.conf['security']['certLoc']
 
         col_producer_conf = producer_conf
         col_producer_conf['value.serializer'] = self.collection_serializer
