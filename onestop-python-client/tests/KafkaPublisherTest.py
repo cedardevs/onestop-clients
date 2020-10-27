@@ -9,9 +9,7 @@ class KafkaPublisherTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
-        self.kp = KafkaPublisher("dev")
-        print(str(self.kp.conf))
-
+        self.kp = KafkaPublisher("../config/config-dev.yaml")
 
     def tearDown(self):
         print("Tear it down!")
@@ -19,8 +17,8 @@ class KafkaPublisherTest(unittest.TestCase):
     def test_parse_config(self):
         self.assertFalse(self.kp.conf['brokers']==None)
 
-    def test_blah(self):
-        print("blah")
+    def test_publish_collection(self):
+        print("Publish collection")
         # config = {
         #     'bootstrap.servers': self.bootstrap_servers,
         #     'schema.registry.url': self.schema_registry
