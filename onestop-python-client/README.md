@@ -31,7 +31,7 @@ kubectl apply -f examples/pyconsumer-pod.yml
 
 At the moment, that pod will tail -f /dev/null to stay open so you can exec into the container with -
 `
-kubectl exec -it pyconsumer bash
+kubectl exec -it pod/pyconsumer -- bash
 `
 # In the container
 Manually add smeFunc.py
