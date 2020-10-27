@@ -102,8 +102,8 @@ class KafkaPublisher:
             raise
         self.collection_producer.poll()
 
-    def publish_record(self, record_uuid, collection_uuid, content_dict, file_information, file_locations):
-        print('publish record')
+    def publish_granule(self, record_uuid, collection_uuid, content_dict, file_information, file_locations):
+        print('publish granule')
         if type(record_uuid) == bytes:
             key = str(UUID(bytes=collection_uuid))
         else:
