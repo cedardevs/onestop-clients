@@ -1,0 +1,24 @@
+Docker stuff
+### Build it
+
+
+>kubectl apply -f pyconsumer-pod.yml
+>kubectl exec -it pod/pyconsumer -- bash
+>kubectl cp test.txt pyconsumer:test.txt
+>kubectl delete -f pyconsumer-pod.yml
+
+### but now smeFunc.py and onestop python client needs to be available to pod/pyconsumer
+From within container
+Manually add smeFunc.py
+>pip install requests
+
+./upload.sh IM /Users/dneufeld/repos/onestop-test-data/DEM http://localhost/registry
+
+python smeFunc.py -cmd consume -b onestop-dev-cp-kafka:9092 -s http://onestop-dev-cp-schema-registry:8081 -t psi-registry-collection-parsed-changelog -g sme-test -o earliest
+
+
+python smeFunc.py -cmd produce -b onestop-dev-cp-kafka:9092 -s http://onestop-dev-cp-schema-registry:8081 -t psi-collection-input-unknown
+
+
+
+
