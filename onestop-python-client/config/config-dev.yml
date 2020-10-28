@@ -1,5 +1,5 @@
 # Example config values for osim client
-log_level: debug
+log_level: DEBUG
 
 # COLLECTION or GRANULE
 metadata_type: COLLECTION
