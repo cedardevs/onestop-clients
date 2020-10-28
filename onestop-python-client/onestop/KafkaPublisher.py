@@ -11,12 +11,13 @@ import yaml
 class KafkaPublisher:
     conf = None
 
-    def __init__(self, confLoc):
+    def __init__(self, conf_loc):
 
-        with open(confLoc) as f:
+        with open(conf_loc) as f:
             self.conf = yaml.load(f, Loader=yaml.FullLoader)
             print(str(self.conf))
 
+        self.metadata_type = self.conf['metadata_type']
         self.brokers = self.conf['brokers']
         self.schema_registry = self.conf['schema_registry']
         self.security = self.conf['security']['enabled']
@@ -24,9 +25,13 @@ class KafkaPublisher:
         self.collection_topic = self.conf['collection_topic']
         self.granule_topic = self.conf['granule_topic']
 
+        if self.metadata_type not in ['COLLECTION', 'GRANULE']:
+            raise ValueError("metadata_type must be 'COLLECTION' or 'GRANULE'")
+
     def connect(self):
         registry_client = self.register_client()
-        self.create_producers(registry_client)
+        metadata_producer = self.create_producer(registry_client)
+        return metadata_producer
 
     def register_client(self):
 
@@ -40,14 +45,17 @@ class KafkaPublisher:
         registry_client = SchemaRegistryClient(reg_conf)
         return registry_client
 
-    def create_producers(self, registry_client):
+    def create_producer(self, registry_client):
 
-        self.collectionSchema = registry_client.get_latest_version(self.collection_topic+'-value').schema.schema_str
-        self.granuleSchema = registry_client.get_latest_version(self.granule_topic+'-value').schema.schema_str
+        metadata_schema = None
 
-        self.collection_serializer = AvroSerializer(self.collectionSchema, registry_client)
-        self.granule_serializer = AvroSerializer(self.granuleSchema, registry_client)
+        if self.metadata_type == "COLLECTION":
+            metadata_schema = registry_client.get_latest_version(self.collection_topic + '-value').schema.schema_str
 
+        if self.metadata_type == "GRANULE":
+            metadata_schema = registry_client.get_latest_version(self.granule_topic + '-value').schema.schema_str
+
+        metadata_serializer = AvroSerializer(metadata_schema, registry_client)
         producer_conf = {'bootstrap.servers': self.brokers}
 
         if self.security:
@@ -56,14 +64,11 @@ class KafkaPublisher:
             producer_conf['ssl.key.location'] = self.conf['security']['keyLoc']
             producer_conf['ssl.certificate.location'] = self.conf['security']['certLoc']
 
-        col_producer_conf = producer_conf
-        col_producer_conf['value.serializer'] = self.collection_serializer
+        meta_producer_conf = producer_conf
+        meta_producer_conf['value.serializer'] = metadata_serializer
 
-        grn_producer_conf = producer_conf
-        grn_producer_conf['value.serializer'] = self.granule_serializer
-
-        self.collection_producer = SerializingProducer(col_producer_conf)
-        self.granule_producer = SerializingProducer(grn_producer_conf)
+        metadata_producer = SerializingProducer(meta_producer_conf)
+        return metadata_producer
 
     def delivery_report(self, err, msg):
         """ Called once for each message produced to indicate delivery result.
@@ -73,15 +78,7 @@ class KafkaPublisher:
         else:
             print('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
 
-    def flush(self, type):
-        if type not in ['collection', 'granule']:
-            raise ValueError("type must be 'collection' or 'granule'")
-        if type == 'collection':
-            self.collection_producer.flush()
-        elif type == 'granule':
-            self.granule_producer.flush()
-
-    def publish_collection(self, collection_uuid, content_dict):
+    def publish_collection(self, collection_producer, collection_uuid, content_dict):
         print('publish collection')
         if type(collection_uuid) == bytes:
             key = str(UUID(bytes=collection_uuid))
@@ -96,13 +93,13 @@ class KafkaPublisher:
             'source': 'unknown',
         }
         try:
-            self.collection_producer.produce(topic=self.collection_topic, value=value_dict, key=key,
+            collection_producer.produce(topic=self.collection_topic, value=value_dict, key=key,
                                              on_delivery=self.delivery_report)
         except KafkaError:
             raise
-        self.collection_producer.poll()
+        collection_producer.poll()
 
-    def publish_granule(self, record_uuid, collection_uuid, content_dict, file_information, file_locations):
+    def publish_granule(self, granule_producer, record_uuid, collection_uuid, content_dict, file_information, file_locations):
         print('publish granule')
         if type(record_uuid) == bytes:
             key = str(UUID(bytes=collection_uuid))
@@ -125,8 +122,8 @@ class KafkaPublisher:
             'relationships': [{'type': 'COLLECTION', 'id': collection_uuid}]
         }
         try:
-            self.granule_producer.produce(topic=self.granule_topic, value=value_dict, key=key,
+            granule_producer.produce(topic=self.granule_topic, value=value_dict, key=key,
                                           on_delivery=self.delivery_report)
         except KafkaError:
             raise
-        self.granule_producer.poll()
+        granule_producer.poll()
