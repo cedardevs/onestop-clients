@@ -78,7 +78,7 @@ class KafkaPublisher:
         else:
             print('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
 
-    def publish_collection(self, collection_producer, collection_uuid, content_dict):
+    def publish_collection(self, collection_producer, collection_uuid, content_dict, method):
         print('publish collection')
         if type(collection_uuid) == bytes:
             key = str(UUID(bytes=collection_uuid))
@@ -89,7 +89,7 @@ class KafkaPublisher:
             'type': 'collection',
             'content': json.dumps(content_dict),
             'contentType': 'application/json',
-            'method': 'PUT',
+            'method': method,
             'source': 'unknown',
         }
         try:

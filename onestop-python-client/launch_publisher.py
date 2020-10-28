@@ -24,9 +24,11 @@ if __name__ == '__main__':
                                   'fileIdentifier': 'gov.noaa.osim2.mgg.dem:yaquina_bay_p210_30m'
                                   }
                     }
+    # method one of POST, PUT, PATCH, DELETE
+    method = 'PUT' #Update
 
     print(str(content_dict))
     kafka_publisher = KafkaPublisher(conf_loc)
     metadata_producer = kafka_publisher.connect()
-    kafka_publisher.publish_collection(metadata_producer, collection_uuid, content_dict)
+    kafka_publisher.publish_collection(metadata_producer, collection_uuid, content_dict, method)
 
