@@ -1,11 +1,13 @@
+import logging
+from uuid import UUID
+import json
+import yaml
+
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.error import KafkaError
 from confluent_kafka import SerializingProducer
 from confluent_kafka.schema_registry.avro import AvroSerializer
 
-from uuid import UUID
-import json
-import yaml
 
 
 class KafkaPublisher:
@@ -15,8 +17,9 @@ class KafkaPublisher:
 
         with open(conf_loc) as f:
             self.conf = yaml.load(f, Loader=yaml.FullLoader)
-            print(str(self.conf))
 
+        self.logger = self.get_logger("KakfaPublisher", False)
+        self.logger.info('Initializing KafkaPublisher')
         self.metadata_type = self.conf['metadata_type']
         self.brokers = self.conf['brokers']
         self.schema_registry = self.conf['schema_registry']
@@ -27,6 +30,38 @@ class KafkaPublisher:
 
         if self.metadata_type not in ['COLLECTION', 'GRANULE']:
             raise ValueError("metadata_type must be 'COLLECTION' or 'GRANULE'")
+
+    def get_logger(self, logger_name, create_file=False):
+
+        # create logger
+        log = logging.getLogger()
+
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        if self.conf['log_level'] == "DEBUG":
+            log.setLevel(level=logging.DEBUG)
+        else:
+            if self.conf['log_level'] == "INFO":
+                log.setLevel(level=logging.INFO)
+            else:
+                log.setLevel(level=logging.ERROR)
+
+        if create_file:
+            # create file handler for logger.
+            fh = logging.FileHandler('KafkaPublisher.log')
+            fh.setFormatter(formatter)
+
+        # create console handler for logger.
+        ch = logging.StreamHandler()
+        ch.setFormatter(formatter)
+
+        # add handlers to logger.
+        if create_file:
+            log.addHandler(fh)
+
+        log.addHandler(ch)
+        return log
 
     def connect(self):
         registry_client = self.register_client()
@@ -74,12 +109,12 @@ class KafkaPublisher:
         """ Called once for each message produced to indicate delivery result.
             Triggered by poll() or flush(). """
         if err is not None:
-            print('Message delivery failed: {}'.format(err))
+            self.logger.error('Message delivery failed: {}'.format(err))
         else:
-            print('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
+            self.logger.error('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
 
     def publish_collection(self, collection_producer, collection_uuid, content_dict, method):
-        print('publish collection')
+        self.logger.info('Publish collection')
         if type(collection_uuid) == bytes:
             key = str(UUID(bytes=collection_uuid))
         else:
@@ -100,7 +135,7 @@ class KafkaPublisher:
         collection_producer.poll()
 
     def publish_granule(self, granule_producer, record_uuid, collection_uuid, content_dict, file_information, file_locations):
-        print('publish granule')
+        self.logger.info('Publish granule')
         if type(record_uuid) == bytes:
             key = str(UUID(bytes=collection_uuid))
         else:

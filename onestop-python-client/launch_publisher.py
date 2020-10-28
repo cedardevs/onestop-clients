@@ -1,8 +1,6 @@
 import argparse
 from onestop.KafkaPublisher import KafkaPublisher
 
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Launches KafkaPublisher to publish kafkda topics")
     parser.add_argument('-conf', dest="conf", required=True,
@@ -27,7 +25,6 @@ if __name__ == '__main__':
     # method one of POST, PUT, PATCH, DELETE
     method = 'PUT' #Update
 
-    print(str(content_dict))
     kafka_publisher = KafkaPublisher(conf_loc)
     metadata_producer = kafka_publisher.connect()
     kafka_publisher.publish_collection(metadata_producer, collection_uuid, content_dict, method)
