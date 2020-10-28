@@ -1,11 +1,11 @@
-Docker stuff
+## Docker
 ### Build it
 docker build --tag onestop-pyconsumer:latest .
 #### Get updated tag
 docker tag 5cc87766d558 cedardevs/onestop-pyconsumer:latest
 docker push cedardevs/onestop-pyconsumer
 
-
+## Kubernetes
 kubectl apply -f pyconsumer-pod.yml
 kubectl exec -it pod/onestop-pyconsumer -- bash
 kubectl delete -f pyconsumer-pod.yml
@@ -28,7 +28,7 @@ python smeFunc.py -cmd produce -b onestop-dev-cp-kafka:9092 -s http://onestop-de
 Test case DEM collection
 http://localhost/onestop/collections/details/3ee5976e-789a-41d5-9cae-d51e7b92a247
 
-Add error handling to KafkaPublisher.connect() - "No topics yet load some data first!"
+TBD - Add error handling to KafkaPublisher.connect() - "No topics yet load some data first!"
 
 
 
