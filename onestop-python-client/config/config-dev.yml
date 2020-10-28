@@ -1,6 +1,9 @@
 # Example config values for osim client
 log_level: debug
 
+# COLLECTION or GRANULE
+metadata_type: COLLECTION
+
 # Kafka config values
 brokers: onestop-dev-cp-kafka:9092
 schema_registry: http://onestop-dev-cp-schema-registry:8081
