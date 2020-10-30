@@ -8,8 +8,6 @@ from confluent_kafka.error import KafkaError
 from confluent_kafka import SerializingProducer
 from confluent_kafka.schema_registry.avro import AvroSerializer
 
-
-
 class KafkaPublisher:
     conf = None
 
@@ -64,6 +62,7 @@ class KafkaPublisher:
         return log
 
     def connect(self):
+
         registry_client = self.register_client()
         metadata_producer = self.create_producer(registry_client)
         return metadata_producer
