@@ -1,5 +1,6 @@
 # Example config values for osim client
-log_level: DEBUG
+log_level: INFO
 
 # AWS config values
 sqs_url: https://sqs.us-east-1.amazonaws.com/282856304593/noaa-nesdis-ncei-csb-sqs-test
+s3_bucket: odp-noaa-nesdis-ncei-csb-test

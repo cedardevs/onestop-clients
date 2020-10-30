@@ -2,6 +2,8 @@ import logging
 from datetime import datetime, timezone
 import yaml
 import boto3
+import json
+
 
 class SqsConsumer:
     conf = None
@@ -14,10 +16,10 @@ class SqsConsumer:
         with open(cred_loc) as f:
             self.cred = yaml.load(f, Loader=yaml.FullLoader)
 
-        self.logger = self.get_logger("SqsConsumer", False)
-        self.logger.info('Initializing SqsConsumer')
+        self.logger = self.get_logger("OneStop-Client", False)
+        self.logger.info("Initializing " + self.__class__.__name__)
 
-    def get_logger(self, logger_name, create_file=False):
+    def get_logger(self, log_name, create_file=False):
 
         # create logger
         log = logging.getLogger()
@@ -33,9 +35,10 @@ class SqsConsumer:
             else:
                 log.setLevel(level=logging.ERROR)
 
+        fh = None
         if create_file:
             # create file handler for logger.
-            fh = logging.FileHandler('KafkaPublisher.log')
+            fh = logging.FileHandler(log_name)
             fh.setFormatter(formatter)
 
         # create console handler for logger.
@@ -50,18 +53,18 @@ class SqsConsumer:
         return log
 
     def connect(self):
-        boto_session = boto3.Session(aws_access_key_id=self.cred['access_key'],
-                                     aws_secret_access_key=self.cred['secret_key'])
+        boto_session = boto3.Session(aws_access_key_id=self.cred['sandbox']['access_key'],
+                                     aws_secret_access_key=self.cred['sandbox']['secret_key'])
         # Get the queue. This returns an SQS.Queue instance
         sqs_session = boto_session.resource('sqs')
         sqs_queue = sqs_session.Queue(self.conf['sqs_url'])
         return sqs_queue
 
-    def receive_messges(self, queue):
-        self.logger.debug("Receive messages")
+    def receive_messages(self, queue):
+        self.logger.info("Receive messages")
         while True:
             sqs_messages = queue.receive_messages(MaxNumberOfMessages=10, WaitTimeSeconds=20)
-            self.logger.debug("Received %d messages." % len(sqs_messages))
+            self.logger.info("Received %d messages." % len(sqs_messages))
 
             for sqs_message in sqs_messages:
                 try:
@@ -69,7 +72,8 @@ class SqsConsumer:
                     dt_start = datetime.now(tz=timezone.utc)
                     self.logger.info("Started processing message")
 
-                    # jsonStringForOneStop = json.loads(sqsMessage.body)['Message']
+                    message_content = json.loads(sqs_message.body)['Records']
+                    self.logger.info("message_content: " + str(message_content))
                     # self.logger.debug("Retrieved JSON metadata from message body: %s" % jsonStringForOneStop)
                     #
                     # fileMetadataUrl = baseMetadataUrl + '/' + json.loads(jsonStringForOneStop)['discovery'][
@@ -83,13 +87,14 @@ class SqsConsumer:
                     # response.raise_for_status()
 
                     sqs_message.delete()
-                    self.logger.debug("The SQS message has been deleted.")
+                    self.logger.info("The SQS message has been deleted.")
 
                     dt_end = datetime.now(tz=timezone.utc)
                     processing_time = dt_end - dt_start
 
-                    self.logger.info("Completed processing message (s):" + str(processing_time.milliseconds * 1000))
+                    self.logger.info("Completed processing message (s):" + str(processing_time.microseconds * 1000))
 
                 except:
                     self.logger.exception(
-                        "An exception was thrown while processing a message, but this program will continue. The message will not be deleted from the SQS queue. The message was: %s" % sqsMessage.body)
+                        "An exception was thrown while processing a message, but this program will continue. The "
+                        "message will not be deleted from the SQS queue. The message was: %s" % sqs_message.body)

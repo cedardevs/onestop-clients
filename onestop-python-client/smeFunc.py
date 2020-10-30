@@ -1,5 +1,5 @@
 from onestop.consumer import consume
-from onestop.producer import produce
+from onestop.producer_legacy_script import produce
 import argparse
 
 def handler(key, value):

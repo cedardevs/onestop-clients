@@ -1,15 +1,13 @@
 import unittest
 
-import json
-
-from onestop.SqsConsumer import SqsConsumer
+from onestop.util.SqsConsumer import SqsConsumer
 
 class SqsConsumerTest(unittest.TestCase):
     sc = None
 
     def setUp(self):
         print("Set it up!")
-        self.sc = SqsConsumer("../config/sqs-consumer-config-dev.yml", "../config/sqs-credentials.yml")
+        self.sc = SqsConsumer("../../config/aws-util-config-dev.yml", "../../config/aws-credentials.yml")
 
     def tearDown(self):
         print("Tear it down!")
@@ -19,7 +17,7 @@ class SqsConsumerTest(unittest.TestCase):
 
     def test_poll_messages(self):
         queue = self.sc.connect()
-        self.sc.receive_messges(queue)
+        self.sc.receive_messages(queue)
 
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ from confluent_kafka.error import KafkaError
 from confluent_kafka import SerializingProducer
 from confluent_kafka.schema_registry.avro import AvroSerializer
 
+
 class KafkaPublisher:
     conf = None
 
@@ -16,8 +17,8 @@ class KafkaPublisher:
         with open(conf_loc) as f:
             self.conf = yaml.load(f, Loader=yaml.FullLoader)
 
-        self.logger = self.get_logger("KakfaPublisher", False)
-        self.logger.info('Initializing KafkaPublisher')
+        self.logger = self.get_logger("OneStop-Client", False)
+        self.logger.info("Initializing " + self.__class__.__name__)
         self.metadata_type = self.conf['metadata_type']
         self.brokers = self.conf['brokers']
         self.schema_registry = self.conf['schema_registry']
@@ -29,7 +30,7 @@ class KafkaPublisher:
         if self.metadata_type not in ['COLLECTION', 'GRANULE']:
             raise ValueError("metadata_type must be 'COLLECTION' or 'GRANULE'")
 
-    def get_logger(self, logger_name, create_file=False):
+    def get_logger(self, log_name, create_file):
 
         # create logger
         log = logging.getLogger()
@@ -45,9 +46,10 @@ class KafkaPublisher:
             else:
                 log.setLevel(level=logging.ERROR)
 
+        fh = None
         if create_file:
             # create file handler for logger.
-            fh = logging.FileHandler('KafkaPublisher.log')
+            fh = logging.FileHandler(log_name)
             fh.setFormatter(formatter)
 
         # create console handler for logger.
@@ -128,12 +130,13 @@ class KafkaPublisher:
         }
         try:
             collection_producer.produce(topic=self.collection_topic, value=value_dict, key=key,
-                                             on_delivery=self.delivery_report)
+                                        on_delivery=self.delivery_report)
         except KafkaError:
             raise
         collection_producer.poll()
 
-    def publish_granule(self, granule_producer, record_uuid, collection_uuid, content_dict, file_information, file_locations):
+    def publish_granule(self, granule_producer, record_uuid, collection_uuid, content_dict, file_information,
+                        file_locations):
         self.logger.info('Publish granule')
         if type(record_uuid) == bytes:
             key = str(UUID(bytes=collection_uuid))
@@ -157,7 +160,7 @@ class KafkaPublisher:
         }
         try:
             granule_producer.produce(topic=self.granule_topic, value=value_dict, key=key,
-                                          on_delivery=self.delivery_report)
+                                     on_delivery=self.delivery_report)
         except KafkaError:
             raise
         granule_producer.poll()
