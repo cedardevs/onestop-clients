@@ -2,6 +2,9 @@
 
 This python package provides an API to connect to OneStop's event stream (aka Inventory Manager). At this early stage there is only a single module for consuming messages from the kafka brokers that back OneStop.
 
+## KafkaPublisher
+Relies on fastavro <1.0 and confluent-kafka <1.5 
+
 ## prerequisites
 You will need a kafka broker and a schema-registry running to test this package. To bring up the OneStop stack, see the [OneStop quickstart documentation](https://github.com/cedardevs/onestop/blob/master/docs/developer/quickstart.md#quick-start-kubernetes--helm--skaffold)
 
@@ -28,7 +31,7 @@ kubectl apply -f examples/pyconsumer-pod.yml
 
 At the moment, that pod will tail -f /dev/null to stay open so you can exec into the container with -
 `
-kubectl exec -it pyconsumer bash
+kubectl exec -it pod/pyconsumer -- bash
 `
 # In the container
 Manually add smeFunc.py

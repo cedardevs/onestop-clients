@@ -1,5 +1,5 @@
-from onestop_client.consumer import consume
-from onestop_client.producer import produce
+from onestop.consumer import consume
+from onestop.producer import produce
 import argparse
 
 def handler(key, value):
@@ -29,10 +29,9 @@ if __name__ == '__main__':
     cmd = config.pop('command')
     topic = config.pop('topic')
 
-    print(str(config))
-
     if (cmd=="consume"):
         consume(config, topic, lambda k, v: handler(k, v))
+
     if (cmd=="produce"):
         
         #Example content
