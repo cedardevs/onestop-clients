@@ -2,6 +2,7 @@ import logging
 from datetime import datetime, timezone
 import yaml
 import uuid
+import json
 import boto3
 import botocore
 
@@ -59,13 +60,13 @@ class S3Upload:
 
         return boto_client
 
-    def objectkey_exists(self, s3, bucket, s3_file):
+    def objectkey_exists(self, s3, bucket, s3_key):
         exists = True
         try:
             s3 = boto3.resource('s3')
-            object = s3.Object(bucket, s3_file)
-            print("load object")
-            object.load()
+            s3object = s3.Object(bucket, s3_key)
+
+            s3object.load()
 
         except botocore.exceptions.ClientError as e:
             # If a client error is thrown, then check that it was a 404 error.
@@ -75,19 +76,25 @@ class S3Upload:
                 exists = False
         return exists
 
-    def upload_file(self, boto_client, local_file, bucket, s3_file, overwrite):
+    def get_uuid_metadata(self, boto_client, bucket, s3_key):
+        self.logger.debug("Get metadata")
+        response = boto_client.head_object(Bucket=bucket, Key=s3_key)
+        self.logger.info("osim-uuid: " + response['ResponseMetadata']['HTTPHeaders']['x-amz-meta-osim-uuid'])
+        return response['ResponseMetadata']['HTTPHeaders']['x-amz-meta-osim-uuid']
+
+    def upload_file(self, boto_client, local_file, bucket, s3_key, overwrite):
         self.logger.debug("Receive messages")
 
         key_exists = False
         osim_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, 'data.noaa.gov'))
 
         if not overwrite:
-            key_exists = self.objectkey_exists(boto_client, bucket, s3_file)
+            key_exists = self.objectkey_exists(boto_client, bucket, s3_key)
 
         if (not key_exists) or (key_exists and overwrite):
             try:
-                boto_client.upload_file(local_file, bucket, s3_file,
-                    ExtraArgs={'Metadata': {'osim-uuid': osim_uuid}})
+                boto_client.upload_file(local_file, bucket, s3_key,
+                                        ExtraArgs={'Metadata': {'osim-uuid': osim_uuid}})
                 print("Upload Successful")
                 return True
             except FileNotFoundError:
