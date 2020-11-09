@@ -6,3 +6,4 @@ setuptools~=49.2.0
 argparse~=1.4.0
 boto3~=1.15.11
 requests~=2.24.0
+botocore~=1.18.11
