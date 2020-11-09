@@ -1,4 +1,5 @@
 import json
+import boto3
 import requests
 
 import conf
@@ -16,8 +17,6 @@ def lambda_handler(event, context):
 
         msg = json.loads(body)
 
-        #print(msg)
-        # msg = json.loads(msg_json['Message'])
         recs = msg['Records']
 
         rec = recs[0]  # This is standard format 1 record per message for now according to AWS docs
@@ -47,7 +46,9 @@ def lambda_handler(event, context):
             relationship['id'] = str(conf.COLLECTION_ID)
             im_message.append_relationship(relationship)
 
-            s3_obj_uri = "s3://" + rec['s3']['bucket']['name'] + "/" + rec['s3']['object']['key']
+            bucket = rec['s3']['bucket']['name']
+            s3_key = rec['s3']['object']['key']
+            s3_obj_uri = bucket + "/" + s3_key
             file_message = FileMessage(s3_obj_uri, "ARCHIVE", True, "Amazon:AWS:S3", False)
 
             im_message.set_file_locations(file_message)
@@ -75,6 +76,12 @@ def lambda_handler(event, context):
             print(payload)
 
             headers = {'Content-Type': 'application/json'}
+
+            print("Get uuid")
+            boto_client = boto3.client("s3")
+
+            meta_response = boto_client.head_object(Bucket=bucket, Key=s3_key)
+            osim_uuid = meta_response['ResponseMetadata']['HTTPHeaders']['x-amz-meta-osim-uuid']
 
             print("Posting to: " + registry_url)
             r = requests.post(url=registry_url, headers=headers, data=payload, verify=False)
