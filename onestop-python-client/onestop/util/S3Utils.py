@@ -7,7 +7,7 @@ import boto3
 import botocore
 
 
-class S3Upload:
+class S3Utils:
     conf = None
 
     def __init__(self, conf_loc, cred_loc):
@@ -55,8 +55,8 @@ class S3Upload:
         return log
 
     def connect(self):
-        boto_client = boto3.client("s3", aws_access_key_id=self.cred['odp']['access_key'],
-                                   aws_secret_access_key=self.cred['odp']['secret_key'])
+        boto_client = boto3.client("s3", aws_access_key_id=self.cred['sandbox']['access_key'],
+                                   aws_secret_access_key=self.cred['sandbox']['secret_key'])
 
         return boto_client
 
@@ -79,14 +79,16 @@ class S3Upload:
     def get_uuid_metadata(self, boto_client, bucket, s3_key):
         self.logger.debug("Get metadata")
         response = boto_client.head_object(Bucket=bucket, Key=s3_key)
-        self.logger.info("osim-uuid: " + response['ResponseMetadata']['HTTPHeaders']['x-amz-meta-osim-uuid'])
-        return response['ResponseMetadata']['HTTPHeaders']['x-amz-meta-osim-uuid']
+        self.logger.info("bucket: " + bucket)
+        self.logger.info("key: " + s3_key)
+        self.logger.info("object-uuid: " + response['ResponseMetadata']['HTTPHeaders']['x-amz-meta-object-uuid'])
+        return response['ResponseMetadata']['HTTPHeaders']['x-amz-meta-object-uuid']
 
     def upload_file(self, boto_client, local_file, bucket, s3_key, overwrite):
         self.logger.debug("Receive messages")
 
         key_exists = False
-        osim_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, 'data.noaa.gov'))
+        obj_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, 'data.noaa.gov'))
 
         if not overwrite:
             key_exists = self.objectkey_exists(boto_client, bucket, s3_key)
@@ -94,7 +96,7 @@ class S3Upload:
         if (not key_exists) or (key_exists and overwrite):
             try:
                 boto_client.upload_file(local_file, bucket, s3_key,
-                                        ExtraArgs={'Metadata': {'osim-uuid': osim_uuid}})
+                                        ExtraArgs={'Metadata': {'object-uuid': obj_uuid}})
                 print("Upload Successful")
                 return True
             except FileNotFoundError:
