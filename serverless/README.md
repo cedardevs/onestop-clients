@@ -14,3 +14,6 @@ Current implementation assumes a one-to-one mapping of SNS -> SQS -> LAMBDA -> P
 - Make sure SQS trigger is enabled for the lambda
 - Ensure lambda has access to the VPC running OSIM (or use basic auth) to publish to registry
 - onestop-clients has an S3Upload test you can use to upload files to s3
+- Delete curl -k --user user1:mypwd -X DELETE https://ab76afcf90ee844ea95ba43a75c3624c-1204932138.us-east-1.elb.amazonaws.com/registry/metadata/granule/$uuid
+
+#### Access Policy
