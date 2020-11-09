@@ -56,15 +56,19 @@ class SqsConsumer:
         boto_session = boto3.Session(aws_access_key_id=self.cred['sandbox']['access_key'],
                                      aws_secret_access_key=self.cred['sandbox']['secret_key'])
         # Get the queue. This returns an SQS.Queue instance
-        sqs_session = boto_session.resource('sqs')
+        sqs_session = boto_session.resource('sqs', region_name=self.conf['region'])
         sqs_queue = sqs_session.Queue(self.conf['sqs_url'])
         return sqs_queue
 
-    def receive_messages(self, queue):
+    def receive_messages(self, queue, debug):
         self.logger.info("Receive messages")
-        while True:
-            sqs_messages = queue.receive_messages(MaxNumberOfMessages=10, WaitTimeSeconds=20)
+        continue_polling = True
+
+        while continue_polling:
+            continue_polling = not debug
+            sqs_messages = queue.receive_messages(MaxNumberOfMessages=10, WaitTimeSeconds=10)
             self.logger.info("Received %d messages." % len(sqs_messages))
+            records_content = []
 
             for sqs_message in sqs_messages:
                 try:
@@ -72,8 +76,17 @@ class SqsConsumer:
                     dt_start = datetime.now(tz=timezone.utc)
                     self.logger.info("Started processing message")
 
-                    message_content = json.loads(sqs_message.body)['Records']
-                    self.logger.info("message_content: " + str(message_content))
+                    message_content = json.loads(sqs_message.body)
+
+                    if 'Records' in message_content:
+                        records_content = message_content['Records']
+                    else:
+                        self.logger.info("s3 event without records content received.")
+
+                    # Grab osim-uuid here
+
+                    # Translate to IM message format
+
                     # self.logger.debug("Retrieved JSON metadata from message body: %s" % jsonStringForOneStop)
                     #
                     # fileMetadataUrl = baseMetadataUrl + '/' + json.loads(jsonStringForOneStop)['discovery'][
@@ -93,8 +106,11 @@ class SqsConsumer:
                     processing_time = dt_end - dt_start
 
                     self.logger.info("Completed processing message (s):" + str(processing_time.microseconds * 1000))
+                    return records_content
 
                 except:
                     self.logger.exception(
                         "An exception was thrown while processing a message, but this program will continue. The "
                         "message will not be deleted from the SQS queue. The message was: %s" % sqs_message.body)
+
+            print("continue_polling:" + str(continue_polling))
