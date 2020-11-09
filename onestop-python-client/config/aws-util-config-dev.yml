@@ -2,5 +2,6 @@
 log_level: INFO
 
 # AWS config values
-sqs_url: https://sqs.us-east-1.amazonaws.com/282856304593/noaa-nesdis-ncei-csb-sqs-test
-s3_bucket: odp-noaa-nesdis-ncei-csb-test
+sqs_url: https://sqs.us-east-1.amazonaws.com/282856304593/nesdis-ncei-csb-dev-sqs
+region: "us-east-1"
+s3_bucket: nesdis-ncei-csb-dev
