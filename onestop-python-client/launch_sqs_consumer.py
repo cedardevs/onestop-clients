@@ -17,7 +17,7 @@ if __name__ == '__main__':
     queue = sqs_consumer.connect()
 
     #Use call back here?
-    debug = True
+    debug = False
     recs = sqs_consumer.receive_messages(queue, debug)
 
     # Now get boto client for object-uuid retrieval
