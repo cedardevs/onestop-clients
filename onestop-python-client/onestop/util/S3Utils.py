@@ -51,8 +51,8 @@ class S3Utils:
         if create_file:
             log.addHandler(fh)
 
-        log.addHandler(ch)
         return log
+
 
     def connect(self):
         boto_client = boto3.client("s3", aws_access_key_id=self.cred['sandbox']['access_key'],
