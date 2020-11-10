@@ -16,13 +16,13 @@ class SqsConsumer:
         with open(cred_loc) as f:
             self.cred = yaml.load(f, Loader=yaml.FullLoader)
 
-        self.setup_logger("OneStop-Client", False)
+        self.setup_logger(self.__class__.__name__, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
     def setup_logger(self, log_name, create_file=False):
 
         # create logger
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger(self.__class__.__name__)
 
         # create formatter and add it to the handlers
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -48,6 +48,8 @@ class SqsConsumer:
         # add handlers to logger.
         if create_file:
             self.logger.addHandler(fh)
+
+        self.logger.addHandler(ch)
 
     def connect(self):
         boto_session = boto3.Session(aws_access_key_id=self.cred['sandbox']['access_key'],
@@ -97,6 +99,7 @@ class SqsConsumer:
                     # response.raise_for_status()
 
                     sqs_message.delete()
+
                     self.logger.info("The SQS message has been deleted.")
 
                     dt_end = datetime.now(tz=timezone.utc)
