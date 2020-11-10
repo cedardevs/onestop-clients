@@ -16,24 +16,24 @@ class SqsConsumer:
         with open(cred_loc) as f:
             self.cred = yaml.load(f, Loader=yaml.FullLoader)
 
-        self.logger = self.get_logger("OneStop-Client", False)
+        self.setup_logger("OneStop-Client", False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
-    def get_logger(self, log_name, create_file=False):
+    def setup_logger(self, log_name, create_file=False):
 
         # create logger
-        log = logging.getLogger()
+        self.logger = logging.getLogger()
 
         # create formatter and add it to the handlers
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
         if self.conf['log_level'] == "DEBUG":
-            log.setLevel(level=logging.DEBUG)
+            self.logger.setLevel(level=logging.DEBUG)
         else:
             if self.conf['log_level'] == "INFO":
-                log.setLevel(level=logging.INFO)
+                self.logger.setLevel(level=logging.INFO)
             else:
-                log.setLevel(level=logging.ERROR)
+                self.logger.setLevel(level=logging.ERROR)
 
         fh = None
         if create_file:
@@ -47,10 +47,7 @@ class SqsConsumer:
 
         # add handlers to logger.
         if create_file:
-            log.addHandler(fh)
-
-        log.addHandler(ch)
-        return log
+            self.logger.addHandler(fh)
 
     def connect(self):
         boto_session = boto3.Session(aws_access_key_id=self.cred['sandbox']['access_key'],
