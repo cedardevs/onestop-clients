@@ -2,15 +2,15 @@
 class FileMessage:
     
     obj_uri = None
-    location = { }
+    location = {}
     
-    def __init__(self, uri, locType, rest, sType, asyncRetr):
+    def __init__(self, uri, loc_type, rest, s_type, async_retr):
         self.obj_uri = uri
         self.location['uri'] = uri
-        self.location['type'] = locType
+        self.location['type'] = loc_type
         self.location['restricted'] = rest
-        self.location['serviceType'] = sType
-        self.location['asynchronous'] = asyncRetr
+        self.location['serviceType'] = s_type
+        self.location['asynchronous'] = async_retr
 
 
     

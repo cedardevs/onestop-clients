@@ -49,7 +49,7 @@ class WebPublisher:
 
         self.logger.addHandler(ch)
 
-    def publish(self, metadata_type, uuid, payload):
+    def publish_registry(self, metadata_type, uuid, payload):
 
         headers = {'Content-Type': 'application/json'}
 

@@ -1,6 +1,4 @@
-
 class Link:
-
     #   Example
     #   {
     #     "linkFunction": "download",
@@ -9,19 +7,11 @@ class Link:
     #     "linkUrl": "<object_store_url>"
     #   }
 
-    
-    attributes = { }
-    
+    attributes = {}
+
     # parameterized constructor
     def __init__(self, func, name, proto, url):
         self.attributes['linkFunction'] = func
         self.attributes['linkName'] = name
         self.attributes['linkProtocol'] = proto
         self.attributes['linkUrl'] = url
-
-    
-
-
-      
-    
-

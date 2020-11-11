@@ -23,17 +23,32 @@ class S3UtilsTest(unittest.TestCase):
         self.assertTrue(self.su.get_uuid_metadata(boto_client, bucket, s3_key)=="9f0a5ff2-fcc0-5bcb-a225-024b669c9bba")
 
 
-    def test_upload(self):
-        boto_client = self.su.connect()
+    def test_upload_s3(self):
+        boto_client = self.su.connect("s3", None)
         local_file = "../data/file1.csv"
         s3_file = "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
         overwrite = True
 
-        self.assertTrue(self.su.upload_file(boto_client, local_file, bucket, s3_file, overwrite))
+        self.assertTrue(self.su.upload_s3(boto_client, local_file, bucket, s3_file, overwrite))
+
+    def test_upload_archive(self):
+        key = "csv/file1.csv"
+        bucket = self.su.conf['s3_bucket']
+        s3 = self.su.connect("s3", self.su.conf['region'])
+        file_data = self.su.read_bytes_s3(s3, bucket, key)
+        glacier = self.su.connect("glacier", self.su.conf['region'])
+        vault_name = self.su.conf['vault_name']
+        bucket = self.su.conf['s3_bucket']
+        resp_dict = self.su.upload_archive(glacier, vault_name, file_data)
+        #print(str(resp_dict))
+        print("archiveLocation: " + resp_dict['location'])
+        print("archiveId: " + resp_dict['archiveId'])
+        print("sha256: " + resp_dict['checksum'])
+        self.assertTrue(resp_dict['location']!=None)
 
     def test_uploads(self):
-        boto_client = self.su.connect()
+        boto_client = self.su.connect("s3")
         local_files = ["file1.csv", "file2.csv", "file3.csv"]
         bucket = self.su.conf['s3_bucket']
         overwrite = True

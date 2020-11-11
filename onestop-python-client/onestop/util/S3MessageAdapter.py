@@ -61,8 +61,8 @@ class S3MessageAdapter:
         im_message = ImMessage()
         pos = rec['s3']['object']['key'].rfind('/') + 1
 
-        im_message.alg['algorithm'] = "MD5"
-        # REVIEWME what to do if multipart upload
+        im_message.alg['algorithm'] = "MD5" #or perhaps Etag
+        # REVIEW  ME what to do if multipart upload
         im_message.alg_value['value'] = rec['s3']['object']['eTag']
 
         file_name = str(rec['s3']['object']['key'])[pos:]
@@ -94,11 +94,11 @@ class S3MessageAdapter:
         im_message.discovery['parentIdentifier'] = self.conf['collection_id']
         im_message.discovery['fileIdentifier'] = "gov.noaa.ncei.csb:" + file_name[:-4]
 
-        link = Link("download", "Amazon S3", "HTTPS", access_obj_uri)
-        im_message.append_link_attributes(link)
+        https_link = Link("download", "Amazon S3", "HTTPS", access_obj_uri)
+        im_message.links.append(https_link.attributes)
 
-        link = Link("download", "Amazon S3", "Amazon:AWS:S3", s3_obj_uri)
-        im_message.append_link_attributes(link)
+        s3_link = Link("download", "Amazon S3", "Amazon:AWS:S3", s3_obj_uri)
+        im_message.links = [s3_link.attributes, https_link.attributes]
 
         payload = im_message.serialize()
 

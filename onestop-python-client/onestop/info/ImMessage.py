@@ -27,6 +27,7 @@ class ImMessage:
         self.file_locations[file_message.obj_uri] = file_message.location
 
     def append_link_attributes(self, link):
+        print(link.attributes)
         self.links.append(link.attributes)
 
     def append_relationship(self, relationship):
