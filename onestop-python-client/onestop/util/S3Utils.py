@@ -1,8 +1,6 @@
 import logging
-from datetime import datetime, timezone
 import yaml
 import uuid
-import json
 import boto3
 import botocore
 
