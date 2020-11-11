@@ -17,7 +17,7 @@ class KafkaPublisher:
         with open(conf_loc) as f:
             self.conf = yaml.load(f, Loader=yaml.FullLoader)
 
-        self.logger = self.get_logger("OneStop-Client", False)
+        self.logger = self.get_logger(self.__class__.__name__, False)
         self.logger.info("Initializing " + self.__class__.__name__)
         self.metadata_type = self.conf['metadata_type']
         self.brokers = self.conf['brokers']

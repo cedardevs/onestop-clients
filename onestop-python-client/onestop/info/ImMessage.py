@@ -1,7 +1,4 @@
 import json
-from FileMessage import FileMessage
-from Link import Link
-
 
 class ImMessage:
     # File Information
@@ -43,10 +40,10 @@ class ImMessage:
         payload['relationships'] = self.relationships
         payload['fileLocations'] = self.file_locations
         payload['discovery'] = self.discovery
-        json_payload = json.dumps(payload, indent=4)
+        json_payload = json.dumps(payload, indent=2)
 
         print("IM Message:")
         print(json_payload)
 
-        # Return the dictionary or json???
+        # Return
         return json_payload

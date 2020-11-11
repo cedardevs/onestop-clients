@@ -59,12 +59,11 @@ class SqsConsumer:
         sqs_queue = sqs_session.Queue(self.conf['sqs_url'])
         return sqs_queue
 
-    def receive_messages(self, queue, debug):
+    def receive_messages(self, queue):
         self.logger.info("Receive messages")
         continue_polling = True
 
         while continue_polling:
-            continue_polling = not debug
             sqs_messages = queue.receive_messages(MaxNumberOfMessages=10, WaitTimeSeconds=10)
             self.logger.info("Received %d messages." % len(sqs_messages))
             records_content = []
@@ -78,7 +77,7 @@ class SqsConsumer:
                     message_content = json.loads(sqs_message.body)
 
                     if 'Records' in message_content:
-                        records_content = message_content['Records']
+                        recs = message_content['Records']
                     else:
                         self.logger.info("s3 event without records content received.")
 
@@ -106,7 +105,7 @@ class SqsConsumer:
                     processing_time = dt_end - dt_start
 
                     self.logger.info("Completed processing message (s):" + str(processing_time.microseconds * 1000))
-                    return records_content
+                    return recs
 
                 except:
                     self.logger.exception(

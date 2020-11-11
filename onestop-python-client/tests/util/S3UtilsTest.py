@@ -7,7 +7,7 @@ class S3UtilsTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
-        self.su = S3Utils("../../config/aws-util-config-dev.yml", "../../config/aws-credentials.yml")
+        self.su = S3Utils("../../config/aws-util-config-dev.yml", "../../config/credentials.yml")
 
     def tearDown(self):
         print("Tear it down!")
