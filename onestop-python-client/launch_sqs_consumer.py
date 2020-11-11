@@ -18,12 +18,12 @@ if __name__ == '__main__':
 
     #Use call back here?
     debug = False
-    recs = sqs_consumer.receive_messages(queue, debug)
+    recs = sqs_consumer.receive_messages(queue)
+    print(recs)
 
     # Now get boto client for object-uuid retrieval
     print("initializing from launch_sqs_consumer")
     s3_utils = S3Utils(conf_loc, cred_loc)
-
     boto_client = s3_utils.connect()
 
     if recs is None:
