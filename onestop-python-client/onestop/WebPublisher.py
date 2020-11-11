@@ -55,7 +55,7 @@ class WebPublisher:
 
         registry_url = self.conf['url'] + "/metadata/" + metadata_type + "/" + uuid
         print("Posting to: " + registry_url)
-        r = requests.post(url=registry_url, headers=headers, auth=(self.cred['registry']['username'],
+        response = requests.post(url=registry_url, headers=headers, auth=(self.cred['registry']['username'],
                                                                    self.cred['registry']['password']),
                           data=payload, verify=False)
-        return r
+        return response
