@@ -17,7 +17,7 @@ class SqsConsumer:
         with open(cred_loc) as f:
             self.cred = yaml.load(f, Loader=yaml.FullLoader)
 
-        self.logger = ClientLogger.get_logger(self.__class__.__name__, "DEBUG", False)
+        self.logger = ClientLogger.get_logger(self.__class__.__name__, self.conf['log_level'], False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
     def connect(self):
