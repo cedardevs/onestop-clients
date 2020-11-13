@@ -24,18 +24,22 @@ class ImMessage:
     file_locations = {}
 
     def set_file_locations(self, file_message):
-        self.file_locations[file_message.obj_uri] = file_message.location
+        fm_location_copy = file_message.location.copy()
+        self.file_locations[file_message.obj_uri] = fm_location_copy
 
     def append_link_attributes(self, link):
-        print(link.attributes)
-        self.links.append(link.attributes)
+        link_copy = link.copy()
+        self.links.append(link_copy)
 
     def append_relationship(self, relationship):
         self.relationships.append(relationship)
 
     discovery = {'links': links}
 
+
     def serialize(self):
+        print(str(self.links))
+
         payload = {}
         payload['file_information'] = self.file_information
         payload['relationships'] = self.relationships
