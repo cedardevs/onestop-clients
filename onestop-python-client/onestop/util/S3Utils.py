@@ -5,6 +5,8 @@ import boto3
 import botocore
 from botocore.exceptions import ClientError
 
+from onestop.util.ClientLogger import ClientLogger
+
 
 class S3Utils:
     conf = None
@@ -17,40 +19,9 @@ class S3Utils:
         with open(cred_loc) as f:
             self.cred = yaml.load(f, Loader=yaml.FullLoader)
 
-        self.setup_logger(self.__class__.__name__, False)
+        self.logger = ClientLogger.get_logger(self.__class__.__name__, "DEBUG", False)
+
         self.logger.info("Initializing " + self.__class__.__name__)
-
-    def setup_logger(self, log_name, create_file=False):
-
-        # create logger
-        self.logger = logging.getLogger(self.__class__.__name__)
-
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-        if self.conf['log_level'] == "DEBUG":
-            self.logger.setLevel(level=logging.DEBUG)
-        else:
-            if self.conf['log_level'] == "INFO":
-                self.logger.setLevel(level=logging.INFO)
-            else:
-                self.logger.setLevel(level=logging.ERROR)
-
-        fh = None
-        if create_file:
-            # create file handler for logger.
-            fh = logging.FileHandler(log_name)
-            fh.setFormatter(formatter)
-
-        # create console handler for logger.
-        ch = logging.StreamHandler()
-        ch.setFormatter(formatter)
-
-        # add handlers to logger.
-        if create_file:
-            self.logger.addHandler(fh)
-
-        self.logger.addHandler(ch)
 
     def connect(self, client_type, region):
 
@@ -90,7 +61,7 @@ class S3Utils:
         self.logger.debug("Receive messages")
 
         key_exists = False
-        obj_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, 'data.noaa.gov'))
+        obj_uuid = str(uuid.uuid4())
 
         if not overwrite:
             key_exists = self.objectkey_exists(boto_client, bucket, s3_key)
