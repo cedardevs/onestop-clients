@@ -17,10 +17,12 @@ class S3MessageAdapter:
 
     def transform(self, recs):
         self.logger.info("Transform!")
-
+        im_message = None
         rec = recs[0]  # This is standard format 1 record per message for now according to AWS docs
 
         im_message = ImMessage()
+        im_message.links = []
+
         pos = rec['s3']['object']['key'].rfind('/') + 1
 
         im_message.alg['algorithm'] = "MD5"  # or perhaps Etag
@@ -33,9 +35,8 @@ class S3MessageAdapter:
         im_message.file_format['format'] = self.conf['format']
         im_message.headers['headers'] = self.conf['headers']
 
-        relationship = { }
-        relationship['type'] = str(self.conf['type'])
-        relationship['id'] = str(self.conf['collection_id'])
+        relationship = {'type': str( self.conf['type'] ),
+                        'id': str( self.conf['collection_id'] )}
         im_message.append_relationship(relationship)
 
         bucket = rec['s3']['bucket']['name']
@@ -43,14 +44,14 @@ class S3MessageAdapter:
         s3_obj_uri = "s3://" + bucket + "/" + s3_key
         file_message = FileMessage(s3_obj_uri, "ARCHIVE", True, "Amazon:AWS:S3", False)
 
-        im_message.set_file_locations(file_message)
+        im_message.append_file_message(file_message)
 
         access_obj_uri = self.conf['access_bucket'] + "/" + rec['s3']['object']['key']
         file_message = FileMessage(access_obj_uri, "ACCESS", False, "HTTPS", False)
 
         # file_message.fl_lastMod['lastModified'] = TBD ISO conversion to millis
 
-        im_message.set_file_locations(file_message)
+        im_message.append_file_message(file_message)
 
         # Discovery block
         im_message.discovery['title'] = file_name
@@ -58,13 +59,10 @@ class S3MessageAdapter:
         im_message.discovery['fileIdentifier'] = "gov.noaa.ncei.csb:" + file_name[:-4]
 
         https_link = Link("download", "Amazon S3", "HTTPS", access_obj_uri)
-        im_message.append_link_attributes(https_link.attributes)
+        im_message.append_link(https_link)
 
         s3_link = Link("download", "Amazon S3", "Amazon:AWS:S3", s3_obj_uri)
-        im_message.append_link_attributes(s3_link.attributes)
-
-
-        print("Length of links list: " + str(len(im_message.links)))
+        im_message.append_link(s3_link)
 
         payload = im_message.serialize()
 

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import yaml
 import boto3
 import json
-from onestop.util import ClientLogger
+from onestop.util.ClientLogger import ClientLogger
 
 
 class SqsConsumer:
@@ -28,14 +28,16 @@ class SqsConsumer:
         sqs_queue = sqs_session.Queue(self.conf['sqs_url'])
         return sqs_queue
 
-    def receive_messages(self, queue):
+    def receive_messages(self, queue, sqs_max_polls, cb):
         self.logger.info("Receive messages")
-        continue_polling = True
 
-        while continue_polling:
+        i = 1
+        while i <= sqs_max_polls:
+            print("loop attempt: " + str(i))
+            i = i + 1
+
             sqs_messages = queue.receive_messages(MaxNumberOfMessages=10, WaitTimeSeconds=10)
             self.logger.info("Received %d messages." % len(sqs_messages))
-            records_content = []
 
             for sqs_message in sqs_messages:
                 try:
@@ -50,22 +52,6 @@ class SqsConsumer:
                     else:
                         self.logger.info("s3 event without records content received.")
 
-                    # Grab osim-uuid here
-
-                    # Translate to IM message format
-
-                    # self.logger.debug("Retrieved JSON metadata from message body: %s" % jsonStringForOneStop)
-                    #
-                    # fileMetadataUrl = baseMetadataUrl + '/' + json.loads(jsonStringForOneStop)['discovery'][
-                    #     'fileIdentifier']
-                    # self.logger.debug("Will push the metadata to \"%s\"." % fileMetadataUrl)
-                    #
-                    # response = requests.put(fileMetadataUrl, headers={'Content-Type': "application/json"},
-                    #                         data=jsonStringForOneStop)
-                    # logger.debug("HTTP PUT response status code: %d. Response body: %s", response.status_code,
-                    #              response.text)
-                    # response.raise_for_status()
-
                     sqs_message.delete()
 
                     self.logger.info("The SQS message has been deleted.")
@@ -74,11 +60,9 @@ class SqsConsumer:
                     processing_time = dt_end - dt_start
 
                     self.logger.info("Completed processing message (s):" + str(processing_time.microseconds * 1000))
-                    return recs
+                    cb(recs)
 
                 except:
                     self.logger.exception(
                         "An exception was thrown while processing a message, but this program will continue. The "
                         "message will not be deleted from the SQS queue. The message was: %s" % sqs_message.body)
-
-            print("continue_polling:" + str(continue_polling))

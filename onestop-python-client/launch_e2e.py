@@ -4,45 +4,15 @@ from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.WebPublisher import WebPublisher
 
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Launches e2e test")
-    parser.add_argument('-conf', dest="conf", required=True,
-                        help="AWS config filepath")
-
-    parser.add_argument('-cred', dest="cred", required=True,
-                        help="Credentials filepath")
-    args = vars(parser.parse_args())
-
-    conf_loc = args.pop('conf')
-    cred_loc = args.pop('cred')
-
-    s3_utils = S3Utils(conf_loc, cred_loc)
-    s3 = s3_utils.connect("s3", None)
-    local_file = "tests/data/file1.csv"
-    s3_file = "csv/file1.csv"
-    bucket = s3_utils.conf['s3_bucket']
-    overwrite = True
-
-    s3_utils.upload_s3(s3, local_file, bucket, s3_file, overwrite)
-
-    sqs_consumer = SqsConsumer(conf_loc, cred_loc)
-    s3ma = S3MessageAdapter("config/csb-data-stream-config.yml")
-    wp = WebPublisher("config/web-publisher-config-dev.yml", cred_loc)
-
-    queue = sqs_consumer.connect()
-
-    #Use call back here?
-    debug = False
-    recs = sqs_consumer.receive_messages(queue)
-    print(recs)
+def handler(recs):
+    print("Handler...")
 
     # Now get boto client for object-uuid retrieval
     object_uuid = None
+    bucket = None
 
     if recs is None:
-        print("No records retrieved")
+        print( "No records retrieved" )
     else:
         rec = recs[0]
         bucket = rec['s3']['bucket']['name']
@@ -56,17 +26,62 @@ if __name__ == '__main__':
     registry_response = wp.publish_registry("granule", object_uuid, payload)
     print(registry_response.json())
 
-    #Upload to archive
+    # Upload to archive
     file_data = s3_utils.read_bytes_s3(s3, bucket, s3_key)
     glacier = s3_utils.connect("glacier", s3_utils.conf['region'])
     vault_name = s3_utils.conf['vault_name']
-    bucket = s3_utils.conf['s3_bucket']
-    resp_dict = s3_utils.upload_archive(glacier, vault_name, file_data)
+
+    resp_dict = s3_utils.upload_archive( glacier, vault_name, file_data )
 
     # print(str(resp_dict))
-    print("archiveLocation: " + resp_dict['location'])
-    print("archiveId: " + resp_dict['archiveId'])
-    print("sha256: " + resp_dict['checksum'])
+    print( "archiveLocation: " + resp_dict['location'] )
+    print( "archiveId: " + resp_dict['archiveId'] )
+    print( "sha256: " + resp_dict['checksum'] )
 
+    # Send patch request next with archive location
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Launches e2e test")
+    parser.add_argument('-conf', dest="conf", required=True,
+                        help="AWS config filepath")
+
+    parser.add_argument('-cred', dest="cred", required=True,
+                        help="Credentials filepath")
+    args = vars(parser.parse_args())
+
+    # Get configuration file path locations
+    conf_loc = args.pop('conf')
+    cred_loc = args.pop('cred')
+
+
+    # Upload a test file to s3 bucket
+    s3_utils = S3Utils(conf_loc, cred_loc)
+    s3 = s3_utils.connect("s3", None)
+    bucket = s3_utils.conf['s3_bucket']
+    overwrite = True
+
+    sqs_max_polls =s3_utils.conf['sqs_max_polls']
+
+    # Add 3 files to bucket
+    local_files = ["file1.csv", "file2.csv"]
+    s3_file = None
+    for file in local_files:
+        local_file = "tests/data/" + file
+        s3_file = "csv/" + file
+        s3_utils.upload_s3(s3, local_file, bucket, s3_file, overwrite)
+
+    # Receive s3 message and MVM from SQS queue
+    sqs_consumer = SqsConsumer(conf_loc, cred_loc)
+    s3ma = S3MessageAdapter("config/csb-data-stream-config.yml")
+    wp = WebPublisher("config/web-publisher-config-dev.yml", cred_loc)
+
+    queue = sqs_consumer.connect()
+    try:
+        # TBD Use call back here for multiple message processing
+        debug = False
+        sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
+
+    except Exception as e:
+        print("Message queue consumption failed: {}".format(e))
 
 

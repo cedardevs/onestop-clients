@@ -48,7 +48,7 @@ class S3UtilsTest(unittest.TestCase):
         self.assertTrue(resp_dict['location']!=None)
 
     def test_uploads(self):
-        boto_client = self.su.connect("s3")
+        boto_client = self.su.connect("s3", None)
         local_files = ["file1.csv", "file2.csv", "file3.csv"]
         bucket = self.su.conf['s3_bucket']
         overwrite = True
@@ -56,7 +56,7 @@ class S3UtilsTest(unittest.TestCase):
         for file in local_files:
             local_file = "../data/" + file
             s3_file = "csv/" + file
-            self.assertTrue(self.su.upload_file(boto_client, local_file, bucket, s3_file, overwrite))
+            self.assertTrue(self.su.upload_s3(boto_client, local_file, bucket, s3_file, overwrite))
 
 if __name__ == '__main__':
     unittest.main()
