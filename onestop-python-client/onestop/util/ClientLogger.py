@@ -4,10 +4,10 @@ import logging
 class ClientLogger:
 
     @staticmethod
-    def get_logger(self, log_name, log_level, create_file=False):
+    def get_logger(log_name, log_level, create_file=False):
 
         # create logger
-        logger = logging.getLogger(self.__class__.__name__)
+        logger = logging.getLogger(log_name)
 
         # create formatter and add it to the handlers
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')

@@ -51,7 +51,7 @@ class WebPublisherTest(unittest.TestCase):
 
     def test_publish(self):
         payload = json.dumps(self.payloadDict)
-        response = self.wp.publish("granule", self.object_uuid, payload)
+        response = self.wp.publish_registry("granule", self.object_uuid, payload)
         print (response.json())
 
 

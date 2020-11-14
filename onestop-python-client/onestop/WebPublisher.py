@@ -1,7 +1,7 @@
 import logging
 import requests
 import yaml
-
+from onestop.util.ClientLogger import ClientLogger
 
 class WebPublisher:
     conf = None
@@ -14,40 +14,8 @@ class WebPublisher:
         with open(cred_loc) as f:
             self.cred = yaml.load(f, Loader=yaml.FullLoader)
 
-        self.setup_logger(self.__class__.__name__, False)
+        self.logger = ClientLogger.get_logger(self.__class__.__name__, self.conf['log_level'], False)
         self.logger.info("Initializing " + self.__class__.__name__)
-
-    def setup_logger(self, log_name, create_file=False):
-
-        # create logger
-        self.logger = logging.getLogger(self.__class__.__name__)
-
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-        if self.conf['log_level'] == "DEBUG":
-            self.logger.setLevel(level=logging.DEBUG)
-        else:
-            if self.conf['log_level'] == "INFO":
-                self.logger.setLevel(level=logging.INFO)
-            else:
-                self.logger.setLevel(level=logging.ERROR)
-
-        fh = None
-        if create_file:
-            # create file handler for logger.
-            fh = logging.FileHandler(log_name)
-            fh.setFormatter(formatter)
-
-        # create console handler for logger.
-        ch = logging.StreamHandler()
-        ch.setFormatter(formatter)
-
-        # add handlers to logger.
-        if create_file:
-            self.logger.addHandler(fh)
-
-        self.logger.addHandler(ch)
 
     def publish_registry(self, metadata_type, uuid, payload):
 
