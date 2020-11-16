@@ -7,6 +7,7 @@ from onestop.WebPublisher import WebPublisher
 class WebPublisherTest(unittest.TestCase):
     wp = None
     object_uuid = "9f0a5ff2-fcc0-5bcb-a225-024b669c9bba"
+    collection_uuid = "fdb56230-87f4-49f2-ab83-104cfd073177"
     payloadDict = {
         "file_information": [
             {"name": "file2.csv"},
@@ -53,6 +54,28 @@ class WebPublisherTest(unittest.TestCase):
         payload = json.dumps(self.payloadDict)
         response = self.wp.publish_registry("granule", self.object_uuid, payload)
         print (response.json())
+
+    def test_get_granules(self):
+        payload = '{"queries":[],"filters":[{"type":"collection","values":["fdb56230-87f4-49f2-ab83-104cfd073177"]}],"facets":true,"page":{"max":20,"offset":0}}'
+        response = self.wp.get_granules_onestop("granule", self.collection_uuid, payload)
+        print (response.json())
+
+    def test_delete_granule(self):
+        response = self.wp.delete_registry("granule", self.object_uuid)
+        print (response.json())
+
+    def test_delete_granules(self):
+        payload = '{"queries":[],"filters":[{"type":"collection","values":["fdb56230-87f4-49f2-ab83-104cfd073177"]}],"facets":true,"page":{"max":50,"offset":0}}'
+        response = self.wp.get_granules_onestop("granule", self.collection_uuid)
+        # print(response.json())
+        response_dict = json.loads(response.text)
+        # items = response.json().items()
+        data_list = response_dict['data']
+        # print (str(data_list))
+        for item in data_list:
+            uuid = item['id']
+            self.wp.delete_registry( "granule", uuid)
+        #Loop through response
 
 
 if __name__ == '__main__':
