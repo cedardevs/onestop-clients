@@ -16,21 +16,27 @@ class S3UtilsTest(unittest.TestCase):
         self.assertFalse(self.su.conf['sqs_url']==None)
 
     def test_get_uuid_metadata(self):
-        boto_client = self.su.connect()
+        boto_client = self.su.connect("s3", None)
         s3_key = "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
 
-        self.assertTrue(self.su.get_uuid_metadata(boto_client, bucket, s3_key)=="9f0a5ff2-fcc0-5bcb-a225-024b669c9bba")
+        self.assertFalse(self.su.get_uuid_metadata(boto_client, bucket, s3_key) == None)
 
+    def test_add_uuid_metadata(self):
+        boto_client = self.su.connect("s3_resource", None)
+        s3_key = "csv/file1.csv"
+        bucket = self.su.conf['s3_bucket']
+
+        self.assertTrue(self.su.add_uuid_metadata(boto_client, bucket, s3_key))
 
     def test_upload_s3(self):
         boto_client = self.su.connect("s3", None)
         local_file = "../data/file1.csv"
-        s3_file = "csv/file1.csv"
+        s3_key= "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
         overwrite = True
 
-        self.assertTrue(self.su.upload_s3(boto_client, local_file, bucket, s3_file, overwrite))
+        self.assertTrue(self.su.upload_s3(boto_client, local_file, bucket, s3_key, overwrite))
 
     def test_upload_archive(self):
         key = "csv/file1.csv"
