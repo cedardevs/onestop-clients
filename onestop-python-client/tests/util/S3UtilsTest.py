@@ -16,7 +16,7 @@ class S3UtilsTest(unittest.TestCase):
         self.assertFalse(self.su.conf['sqs_url']==None)
 
     def test_get_uuid_metadata(self):
-        boto_client = self.su.connect("s3", None)
+        boto_client = self.su.connect("s3_resource", None)
         s3_key = "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
 

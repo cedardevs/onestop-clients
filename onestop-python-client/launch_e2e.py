@@ -18,8 +18,13 @@ def handler(recs):
         bucket = rec['s3']['bucket']['name']
         s3_key = rec['s3']['object']['key']
 
-        object_uuid = s3_utils.get_uuid_metadata(s3, bucket, s3_key)
-        print("Retrieved object-uuid: " + object_uuid)
+        object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
+        if object_uuid is not None:
+            print("Retrieved object-uuid: " + object_uuid)
+        else:
+            print("Adding uuid")
+            s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
+
 
     payload = s3ma.transform(recs)
     print(payload)
@@ -53,10 +58,15 @@ if __name__ == '__main__':
     conf_loc = args.pop('conf')
     cred_loc = args.pop('cred')
 
-
     # Upload a test file to s3 bucket
     s3_utils = S3Utils(conf_loc, cred_loc)
+
+    # Low-level api ? Can we just use high level revisit me!
     s3 = s3_utils.connect("s3", None)
+
+    # High-level api
+    s3_resource = s3_utils.connect("s3_resource", None)
+
     bucket = s3_utils.conf['s3_bucket']
     overwrite = True
 
