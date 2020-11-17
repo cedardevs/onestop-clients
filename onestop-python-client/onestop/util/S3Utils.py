@@ -27,19 +27,23 @@ class S3Utils:
         if client_type == "s3":
             boto_client = boto3.client("s3", aws_access_key_id=self.cred['sandbox']['access_key'],
                                        aws_secret_access_key=self.cred['sandbox']['secret_key'])
+
+        if client_type == "s3_resource":
+            boto_client = boto3.resource("s3", aws_access_key_id=self.cred['sandbox']['access_key'],
+                                        aws_secret_access_key=self.cred['sandbox']['secret_key'] )
+
         if client_type == "glacier":
             boto_client = boto3.client("glacier", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
                                        aws_secret_access_key=self.cred['sandbox']['secret_key'])
+
         return boto_client
 
-    def objectkey_exists(self, s3, bucket, s3_key):
+    def objectkey_exists(self, bucket, s3_key):
         exists = True
         try:
             s3 = boto3.resource('s3')
             s3object = s3.Object(bucket, s3_key)
-
             s3object.load()
-
         except botocore.exceptions.ClientError as e:
             # If a client error is thrown, then check that it was a 404 error.
             # If it was a 404 error, then the bucket does not exist.
@@ -49,12 +53,26 @@ class S3Utils:
         return exists
 
     def get_uuid_metadata(self, boto_client, bucket, s3_key):
+        obj_uuid = None
         self.logger.debug("Get metadata")
         response = boto_client.head_object(Bucket=bucket, Key=s3_key)
         self.logger.info("bucket: " + bucket)
         self.logger.info("key: " + s3_key)
-        self.logger.info("object-uuid: " + response['ResponseMetadata']['HTTPHeaders']['x-amz-meta-object-uuid'])
-        return response['ResponseMetadata']['HTTPHeaders']['x-amz-meta-object-uuid']
+        http_headers = response['ResponseMetadata']['HTTPHeaders']
+        if 'x-amz-meta-object-uuid' in http_headers:
+            self.logger.info("object-uuid: " + http_headers['x-amz-meta-object-uuid'])
+            obj_uuid = http_headers['x-amz-meta-object-uuid']
+        return obj_uuid
+
+    def add_uuid_metadata(self, boto_client, bucket, s3_key):
+        self.logger.info("Adding uuid to object metadata")
+        obj_uuid = str(uuid.uuid4())
+        s3_object = boto_client.Object(bucket, s3_key)
+        s3_object.metadata.update({'object-uuid': obj_uuid})
+        s3_object.copy_from(
+            CopySource={'Bucket': bucket, 'Key': s3_key},
+            Metadata=s3_object.metadata, MetadataDirective='REPLACE' )
+        return True
 
     def upload_s3(self, boto_client, local_file, bucket, s3_key, overwrite):
         self.logger.debug("Receive messages")
@@ -69,7 +87,7 @@ class S3Utils:
             try:
                 boto_client.upload_file(local_file, bucket, s3_key,
                                         ExtraArgs={'Metadata': {'object-uuid': obj_uuid}})
-                print("Upload Successful")
+                print("Upload successful.")
                 return True
             except FileNotFoundError:
                 print("The file was not found")
