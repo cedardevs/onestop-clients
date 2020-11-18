@@ -17,15 +17,26 @@ class WebPublisher:
         self.logger = ClientLogger.get_logger(self.__class__.__name__, self.conf['log_level'], False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
-    def publish_registry(self, metadata_type, uuid, payload):
+    def publish_registry(self, metadata_type, uuid, payload, method):
 
         headers = {'Content-Type': 'application/json'}
 
         registry_url = self.conf['registry_base_url'] + "/metadata/" + metadata_type + "/" + uuid
         print("Post: " + registry_url)
-        response = requests.post(url=registry_url, headers=headers, auth=(self.cred['registry']['username'],
-                                                                   self.cred['registry']['password']),
-                          data=payload, verify=False)
+        if method == "POST":
+            response = requests.post(url=registry_url, headers=headers, auth=(self.cred['registry']['username'],
+                                                                       self.cred['registry']['password']),
+                              data=payload, verify=False)
+
+        if method == "PATCH":
+            response = requests.patch(url=registry_url, headers=headers, auth=(self.cred['registry']['username'],
+                                                                       self.cred['registry']['password']),
+                              data=payload, verify=False)
+
+        if method == "PUT":
+            response = requests.put(url=registry_url, headers=headers, auth=(self.cred['registry']['username'],
+                                                                       self.cred['registry']['password']),
+                              data=payload, verify=False)
         return response
 
     def delete_registry(self, metadata_type, uuid):
@@ -49,8 +60,6 @@ class WebPublisher:
         return response
 
     def get_granules_onestop(self, metadata_type, uuid):
-
-        # url = 'https://ab76afcf90ee844ea95ba43a75c3624c-1204932138.us-east-1.elb.amazonaws.com/onestop-search/search/granule'
         payload = '{"queries":[],"filters":[{"type":"collection","values":["' + uuid +  '"]}],"facets":true,"page":{"max":50,"offset":0}}'
 
         headers = {'Content-Type': 'application/json'}

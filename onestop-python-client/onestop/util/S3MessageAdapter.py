@@ -25,15 +25,15 @@ class S3MessageAdapter:
 
         pos = rec['s3']['object']['key'].rfind('/') + 1
 
-        im_message.alg['algorithm'] = "MD5"  # or perhaps Etag
-        # REVIEW  ME what to do if multipart upload
-        im_message.alg_value['value'] = rec['s3']['object']['eTag']
+        im_message.alg = "MD5"  # or perhaps Etag
+        # # REVIEW  ME what to do if multipart upload
+        im_message.alg_value = rec['s3']['object']['eTag']
 
         file_name = str(rec['s3']['object']['key'])[pos:]
-        im_message.file_name['name'] = file_name
-        im_message.file_size['size'] = rec['s3']['object']['size']
-        im_message.file_format['format'] = self.conf['format']
-        im_message.headers['headers'] = self.conf['headers']
+        im_message.file_name = file_name
+        im_message.file_size = rec['s3']['object']['size']
+        im_message.file_format = self.conf['format']
+        im_message.headers = self.conf['headers']
 
         relationship = {'type': str( self.conf['type'] ),
                         'id': str( self.conf['collection_id'] )}

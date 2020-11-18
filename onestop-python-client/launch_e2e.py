@@ -1,4 +1,5 @@
 import argparse
+import json
 from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
@@ -26,9 +27,9 @@ def handler(recs):
             s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
 
-    payload = s3ma.transform(recs)
-    print(payload)
-    registry_response = wp.publish_registry("granule", object_uuid, payload)
+    json_payload = s3ma.transform(recs)
+    print(json_payload)
+    registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
     print(registry_response.json())
 
     # Upload to archive
@@ -38,12 +39,25 @@ def handler(recs):
 
     resp_dict = s3_utils.upload_archive( glacier, vault_name, file_data )
 
-    # print(str(resp_dict))
-    print( "archiveLocation: " + resp_dict['location'] )
-    print( "archiveId: " + resp_dict['archiveId'] )
-    print( "sha256: " + resp_dict['checksum'] )
+    print("archiveLocation: " + resp_dict['location'])
+    print("archiveId: " + resp_dict['archiveId'])
+    print("sha256: " + resp_dict['checksum'])
 
+    addlocPayload = {
+         "fileLocations": {
+             resp_dict['location']: {
+                 "uri": resp_dict['location'],
+                 "type": "ACCESS",
+                 "restricted": True,
+                 "locality": "us-east-1",
+                 "serviceType": "Amazon:AWS:Glacier",
+                 "asynchronous": True
+             }
+         }
+    }
+    json_payload = json.dumps(addlocPayload, indent=2)
     # Send patch request next with archive location
+    registry_response = wp.publish_registry("granule", object_uuid, json_payload, "PATCH")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Launches e2e test")
@@ -87,7 +101,6 @@ if __name__ == '__main__':
 
     queue = sqs_consumer.connect()
     try:
-        # TBD Use call back here for multiple message processing
         debug = False
         sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
 
