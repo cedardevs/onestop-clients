@@ -1,0 +1,11 @@
+# Example config values for osim client
+log_level: INFO
+
+# AWS config values
+sqs_url: https://sqs.us-east-1.amazonaws.com/282856304593/nesdis-ncei-csb-dev-sqs
+sqs_max_polls: 2
+region: "us-east-1"
+s3_bucket: nesdis-ncei-csb-dev
+vault_name: noaa-nesdis-ncei-vault-test
+
+
