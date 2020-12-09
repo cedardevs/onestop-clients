@@ -87,7 +87,6 @@ if __name__ == '__main__':
 
     sqs_max_polls =s3_utils.conf['sqs_max_polls']
 
-    '''
     # Add 3 files to bucket
     local_files = ["file1.csv", "file2.csv"]
     s3_file = None
@@ -95,7 +94,6 @@ if __name__ == '__main__':
         local_file = "tests/data/" + file
         s3_file = "csv/" + file
         s3_utils.upload_s3(s3, local_file, bucket, s3_file, overwrite)
-    '''
 
     # Receive s3 message and MVM from SQS queue
     sqs_consumer = SqsConsumer(conf_loc, cred_loc)
