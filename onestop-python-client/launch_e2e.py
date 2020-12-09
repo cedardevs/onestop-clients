@@ -18,8 +18,6 @@ def handler(recs):
         rec = recs[0]
         bucket = rec['s3']['bucket']['name']
         s3_key = rec['s3']['object']['key']
-        print('Bucket: ' + str(bucket))
-        print('s3_key' + str(s3_key))
 
         object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
         if object_uuid is not None:
@@ -28,7 +26,7 @@ def handler(recs):
             print("Adding uuid")
             s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
-    '''
+
     json_payload = s3ma.transform(recs)
     print(json_payload)
     registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
@@ -60,7 +58,7 @@ def handler(recs):
     json_payload = json.dumps(addlocPayload, indent=2)
     # Send patch request next with archive location
     registry_response = wp.publish_registry("granule", object_uuid, json_payload, "PATCH")
-    '''
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Launches e2e test")
