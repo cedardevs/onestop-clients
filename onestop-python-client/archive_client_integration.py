@@ -19,7 +19,7 @@ def handler(recs):
         bucket = rec['s3']['bucket']['name']
         s3_key = rec['s3']['object']['key']
         print('Bucket: ' + str(bucket))
-        print('s3_key' + str(s3_key))
+        print('s3_key: ' + str(s3_key))
 
         object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
         if object_uuid is not None:
