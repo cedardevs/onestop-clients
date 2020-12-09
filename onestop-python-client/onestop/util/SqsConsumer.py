@@ -45,10 +45,12 @@ class SqsConsumer:
                     dt_start = datetime.now(tz=timezone.utc)
                     self.logger.info("Started processing message")
 
-                    message_content = json.loads(sqs_message.body)
+                    message_body = json.loads(sqs_message.body)
+                    message_content = json.loads(message_body['Message'])
 
                     if 'Records' in message_content:
                         recs = message_content['Records']
+                        print('Records: ' + str(recs) )
                     else:
                         self.logger.info("s3 event without records content received.")
 

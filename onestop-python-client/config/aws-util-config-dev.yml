@@ -2,10 +2,11 @@
 log_level: INFO
 
 # AWS config values
-sqs_url: https://sqs.us-east-1.amazonaws.com/282856304593/nesdis-ncei-csb-dev-sqs
+sqs_url: https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs
 sqs_max_polls: 2
-region: "us-east-1"
-s3_bucket: nesdis-ncei-csb-dev
-vault_name: noaa-nesdis-ncei-vault-test
+region: "us-east-2"
+s3_bucket: archive-testing-demo
+vault_name: archive-vault
 
+#AWS config values for 2nd vault in different region
 
