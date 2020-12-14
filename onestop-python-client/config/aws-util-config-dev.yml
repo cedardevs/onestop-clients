@@ -9,4 +9,5 @@ s3_bucket: archive-testing-demo
 vault_name: archive-vault
 
 #AWS config values for 2nd vault in different region
-
+vault_name2: archive-vault-new
+region2: "us-west-2"

@@ -42,11 +42,14 @@ class S3MessageAdapter:
         bucket = rec['s3']['bucket']['name']
         s3_key = rec['s3']['object']['key']
         s3_obj_uri = "s3://" + bucket + "/" + s3_key
+        print('S3 URI: ' + str(s3_obj_uri))
         file_message = FileMessage(s3_obj_uri, "ARCHIVE", True, "Amazon:AWS:S3", False)
 
         im_message.append_file_message(file_message)
 
         access_obj_uri = self.conf['access_bucket'] + "/" + rec['s3']['object']['key']
+        print('Access Object uri: ' + str(access_obj_uri))
+
         file_message = FileMessage(access_obj_uri, "ACCESS", False, "HTTPS", False)
 
         # file_message.fl_lastMod['lastModified'] = TBD ISO conversion to millis
