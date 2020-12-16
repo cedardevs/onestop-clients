@@ -64,5 +64,98 @@ class S3UtilsTest(unittest.TestCase):
             s3_file = "csv/" + file
             self.assertTrue(self.su.upload_s3(boto_client, local_file, bucket, s3_file, overwrite))
 
+    def test_s3_cross_region(self, key):
+        print('Cross Region Vault Upload ------------- ')
+
+        # grabs te region and bucket name from the config file
+        region = self.su.conf['region']
+        bucket = self.su.conf['s3_bucket']
+
+        # makes connection to low level s3 client
+        s3 = self.su.connect('s3', region)
+
+        # Reads object data and stores it into a variable
+        file_data = self.su.read_bytes_s3(s3, bucket, key)
+
+        # Redirecting upload to vault in second region
+        glacier = self.su.connect("glacier", self.su.conf['region2'])
+        vault_name = self.su.conf['vault_name2']
+        print('vault name: ' + str(vault_name))
+        print('region name: ' + str(self.su.conf['region2']))
+        print('-------file data---------')
+        print(file_data)
+        response = self.su.upload_archive(glacier, vault_name, file_data)
+
+        self.assertTrue(response['location']!=None)
+
+
+    def test_s3_to_glacier(self, key):
+        """
+        Changes the storage class of an object from S3 to Glacier
+        Requires the configure and credential locations as parameters as well as the key of the object
+        """
+
+        print("S3 to Glacier---------")
+
+        # grabs te region and bucket name from the config file
+        region = self.su.conf['region']
+        bucket = self.su.conf['s3_bucket']
+
+        # Create boto3 low level api connection
+        s3 = self.su.connect('s3', region)
+
+        # Using the S3 util class invoke the change of storage class
+        response = self.su.s3_to_glacier(s3, bucket, key)
+
+        self.assertTrue(response != None)
+
+    def test_s3_restore(self, key):
+        """
+        Uses high level api to restore object from glacier to s3
+        """
+
+        region = self.su.conf['region']
+        bucket = self.su.conf['s3_bucket']
+
+        days = 3
+
+        # use high level api
+        s3 = self.su.connect('s3_resource', region)
+
+
+        self.assertTrue(self.su.s3_restore(s3, bucket, key, days) != None)
+
+
+    def test_retrieve_inventory(self):
+        """
+        Initiates job for archive retrieval. Takes 3-5 hours to complete
+        """
+
+        # Using glacier api initiates job and returns archive results
+        # Connect to your glacier vault for retrieval
+        glacier = self.su.connect("glacier", self.su.conf['region'])
+        vault_name = self.su.conf['vault_name']
+
+
+        response = self.su.retrieve_inventory(glacier, vault_name)
+        self.assertTrue(response['jobId']!= None)
+
+    def test_retrieve_inventory_results(self, jobid):
+        """
+        Once the job has been completed, use the job id to retrieve archive results
+        """
+
+        # Connect to your glacier vault for retrieval
+        glacier = self.su.connect("glacier", self.su.conf['region'])
+        vault_name = self.su.conf['vault_name']
+
+        # Retrieve the job results
+        inventory = self.su.retrieve_inventory_results(vault_name, glacier, jobid)
+
+        self.assertTrue(inventory != None)
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

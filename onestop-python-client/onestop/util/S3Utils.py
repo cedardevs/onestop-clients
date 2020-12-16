@@ -153,20 +153,24 @@ class S3Utils:
         filedata = self.read_bytes_s3(boto_client,bucket_name,key)
 
         response = boto_client.put_object(Body=filedata, Bucket= bucket_name,StorageClass='GLACIER', Key=key)
-        return response
         print(response)
+        return response
 
-    def s3_restore(self, boto_client, bucket_name, key):
+
+    def s3_restore(self, boto_client, bucket_name, key, days):
         # Restores an object in glacier back to s3
 
         # create bucket object
         obj = boto_client.Object(bucket_name, key)
 
         # Days refers to lifetime of the active copy in days
-        restore_request = {'Days': 1}
+        restore_request = {'Days': days}
 
+        # restores the object
         obj.restore_object(RestoreRequest = restore_request)
-        print(obj.restore)
+
+        # returns status of object retrieval
+        return obj.restore
 
 
     def retrieve_inventory(self, boto_client, vault_name):
