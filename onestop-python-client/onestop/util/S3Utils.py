@@ -3,6 +3,7 @@ import yaml
 import uuid
 import boto3
 import botocore
+import json
 from botocore.exceptions import ClientError
 
 from onestop.util.ClientLogger import ClientLogger
@@ -144,4 +145,71 @@ class S3Utils:
                 object_data.close()
 
         # Return dictionary of archive information
+        print('Archive: ' + str(archive))
         return archive
+
+    def s3_to_glacier(self, boto_client, bucket_name, key):
+        # reads the file data in s3 and store into variable to pass into put_object
+        filedata = self.read_bytes_s3(boto_client,bucket_name,key)
+
+        response = boto_client.put_object(Body=filedata, Bucket= bucket_name,StorageClass='GLACIER', Key=key)
+        print(response)
+        return response
+
+
+    def s3_restore(self, boto_client, bucket_name, key, days):
+        # Restores an object in glacier back to s3
+
+        # create bucket object
+        obj = boto_client.Object(bucket_name, key)
+
+        # Days refers to lifetime of the active copy in days
+        restore_request = {'Days': days}
+
+        # restores the object
+        obj.restore_object(RestoreRequest=restore_request)
+
+        # returns status of object retrieval
+        return obj.restore
+
+
+    def retrieve_inventory(self, boto_client, vault_name):
+        """Initiate an Amazon Glacier inventory-retrieval job
+
+        To check the status of the job, call Glacier.Client.describe_job()
+        To retrieve the output of the job, call Glacier.Client.get_job_output()
+
+        :param vault_name: string
+        :return: Dictionary of information related to the initiated job. If error,
+        returns None.
+        """
+
+        # Construct job parameters
+        job_parms = {'Type': 'inventory-retrieval'}
+
+        try:
+            response = boto_client.initiate_job(vaultName=vault_name,
+                                            jobParameters=job_parms)
+        except ClientError as e:
+            logging.error(e)
+            return None
+        print('Retrieval Response: ', response)
+        return response
+
+    def retrieve_inventory_results(self, vault_name, boto_client, job_id):
+        """Retrieve the results of an Amazon Glacier inventory-retrieval job
+
+        :param vault_name: string
+        :param job_id: string. The job ID was returned by Glacier.Client.initiate_job()
+        :return: Dictionary containing the results of the inventory-retrieval job.
+        If error, return None.
+        """
+
+        try:
+            response = boto_client.get_job_output(vaultName=vault_name, jobId=job_id)
+        except ClientError as e:
+            logging.error(e)
+            return None
+
+        # Read the streaming results into a dictionary
+        return json.loads(response['body'].read())
