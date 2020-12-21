@@ -63,7 +63,7 @@ def handler(recs):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Launches e2e test")
+    parser = argparse.ArgumentParser(description="Launches archive client integration")
     parser.add_argument('-conf', dest="conf", required=True,
                         help="AWS config filepath")
 

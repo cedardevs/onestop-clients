@@ -148,7 +148,7 @@ class S3Utils:
         print('Archive: ' + str(archive))
         return archive
 
-    def s3_to_glacier(self,boto_client, bucket_name, key):
+    def s3_to_glacier(self, boto_client, bucket_name, key):
         # reads the file data in s3 and store into variable to pass into put_object
         filedata = self.read_bytes_s3(boto_client,bucket_name,key)
 
@@ -167,7 +167,7 @@ class S3Utils:
         restore_request = {'Days': days}
 
         # restores the object
-        obj.restore_object(RestoreRequest = restore_request)
+        obj.restore_object(RestoreRequest=restore_request)
 
         # returns status of object retrieval
         return obj.restore
@@ -196,7 +196,7 @@ class S3Utils:
         print('Retrieval Response: ', response)
         return response
 
-    def retrieve_inventory_results(self, vault_name,boto_client, job_id):
+    def retrieve_inventory_results(self, vault_name, boto_client, job_id):
         """Retrieve the results of an Amazon Glacier inventory-retrieval job
 
         :param vault_name: string
@@ -204,7 +204,6 @@ class S3Utils:
         :return: Dictionary containing the results of the inventory-retrieval job.
         If error, return None.
         """
-
 
         try:
             response = boto_client.get_job_output(vaultName=vault_name, jobId=job_id)
