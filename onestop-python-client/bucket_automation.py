@@ -6,19 +6,17 @@ from onestop.util.S3Utils import S3Utils
 def handler():
     print("Bucket Automation")
     # connect to low level api
-    s3 = s3_utils.connect("s3", s3_utils.conf['region'])
+    s3 = s3_utils.connect("s3", s3_utils.conf['s3_region2'])
 
     # Create bucket name
-    bucket_name = "noaa-nccf-dev"
+    bucket_name = "noaa-nccf-dev-archive"
 
 
     """
     - Create bucket
     - need to specify bucket location for every region except us-east-1 -> https://github.com/aws/aws-cli/issues/2603
     """
-    s3.create_bucket(Bucket= bucket_name,CreateBucketConfiguration={
-        'LocationConstraint': 'us-east-2',
-    },)
+    s3.create_bucket(Bucket= bucket_name, CreateBucketConfiguration={'LocationConstraint': 'us-west-2'}, ObjectLockEnabledForBucket= True)
 
 
     # Create bucket policy

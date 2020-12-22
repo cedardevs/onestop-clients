@@ -1,65 +1,37 @@
 import argparse
-import json
-from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
-from onestop.util.S3MessageAdapter import S3MessageAdapter
-from onestop.WebPublisher import WebPublisher
 
-def handler(recs):
+
+"""
+Simultaneously upload files to main bucket 'noaa-nccf-dev' in us-east-2 and glacier in cross region bucket 'noaa-nccf-dev-archive' in us-west-2
+"""
+def handler():
     print("Handler...")
 
-    # Now get boto client for object-uuid retrieval
-    object_uuid = None
-    bucket = None
+    # config for s3 low level api for us-east-2
+    s3 = s3_utils.connect('s3', s3_utils.conf['s3_region'])
+    bucket_name = s3_utils.conf['s3_bucket']
 
-    if recs is None:
-        print( "No records retrieved" )
-    else:
-        rec = recs[0]
-        bucket = rec['s3']['bucket']['name']
-        s3_key = rec['s3']['object']['key']
-        print('Bucket: ' + str(bucket))
-        print('s3_key: ' + str(s3_key))
+    # config for s3 low level api cross origin us-west-2
+    s3_cross_region = s3_utils.connect('s3', s3_utils.conf['s3_region2'])
+    bucket_name_cross_region = s3_utils.conf['s3_bucket2']
 
-        object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
-        if object_uuid is not None:
-            print("Retrieved object-uuid: " + object_uuid)
-        else:
-            print("Adding uuid")
-            s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
+    overwrite = True
+
+    # Add 3 files to bucket
+    local_files = ["file1.csv", "file2.csv"]
+    s3_file = None
+    for file in local_files:
+        local_file = "tests/data/" + file
+        # changed the key for testing
+        s3_file = "public/NESDIS/CSB/" + file
+        s3_utils.upload_s3(s3, local_file, bucket_name, s3_file, overwrite)
+
+        # Upload file to cross region bucket then transfer to glacier right after
+        s3_utils.upload_s3(s3_cross_region, local_file, bucket_name_cross_region, s3_file, overwrite)
+        s3_utils.s3_to_glacier(s3_cross_region, bucket_name_cross_region, s3_file)
 
 
-    json_payload = s3ma.transform(recs)
-    print(json_payload)
-    registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
-    print(registry_response.json())
-
-    # Upload to cross region archive vault
-    file_data = s3_utils.read_bytes_s3(s3, bucket, s3_key)
-    glacier = s3_utils.connect("glacier", s3_utils.conf['region2'])
-    vault_name = s3_utils.conf['vault_name2']
-
-    resp_dict = s3_utils.upload_archive( glacier, vault_name, file_data )
-
-    print("archiveLocation: " + resp_dict['location'])
-    print("archiveId: " + resp_dict['archiveId'])
-    print("sha256: " + resp_dict['checksum'])
-
-    addlocPayload = {
-         "fileLocations": {
-             resp_dict['location']: {
-                 "uri": resp_dict['location'],
-                 "type": "ACCESS",
-                 "restricted": True,
-                 "locality": "us-east-1",
-                 "serviceType": "Amazon:AWS:Glacier",
-                 "asynchronous": True
-             }
-         }
-    }
-    json_payload = json.dumps(addlocPayload, indent=2)
-    # Send patch request next with archive location
-    registry_response = wp.publish_registry("granule", object_uuid, json_payload, "PATCH")
 
 
 if __name__ == '__main__':
@@ -78,39 +50,14 @@ if __name__ == '__main__':
     # Upload a test file to s3 bucket
     s3_utils = S3Utils(conf_loc, cred_loc)
 
-    # Low-level api ? Can we just use high level revisit me!
-    s3 = s3_utils.connect("s3", None)
-
-    # High-level api
-    s3_resource = s3_utils.connect("s3_resource", None)
-
-    bucket = s3_utils.conf['s3_bucket']
-    overwrite = True
-
-    sqs_max_polls =s3_utils.conf['sqs_max_polls']
+    handler()
 
 
-    # Add 3 files to bucket
-    local_files = ["file1.csv", "file2.csv"]
-    s3_file = None
-    for file in local_files:
-        local_file = "tests/data/" + file
-        s3_file = "csv/" + file
-        s3_utils.upload_s3(s3, local_file, bucket, s3_file, overwrite)
 
 
-    # Receive s3 message and MVM from SQS queue
-    sqs_consumer = SqsConsumer(conf_loc, cred_loc)
-    s3ma = S3MessageAdapter("config/csb-data-stream-config.yml")
-    wp = WebPublisher("config/web-publisher-config-dev.yml", cred_loc)
 
-    queue = sqs_consumer.connect()
-    try:
-        debug = False
-        sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
+        
 
-    except Exception as e:
-        print("Message queue consumption failed: {}".format(e))
 
 
 
