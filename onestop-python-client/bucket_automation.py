@@ -21,6 +21,57 @@ def handler():
     },)
 
 
+    cors_rules = [
+        {
+            "AllowedHeaders": [
+                "*"
+            ],
+            "AllowedMethods": [
+                "PUT",
+                "POST",
+                "DELETE",
+                "GET"
+            ],
+            "AllowedOrigins": [
+                "*"
+            ],
+            "ExposeHeaders": []
+        },
+        {
+            "AllowedHeaders": [
+                "*"
+            ],
+            "AllowedMethods": [
+                "PUT",
+                "POST",
+                "DELETE"
+            ],
+            "AllowedOrigins": [
+                "localhost:3000"
+            ],
+            "ExposeHeaders": []
+        },
+        {
+            "AllowedHeaders": [],
+            "AllowedMethods": [
+                "GET",
+                "POST",
+                "DELETE"
+            ],
+            "AllowedOrigins": [
+                "localhost:3000"
+            ],
+            "ExposeHeaders": []
+        }
+    ]
+
+    cors_configuration = {
+        'CORSRules': cors_rules
+    }
+
+    s3.put_bucket_cors(Bucket=bucket_name,
+                       CORSConfiguration=cors_configuration)
+
     # Create bucket policy
     bucket_policy = {
         "Version": "2012-10-17",
