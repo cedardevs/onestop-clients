@@ -76,6 +76,8 @@ class S3UtilsTest(unittest.TestCase):
 
         # makes connection to low level s3 client
         s3 = self.su.connect('s3', region)
+        s3.create_bucket(Bucket=bucket)
+        s3.put_object(Bucket=bucket, Key=key, Body="body")
 
         # Reads object data and stores it into a variable
         file_data = self.su.read_bytes_s3(s3, bucket, key)
@@ -83,6 +85,7 @@ class S3UtilsTest(unittest.TestCase):
         # Redirecting upload to vault in second region
         glacier = self.su.connect("glacier", self.su.conf['glacier_region'])
         vault_name = self.su.conf['vault_name']
+        glacier.create_vault(vaultName=vault_name)
         print('vault name: ' + str(vault_name))
         print('region name: ' + str(self.su.conf['glacier_region']))
         print('-------file data---------')
@@ -107,6 +110,8 @@ class S3UtilsTest(unittest.TestCase):
 
         # Create boto3 low level api connection
         s3 = self.su.connect('s3', region)
+        s3.create_bucket(Bucket=bucket)
+        s3.put_object(Bucket=bucket, Key=key, Body="body")
 
         # Using the S3 util class invoke the change of storage class
         response = self.su.s3_to_glacier(s3, bucket, key)
@@ -128,6 +133,8 @@ class S3UtilsTest(unittest.TestCase):
 
         # use high level api
         s3 = self.su.connect('s3_resource', region)
+        s3.create_bucket(Bucket=bucket)
+        s3.Object(bucket, key).put(Bucket=bucket, Key=key, Body="body")
 
         self.assertTrue(self.su.s3_restore(s3, bucket, key, days) != None)
 
@@ -141,6 +148,7 @@ class S3UtilsTest(unittest.TestCase):
         # Connect to your glacier vault for retrieval
         glacier = self.su.connect("glacier", self.su.conf['glacier_region'])
         vault_name = self.su.conf['vault_name']
+        glacier.create_vault(vaultName=vault_name)
 
 
         response = self.su.retrieve_inventory(glacier, vault_name)
