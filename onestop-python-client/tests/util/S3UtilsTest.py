@@ -1,4 +1,8 @@
 import unittest
+import os
+import uuid
+from moto import mock_s3
+from moto import mock_glacier
 
 from onestop.util.S3Utils import S3Utils
 
@@ -7,7 +11,7 @@ class S3UtilsTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
-        self.su = S3Utils("../../config/aws-util-config-dev.yml", "../../config/credentials.yml")
+        self.su = S3Utils(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../config/aws-util-config-dev.yml")), os.path.abspath(os.path.join(os.path.dirname(__file__), "../../config/credentials.yml")))
 
     def tearDown(self):
         print("Tear it down!")
@@ -16,40 +20,53 @@ class S3UtilsTest(unittest.TestCase):
     def test_parse_config(self):
         self.assertFalse(self.su.conf['sqs_url']==None)
 
+    @mock_s3
     def test_get_uuid_metadata(self):
         boto_client = self.su.connect("s3_resource", None)
         s3_key = "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
+        boto_client.create_bucket(Bucket=bucket)
+        obj_uuid = str(uuid.uuid4())
+        boto_client.Object(bucket, s3_key).put(Bucket=bucket, Key=s3_key, Body="my_body", Metadata={'object-uuid': obj_uuid})
 
         self.assertFalse(self.su.get_uuid_metadata(boto_client, bucket, s3_key) == None)
 
+    @mock_s3
     def test_add_uuid_metadata(self):
         boto_client = self.su.connect("s3_resource", None)
         s3_key = "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
+        boto_client.create_bucket(Bucket=bucket)
+        boto_client.Object(bucket, s3_key).put(Bucket=bucket, Key=s3_key, Body="my_body")
 
         self.assertTrue(self.su.add_uuid_metadata(boto_client, bucket, s3_key))
 
+    @mock_s3
     def test_add_file_s3(self):
         boto_client = self.su.connect("s3", None)
-        local_file = "../data/file1.csv"
+        local_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data/file1.csv"))
         s3_key= "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
+        boto_client.create_bucket(Bucket=bucket)
         overwrite = True
 
         self.assertTrue(self.su.upload_s3(boto_client, local_file, bucket, s3_key, overwrite))
 
+    @mock_s3
     def test_add_files(self):
         boto_client = self.su.connect("s3", None)
         local_files = ["file1_s3.csv", "file2.csv", "file3.csv"]
         bucket = self.su.conf['s3_bucket']
+        boto_client.create_bucket(Bucket=bucket)
         overwrite = True
         s3_file = None
         for file in local_files:
-            local_file = "../data/" + file
+            local_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data/" + file))
             s3_file = "csv/" + file
             self.assertTrue(self.su.upload_s3(boto_client, local_file, bucket, s3_file, overwrite))
 
+    @mock_s3
+    @mock_glacier
     def test_s3_cross_region(self):
         print('Cross Region Vault Upload ------------- ')
         key = "csv/file1.csv"
@@ -74,7 +91,8 @@ class S3UtilsTest(unittest.TestCase):
 
         self.assertTrue(response['location']!=None)
 
-
+    @mock_s3
+    @mock_glacier
     def test_s3_to_glacier(self):
         """
         Changes the storage class of an object from S3 to Glacier
@@ -97,6 +115,7 @@ class S3UtilsTest(unittest.TestCase):
 
         self.assertTrue(response['ResponseMetadata']['HTTPHeaders']['x-amz-storage-class'] == "GLACIER")
 
+    @mock_s3
     def test_s3_restore(self):
         """
         Uses high level api to restore object from glacier to s3
@@ -112,7 +131,7 @@ class S3UtilsTest(unittest.TestCase):
 
         self.assertTrue(self.su.s3_restore(s3, bucket, key, days) != None)
 
-
+    @mock_glacier
     def test_retrieve_inventory(self):
         """
         Initiates job for archive retrieval. Takes 3-5 hours to complete
