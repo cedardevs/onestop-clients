@@ -4,6 +4,8 @@ from onestop.info.ImMessage import ImMessage
 from onestop.info.FileMessage import FileMessage
 from onestop.info.Link import Link
 from onestop.util.ClientLogger import ClientLogger
+from onestop.util.S3Utils import S3Utils
+import csv
 
 
 class S3MessageAdapter:
@@ -19,7 +21,6 @@ class S3MessageAdapter:
         self.logger.info("Transform!")
         im_message = None
         rec = recs[0]  # This is standard format 1 record per message for now according to AWS docs
-
         im_message = ImMessage()
         im_message.links = []
 
@@ -56,10 +57,30 @@ class S3MessageAdapter:
 
         im_message.append_file_message(file_message)
 
+        # Looks to see if the file is a csv file
+        lon, lat, time = None, None, None
+        if '.csv' in str(s3_key):
+            # Use S3Utils to read the file as a raw text
+            s3_utils = S3Utils("config/aws-util-config-dev.yml", "config/credentials.yml")
+            s3 = s3_utils.connect('s3', s3_utils.conf['s3_region'])
+            file_data = s3_utils.read_bytes_s3(s3, bucket, s3_key)
+
+            # Extract the appropriate fields
+            lines = file_data.decode('utf-8').split('\n')
+            for row in csv.DictReader(lines):
+                # Only need to look at first line because these fields consistent throughout the file
+                lon = float(row['LON'])
+                lat = float(row['LAT'])
+                time = row['TIME']
+                break
+
+
         # Discovery block
         im_message.discovery['title'] = file_name
         im_message.discovery['parentIdentifier'] = self.conf['collection_id']
         im_message.discovery['fileIdentifier'] = "gov.noaa.ncei.csb:" + file_name[:-4]
+        im_message.coordinates.append([lon,lat])
+        im_message.temporalBounding= {'beginDate': time}
 
         https_link = Link("download", "Amazon S3", "HTTPS", access_obj_uri)
         im_message.append_link(https_link)
@@ -68,5 +89,7 @@ class S3MessageAdapter:
         im_message.append_link(s3_link)
 
         payload = im_message.serialize()
+        print(payload)
+
 
         return payload

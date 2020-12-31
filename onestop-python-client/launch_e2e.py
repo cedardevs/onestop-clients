@@ -5,6 +5,7 @@ from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.WebPublisher import WebPublisher
 
+
 def handler(recs):
     print("Handler...")
 
@@ -13,7 +14,7 @@ def handler(recs):
     bucket = None
 
     if recs is None:
-        print( "No records retrieved" )
+        print("No records retrieved")
     else:
         rec = recs[0]
         bucket = rec['s3']['bucket']['name']
@@ -26,34 +27,32 @@ def handler(recs):
             print("Adding uuid")
             s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
-
     json_payload = s3ma.transform(recs)
-    print(json_payload)
     registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
     print(registry_response.json())
 
     # Upload to archive
     file_data = s3_utils.read_bytes_s3(s3, bucket, s3_key)
-    glacier = s3_utils.connect("glacier", s3_utils.conf['region'])
+    glacier = s3_utils.connect("glacier", s3_utils.conf['s3_region'])
     vault_name = s3_utils.conf['vault_name']
 
-    resp_dict = s3_utils.upload_archive( glacier, vault_name, file_data )
+    resp_dict = s3_utils.upload_archive(glacier, vault_name, file_data)
 
     print("archiveLocation: " + resp_dict['location'])
     print("archiveId: " + resp_dict['archiveId'])
     print("sha256: " + resp_dict['checksum'])
 
     addlocPayload = {
-         "fileLocations": {
-             resp_dict['location']: {
-                 "uri": resp_dict['location'],
-                 "type": "ACCESS",
-                 "restricted": True,
-                 "locality": "us-east-1",
-                 "serviceType": "Amazon:AWS:Glacier",
-                 "asynchronous": True
-             }
-         }
+        "fileLocations": {
+            resp_dict['location']: {
+                "uri": resp_dict['location'],
+                "type": "ACCESS",
+                "restricted": True,
+                "locality": "us-east-1",
+                "serviceType": "Amazon:AWS:Glacier",
+                "asynchronous": True
+            }
+        }
     }
     json_payload = json.dumps(addlocPayload, indent=2)
     # Send patch request next with archive location
@@ -85,7 +84,7 @@ if __name__ == '__main__':
     bucket = s3_utils.conf['s3_bucket']
     overwrite = True
 
-    sqs_max_polls =s3_utils.conf['sqs_max_polls']
+    sqs_max_polls = s3_utils.conf['sqs_max_polls']
 
     # Add 3 files to bucket
     local_files = ["file1.csv", "file2.csv"]
@@ -107,5 +106,3 @@ if __name__ == '__main__':
 
     except Exception as e:
         print("Message queue consumption failed: {}".format(e))
-
-
