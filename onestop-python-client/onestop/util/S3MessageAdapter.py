@@ -80,7 +80,10 @@ class S3MessageAdapter:
         im_message.discovery['parentIdentifier'] = self.conf['collection_id']
         im_message.discovery['fileIdentifier'] = "gov.noaa.ncei.csb:" + file_name[:-4]
         im_message.coordinates.append([lon,lat])
-        im_message.temporalBounding= {'beginDate': time}
+        im_message.coordinates.append([lon, lat])
+        im_message.coordinates.append([lon, lat])
+        im_message.coordinates.append([lon, lat])
+        im_message.temporalBounding= {'beginDate': time, 'endDate': time}
 
         https_link = Link("download", "Amazon S3", "HTTPS", access_obj_uri)
         im_message.append_link(https_link)
