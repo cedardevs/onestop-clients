@@ -92,7 +92,7 @@ class S3UtilsTest(unittest.TestCase):
         print(file_data)
         response = self.su.upload_archive(glacier, vault_name, file_data)
 
-        self.assertTrue(response['location']!=None)
+        self.assertTrue(response['archiveId']!=None)
 
     @mock_s3
     @mock_glacier
