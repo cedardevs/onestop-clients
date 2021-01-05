@@ -102,7 +102,7 @@ jobs:
     executor: python/default
     steps: &steps
       - checkout
-      - run: cd onestop-python-client/; ls -la; pwd; python -v;
+      - run: cd onestop-python-client/; ls -la; pwd; python --version;
       - python/install-packages:
           app-dir: ./onestop-python-client
           pkg-manager: pip
