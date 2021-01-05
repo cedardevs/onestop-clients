@@ -102,11 +102,10 @@ jobs:
     executor: python/default
     steps: &steps
       - checkout
-      - run: cd onestop-python-client/; ls -la; pwd;
-      - run: python -v
+      - run: cd onestop-python-client/; ls -la; pwd; python -v;
       - python/install-packages:
-          - app-dir: ./onestop-python-client
-          - pkg-manager: pip
+          app-dir: ./onestop-python-client
+          pkg-manager: pip
       - run:
           name: "Run util tests"
           command: >
