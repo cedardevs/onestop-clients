@@ -102,9 +102,17 @@ jobs:
     docker:
       - image: circleci/python:3.8
     steps: &steps
-      - python/test:
-          app-dir: onestop-python-client
-          version: 3.8
+      - checkout
+      - run: cd onestop-python-client/; ls -la; pwd;
+      - run: python -v
+      - python/install-packages:
+          - app-dir: ./onestop-python-client
+          - pkg-manager: pip
+      - run:
+          name: "Run util tests"
+          command: >
+            cd onestop-python-client/;
+            python -m unittest tests/util/*.py
 
 orbs:
   slack: circleci/slack@3.4.2
