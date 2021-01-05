@@ -7,7 +7,7 @@ class SqsConsumerTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
-        self.sc = SqsConsumer("../../config/aws-util-config-dev.yml", "../../config/credentials.yml")
+        self.sc = SqsConsumer("./config/aws-util-config-dev.yml", "./config/credentials.yml")
 
     def tearDown(self):
         print("Tear it down!")

@@ -50,7 +50,7 @@ class S3MessageAdapterTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
-        self.s3ma = S3MessageAdapter("../../config/csb-data-stream-config.yml")
+        self.s3ma = S3MessageAdapter("./config/csb-data-stream-config.yml")
 
     def tearDown(self):
         print("Tear it down!")
