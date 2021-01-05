@@ -1,13 +1,10 @@
 import argparse
 import json
 from onestop.util.S3Utils import S3Utils
-import botocore.exceptions
-import sys
 
 def handler():
     # connect to low level api
     s3 = s3_utils.connect("s3", s3_utils.conf['s3_region2'])
-
 
     # Create bucket name
     bucket_name = "noaa-nccf-dev-archive"
@@ -16,14 +13,7 @@ def handler():
     - Create bucket
     - need to specify bucket location for every region except us-east-1 -> https://github.com/aws/aws-cli/issues/2603
     """
-
-    try:
-        s3.create_bucket(Bucket= bucket_name,CreateBucketConfiguration={
-            'LocationConstraint': 'us-west-2'}, ObjectLockEnabledForBucket= True)
-    except botocore.exceptions.ClientError:
-        txt = input("Bucket already exists. Do you want to update policies? y/n \n")
-        if txt.lower() != 'y':
-            sys.exit()
+    s3.create_bucket(Bucket= bucket_name, CreateBucketConfiguration={'LocationConstraint': 'us-west-2'}, ObjectLockEnabledForBucket= True)
 
     # Create bucket policy
     bucket_policy = {

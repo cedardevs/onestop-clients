@@ -31,9 +31,6 @@ def handler():
         s3_utils.upload_s3(s3_cross_region, local_file, bucket_name_cross_region, s3_file, overwrite)
         s3_utils.s3_to_glacier(s3_cross_region, bucket_name_cross_region, s3_file)
 
-
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Launches archive client integration")
     parser.add_argument('-conf', dest="conf", required=True,
