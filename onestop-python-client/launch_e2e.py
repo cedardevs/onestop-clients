@@ -87,7 +87,7 @@ if __name__ == '__main__':
     sqs_max_polls = s3_utils.conf['sqs_max_polls']
 
     # Add 3 files to bucket
-    local_files = ["file1.csv", "file2.csv"]
+    local_files = ["file1.csv", "file4.csv"]
     s3_file = None
     for file in local_files:
         local_file = "tests/data/" + file
