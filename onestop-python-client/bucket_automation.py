@@ -1,31 +1,37 @@
 import argparse
 import json
 from onestop.util.S3Utils import S3Utils
-
+import botocore.exceptions
+import sys
 
 def handler():
-    print("Bucket Automation")
     # connect to low level api
     s3 = s3_utils.connect("s3", s3_utils.conf['s3_region2'])
 
+
     # Create bucket name
     bucket_name = "noaa-nccf-dev-archive"
-
 
     """
     - Create bucket
     - need to specify bucket location for every region except us-east-1 -> https://github.com/aws/aws-cli/issues/2603
     """
-    s3.create_bucket(Bucket= bucket_name, CreateBucketConfiguration={'LocationConstraint': 'us-west-2'}, ObjectLockEnabledForBucket= True)
 
+    try:
+        s3.create_bucket(Bucket= bucket_name,CreateBucketConfiguration={
+            'LocationConstraint': 'us-west-2'}, ObjectLockEnabledForBucket= True)
+    except botocore.exceptions.ClientError:
+        txt = input("Bucket already exists. Do you want to update policies? y/n \n")
+        if txt.lower() != 'y':
+            sys.exit()
 
     # Create bucket policy
     bucket_policy = {
         "Version": "2012-10-17",
-        "Id": "Policy1605737714816",
+        "Id": "noaa-nccf-dev-policy",
         "Statement": [
             {
-                "Sid": "Stmt1605737712384",
+                "Sid": "PublicRead",
                 "Effect": "Allow",
                 "Principal": "*",
                 "Action": "s3:GetObject",
@@ -39,6 +45,18 @@ def handler():
     #Set new bucket policy
     s3.put_bucket_policy(Bucket=bucket_name, Policy=bucket_policy)
 
+    """
+    - Set ACL for public read
+    """
+    s3.put_public_access_block(
+        PublicAccessBlockConfiguration={
+            'BlockPublicAcls': True,
+            'IgnorePublicAcls': True,
+            'BlockPublicPolicy': False,
+            'RestrictPublicBuckets': False
+        },
+        Bucket=bucket_name
+    )
 
     """
     - Create Public Key Paths
