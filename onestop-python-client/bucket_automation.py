@@ -41,6 +41,39 @@ def handler():
     #Set new bucket policy
     s3.put_bucket_policy(Bucket=bucket_name, Policy=bucket_policy)
 
+    # response = s3.put_bucket_acl(
+    #     #     ACL='public-read',
+    #     #     AccessControlPolicy={
+    #     #         'Grants': [
+    #     #             {
+    #     #                 'Grantee': {
+    #     #                     'DisplayName': 'string',
+    #     #                     'EmailAddress': 'string',
+    #     #                     'ID': 'string',
+    #     #                     'Type': 'CanonicalUser'|'AmazonCustomerByEmail'|'Group',
+    #     #                     'URI': 'string'
+    #     #                 },
+    #     #                 'Permission': 'FULL_CONTROL'|'WRITE'|'WRITE_ACP'|'READ'|'READ_ACP'
+    #     #             },
+    #     #         ],
+    #     #         'Owner': {
+    #     #             'DisplayName': 'string',
+    #     #             'ID': 'string'
+    #     #         }
+    #     #     },
+    #     #     Bucket=bucket_name,
+    #     #     GrantFullControl='string',
+    #     #     GrantRead='string',
+    #     #     GrantReadACP='string',
+    #     #     GrantWrite='string',
+    #     #     GrantWriteACP='string',
+    #     #     ExpectedBucketOwner='string'
+    #     # )
+
+    response = s3.put_bucket_acl(
+        ACL='public-read',
+        Bucket=bucket_name
+    )
 
     """
     - Create Public Key Paths
