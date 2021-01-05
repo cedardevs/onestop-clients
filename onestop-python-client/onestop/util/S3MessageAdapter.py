@@ -23,13 +23,15 @@ class S3MessageAdapter:
         im_message = ImMessage()
         im_message.links = []
 
-        pos = rec['s3']['object']['key'].rfind('/') + 1
+        s3_bucket = rec['s3']['bucket']['name']
+        s3_key = rec['s3']['object']['key']
+        pos = s3_key.rfind('/') + 1
 
         im_message.alg = "MD5"  # or perhaps Etag
         # # REVIEW  ME what to do if multipart upload
         im_message.alg_value = rec['s3']['object']['eTag']
 
-        file_name = str(rec['s3']['object']['key'])[pos:]
+        file_name = str(s3_key)[pos:]
         im_message.file_name = file_name
         im_message.file_size = rec['s3']['object']['size']
         im_message.file_format = self.conf['format']
@@ -39,15 +41,13 @@ class S3MessageAdapter:
                         'id': str( self.conf['collection_id'] )}
         im_message.append_relationship(relationship)
 
-        bucket = rec['s3']['bucket']['name']
-        s3_key = rec['s3']['object']['key']
-        s3_obj_uri = "s3://" + bucket + "/" + s3_key
+        s3_obj_uri = "s3://" + s3_bucket + "/" + s3_key
         print('S3 URI: ' + str(s3_obj_uri))
         file_message = FileMessage(s3_obj_uri, "ARCHIVE", True, "Amazon:AWS:S3", False)
 
         im_message.append_file_message(file_message)
 
-        access_obj_uri = self.conf['access_bucket'] + "/" + rec['s3']['object']['key']
+        access_obj_uri = self.conf['access_bucket'] + "/" + s3_key
         print('Access Object uri: ' + str(access_obj_uri))
 
         file_message = FileMessage(access_obj_uri, "ACCESS", False, "HTTPS", False)
@@ -59,7 +59,7 @@ class S3MessageAdapter:
         # Discovery block
         im_message.discovery['title'] = file_name
         im_message.discovery['parentIdentifier'] = self.conf['collection_id']
-        im_message.discovery['fileIdentifier'] = "gov.noaa.ncei.csb:" + file_name[:-4]
+        im_message.discovery['fileIdentifier'] = self.conf['file_identifier_prefix'] + file_name[:-4]
 
         https_link = Link("download", "Amazon S3", "HTTPS", access_obj_uri)
         im_message.append_link(https_link)
