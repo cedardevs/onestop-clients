@@ -24,10 +24,10 @@ def handler():
     # Create bucket policy
     bucket_policy = {
         "Version": "2012-10-17",
-        "Id": "Policy1605737714816",
+        "Id": "noaa-nccf-dev-policy",
         "Statement": [
             {
-                "Sid": "Stmt1605737712384",
+                "Sid": "PublicRead",
                 "Effect": "Allow",
                 "Principal": "*",
                 "Action": "s3:GetObject",
@@ -70,7 +70,11 @@ def handler():
     #     #     ExpectedBucketOwner='string'
     #     # )
 
-    response = s3.put_bucket_acl(
+
+    """
+    - Set ACL for public read
+    """
+    s3.put_bucket_acl(
         ACL='public-read',
         Bucket=bucket_name
     )
