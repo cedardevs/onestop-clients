@@ -2,6 +2,7 @@ import argparse
 import json
 from onestop.util.S3Utils import S3Utils
 import botocore.exceptions
+import sys
 
 def handler():
     # connect to low level api
