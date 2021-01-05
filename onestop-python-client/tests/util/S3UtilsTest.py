@@ -11,7 +11,7 @@ class S3UtilsTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
-        self.su = S3Utils(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../config/aws-util-config-dev.yml")), os.path.abspath(os.path.join(os.path.dirname(__file__), "../../config/credentials.yml")))
+        self.su = S3Utils(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../config/aws-util-config-dev.yml")), os.path.abspath(os.path.join(os.path.dirname(__file__), "../../config/credentials-template.yml")))
 
     def tearDown(self):
         print("Tear it down!")
