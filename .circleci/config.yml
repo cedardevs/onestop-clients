@@ -99,8 +99,7 @@ jobs:
   # inherit this base, and override (at least) the container image used.
 
   python-client-test: &python-client-test
-    docker:
-      - image: circleci/python:3.8
+    executor: python/default
     steps: &steps
       - checkout
       - run: cd onestop-python-client/; ls -la; pwd;
