@@ -1,5 +1,5 @@
 import unittest
-
+from tests.utils import abspath_from_relative
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 
 
@@ -50,7 +50,7 @@ class S3MessageAdapterTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
-        self.s3ma = S3MessageAdapter("./config/csb-data-stream-config.yml")
+        self.s3ma = S3MessageAdapter(abspath_from_relative(__file__, "../../config/csb-data-stream-config.yml"))
 
     def tearDown(self):
         print("Tear it down!")

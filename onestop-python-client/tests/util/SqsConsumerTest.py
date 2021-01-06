@@ -1,7 +1,7 @@
 import unittest
 import boto3
 from moto import mock_sqs
-
+from tests.utils import abspath_from_relative
 from onestop.util.SqsConsumer import SqsConsumer
 
 class SqsConsumerTest(unittest.TestCase):
@@ -9,7 +9,8 @@ class SqsConsumerTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
-        self.sc = SqsConsumer("./config/aws-util-config-dev.yml", "./config/credentials-template.yml")
+        self.sc = SqsConsumer(abspath_from_relative(__file__, "../../config/aws-util-config-dev.yml"),
+                              abspath_from_relative(__file__, "../../config/credentials-template.yml"))
 
     def tearDown(self):
         print("Tear it down!")
