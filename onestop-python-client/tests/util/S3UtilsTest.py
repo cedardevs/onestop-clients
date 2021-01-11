@@ -33,10 +33,14 @@ class S3UtilsTest(unittest.TestCase):
 
     @mock_s3
     def test_add_uuid_metadata(self):
-        boto_client = self.su.connect("s3_resource", None)
+        region = self.su.conf['s3_region']
+        boto_client = self.su.connect("s3_resource", region)
+
         s3_key = "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
-        boto_client.create_bucket(Bucket=bucket)
+
+        location = {'LocationConstraint': region}
+        boto_client.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
         boto_client.Object(bucket, s3_key).put(Bucket=bucket, Key=s3_key, Body="my_body")
 
         self.assertTrue(self.su.add_uuid_metadata(boto_client, bucket, s3_key))
