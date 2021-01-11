@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 import yaml
 import uuid
 import boto3
@@ -26,8 +27,8 @@ class S3Utils:
     def connect(self, client_type, region):
 
         if client_type == "s3":
-            boto_client = boto3.client("s3", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
-                                       aws_secret_access_key=self.cred['sandbox']['secret_key'])
+            boto_client = boto3.client("s3", aws_access_key_id=self.cred['sandbox']['access_key'],
+                                       aws_secret_access_key=self.cred['sandbox']['secret_key'], region_name=region)
 
         if client_type == "s3_resource":
             boto_client = boto3.resource("s3", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
@@ -156,6 +157,13 @@ class S3Utils:
         print(response)
         return response
 
+    def s3_to_glacier_object_lock(self, boto_client, bucket_name, key, object_lock_mode, object_lock_retention):
+        # reads the file data in s3 and store into variable to pass into put_object
+        filedata = self.read_bytes_s3(boto_client,bucket_name,key)
+
+        response = boto_client.put_object(Body=filedata, Bucket= bucket_name,StorageClass='GLACIER', Key=key, ObjectLockMode = object_lock_mode, ObjectLockRetainUntilDate=object_lock_retention)
+        print(response)
+        return response
 
     def s3_restore(self, boto_client, bucket_name, key, days):
         # Restores an object in glacier back to s3
