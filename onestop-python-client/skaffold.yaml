@@ -1,0 +1,14 @@
+apiVersion: skaffold/v2beta10
+kind: Config
+metadata:
+  name: onestop-python-client
+build:
+  artifacts:
+  - image: cedardevs/onestop-pyconsumer
+    docker:
+      dockerfile: Dockerfile
+deploy:
+  kubectl:
+    manifests:
+    - pyconsumer-pod.yml
+    - pyconsumer-secret.yml
