@@ -11,12 +11,13 @@ from datetime import datetime
 
 class S3MessageAdapter:
 
-    def __init__(self, conf_loc):
+    def __init__(self, conf_loc, s3_utils):
         with open(conf_loc) as f:
             self.conf = yaml.load(f, Loader=yaml.FullLoader)
 
         self.logger = ClientLogger.get_logger(self.__class__.__name__, self.conf['log_level'], False)
         self.logger.info("Initializing " + self.__class__.__name__)
+        self.s3_utils = s3_utils
 
     def transform(self, recs):
         self.logger.info("Transform!")
@@ -66,9 +67,8 @@ class S3MessageAdapter:
         # Looks to see if the file is a csv file
         if '.csv' in str(s3_key):
             # Use S3Utils to read the file as a raw text
-            s3_utils = S3Utils("config/aws-util-config-dev.yml", "config/credentials.yml")
-            s3 = s3_utils.connect('s3', s3_utils.conf['s3_region'])
-            file_data = s3_utils.read_bytes_s3(s3, bucket, s3_key)
+            s3 = self.s3_utils.connect('s3', self.s3_utils.conf['s3_region'])
+            file_data = self.s3_utils.read_bytes_s3(s3, s3_bucket, s3_key)
 
             # Extract the appropriate fields
             lines = file_data.decode('utf-8').split('\n')

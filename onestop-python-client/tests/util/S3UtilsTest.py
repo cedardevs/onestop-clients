@@ -89,11 +89,11 @@ class S3UtilsTest(unittest.TestCase):
         file_data = self.su.read_bytes_s3(s3, bucket, key)
 
         # Redirecting upload to vault in second region
-        glacier = self.su.connect("glacier", self.su.conf['glacier_region'])
+        glacier = self.su.connect("glacier", self.su.conf['s3_region2'])
         vault_name = self.su.conf['vault_name']
         glacier.create_vault(vaultName=vault_name)
         print('vault name: ' + str(vault_name))
-        print('region name: ' + str(self.su.conf['glacier_region']))
+        print('region name: ' + str(self.su.conf['s3_region2']))
         print('-------file data---------')
         print(file_data)
         response = self.su.upload_archive(glacier, vault_name, file_data)
@@ -133,7 +133,7 @@ class S3UtilsTest(unittest.TestCase):
         Uses high level api to restore object from glacier to s3
         """
 
-        region = self.su.conf['glacier_region']
+        region = self.su.conf['s3_region2']
         bucket = self.su.conf['s3_bucket']
         key = "csv/file1_s3.csv"
         days = 3
@@ -154,7 +154,7 @@ class S3UtilsTest(unittest.TestCase):
 
         # Using glacier api initiates job and returns archive results
         # Connect to your glacier vault for retrieval
-        glacier = self.su.connect("glacier", self.su.conf['glacier_region'])
+        glacier = self.su.connect("glacier", self.su.conf['s3_region2'])
         vault_name = self.su.conf['vault_name']
         glacier.create_vault(vaultName=vault_name)
 
