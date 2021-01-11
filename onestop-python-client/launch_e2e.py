@@ -1,5 +1,7 @@
 import argparse
 import json
+import os
+
 from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
@@ -61,51 +63,55 @@ def handler(recs):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Launches e2e test")
-    parser.add_argument('-conf', dest="conf", required=True,
-                        help="AWS config filepath")
 
-    parser.add_argument('-cred', dest="cred", required=True,
-                        help="Credentials filepath")
-    args = vars(parser.parse_args())
+    print(os.environ.get("REGISTRY_USERNAME"))
+    print(os.environ.get("REGISTRY_PASSWORD"))
 
-    # Get configuration file path locations
-    conf_loc = args.pop('conf')
-    cred_loc = args.pop('cred')
-
-    # Upload a test file to s3 bucket
-    s3_utils = S3Utils(conf_loc, cred_loc)
-
-    # Low-level api ? Can we just use high level revisit me!
-    s3 = s3_utils.connect("s3", None)
-
-    # High-level api
-    s3_resource = s3_utils.connect("s3_resource", None)
-
-    bucket = s3_utils.conf['s3_bucket']
-    overwrite = True
-
-    sqs_max_polls =s3_utils.conf['sqs_max_polls']
-
-    # Add 3 files to bucket
-    local_files = ["file1.csv", "file2.csv"]
-    s3_file = None
-    for file in local_files:
-        local_file = "tests/data/" + file
-        s3_file = "csv/" + file
-        s3_utils.upload_s3(s3, local_file, bucket, s3_file, overwrite)
-
-    # Receive s3 message and MVM from SQS queue
-    sqs_consumer = SqsConsumer(conf_loc, cred_loc)
-    s3ma = S3MessageAdapter("config/csb-data-stream-config.yml")
-    wp = WebPublisher("config/web-publisher-config-dev.yml", cred_loc)
-
-    queue = sqs_consumer.connect()
-    try:
-        debug = False
-        sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
-
-    except Exception as e:
-        print("Message queue consumption failed: {}".format(e))
-
-
+    # parser = argparse.ArgumentParser(description="Launches e2e test")
+    # parser.add_argument('-conf', dest="conf", required=True,
+    #                     help="AWS config filepath")
+    #
+    # parser.add_argument('-cred', dest="cred", required=True,
+    #                     help="Credentials filepath")
+    # args = vars(parser.parse_args())
+    #
+    # # Get configuration file path locations
+    # conf_loc = args.pop('conf')
+    # cred_loc = args.pop('cred')
+    #
+    # # Upload a test file to s3 bucket
+    # s3_utils = S3Utils(conf_loc, cred_loc)
+    #
+    # # Low-level api ? Can we just use high level revisit me!
+    # s3 = s3_utils.connect("s3", None)
+    #
+    # # High-level api
+    # s3_resource = s3_utils.connect("s3_resource", None)
+    #
+    # bucket = s3_utils.conf['s3_bucket']
+    # overwrite = True
+    #
+    # sqs_max_polls =s3_utils.conf['sqs_max_polls']
+    #
+    # # Add 3 files to bucket
+    # local_files = ["file1.csv", "file2.csv"]
+    # s3_file = None
+    # for file in local_files:
+    #     local_file = "tests/data/" + file
+    #     s3_file = "csv/" + file
+    #     s3_utils.upload_s3(s3, local_file, bucket, s3_file, overwrite)
+    #
+    # # Receive s3 message and MVM from SQS queue
+    # sqs_consumer = SqsConsumer(conf_loc, cred_loc)
+    # s3ma = S3MessageAdapter("config/csb-data-stream-config.yml")
+    # wp = WebPublisher("config/web-publisher-config-dev.yml", cred_loc)
+    #
+    # queue = sqs_consumer.connect()
+    # try:
+    #     debug = False
+    #     sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
+    #
+    # except Exception as e:
+    #     print("Message queue consumption failed: {}".format(e))
+    #
+    #

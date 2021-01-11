@@ -8,4 +8,14 @@ spec:
     tty: true #need this to get the output with `kubectl logs onestop-pyconsumer`
     image: cedardevs/onestop-pyconsumer:latest
     imagePullPolicy: Always
-
+    env:
+    - name: REGISTRY_USERNAME
+      valueFrom:
+         secretKeyRef:
+             name: registry-api
+             key: username
+    - name: REGISTRY_PASSWORD
+      valueFrom:
+         secretKeyRef:
+             name: registry-api
+             key: password

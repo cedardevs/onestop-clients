@@ -9,6 +9,16 @@ docker push cedardevs/onestop-pyconsumer
 kubectl apply -f pyconsumer-pod.yml
 kubectl exec -it pod/onestop-pyconsumer -- bash
 kubectl delete -f pyconsumer-pod.yml
+
+## Add username password info...
+kubectl apply -f pyconsumer-secret.yml
+## Check results
+kubectl get secret/registry-api -o yaml
+## Delete secret
+kubectl delete secret/registry-api
+
+#################### Legacy review....
+
 ### push local mods to pod
 kubectl cp test.txt onestop-pyconsumer:test.txt
 

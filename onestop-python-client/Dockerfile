@@ -8,6 +8,9 @@ RUN pip install requests
 RUN pip install confluent-kafka
 RUN pip install avro-python3
 RUN pip install fastavro
+RUN pip install boto3
+RUN pip install botocore
+RUN pip install argparse
 RUN apt-get install vim -y
 CMD tail -f /dev/null
 
