@@ -24,7 +24,7 @@ class SqsConsumer:
         boto_session = boto3.Session(aws_access_key_id=self.cred['sandbox']['access_key'],
                                      aws_secret_access_key=self.cred['sandbox']['secret_key'])
         # Get the queue. This returns an SQS.Queue instance
-        sqs_session = boto_session.resource('sqs', region_name=self.conf['region'])
+        sqs_session = boto_session.resource('sqs', region_name=self.conf['s3_region'])
         sqs_queue = sqs_session.Queue(self.conf['sqs_url'])
         return sqs_queue
 

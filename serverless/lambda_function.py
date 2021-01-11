@@ -62,7 +62,7 @@ def lambda_handler(event, context):
             # Discovery block
             im_message.discovery['title'] = file_name
             im_message.discovery['parentIdentifier'] = conf.COLLECTION_ID
-            im_message.discovery['fileIdentifier'] = "gov.noaa.ncei.csb:" + file_name[:-4]
+            im_message.discovery['fileIdentifier'] = conf.FILE_IDENTIFIER_PREFIX + file_name[:-4]
 
             link = Link("download", "Amazon S3", "HTTPS", access_obj_uri)
             im_message.append_link_attributes(link)

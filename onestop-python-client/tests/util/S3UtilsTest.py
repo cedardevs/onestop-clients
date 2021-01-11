@@ -1,9 +1,9 @@
 import unittest
-import os
 import uuid
 from moto import mock_s3
 from moto import mock_glacier
 
+from tests.utils import abspath_from_relative
 from onestop.util.S3Utils import S3Utils
 
 class S3UtilsTest(unittest.TestCase):
@@ -11,7 +11,8 @@ class S3UtilsTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
-        self.su = S3Utils(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../config/aws-util-config-dev.yml")), os.path.abspath(os.path.join(os.path.dirname(__file__), "../../config/credentials.yml")))
+        self.su = S3Utils(abspath_from_relative(__file__, "../../config/aws-util-config-dev.yml"),
+                          abspath_from_relative(__file__, "../../config/credentials-template.yml"))
 
     def tearDown(self):
         print("Tear it down!")
@@ -48,7 +49,7 @@ class S3UtilsTest(unittest.TestCase):
     @mock_s3
     def test_add_file_s3(self):
         boto_client = self.su.connect("s3", None)
-        local_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data/file1.csv"))
+        local_file = abspath_from_relative(__file__, "../data/file1.csv")
         s3_key= "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
         boto_client.create_bucket(Bucket=bucket)
@@ -65,7 +66,7 @@ class S3UtilsTest(unittest.TestCase):
         overwrite = True
         s3_file = None
         for file in local_files:
-            local_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data/" + file))
+            local_file = abspath_from_relative(__file__, "../data/" + file)
             s3_file = "csv/" + file
             self.assertTrue(self.su.upload_s3(boto_client, local_file, bucket, s3_file, overwrite))
 
@@ -96,7 +97,7 @@ class S3UtilsTest(unittest.TestCase):
         print(file_data)
         response = self.su.upload_archive(glacier, vault_name, file_data)
 
-        self.assertTrue(response['location']!=None)
+        self.assertTrue(response['archiveId']!=None)
 
     @mock_s3
     @mock_glacier
