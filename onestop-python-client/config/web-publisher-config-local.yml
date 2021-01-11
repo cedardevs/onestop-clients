@@ -1,0 +1,10 @@
+# Example config values for osim client
+log_level: INFO
+
+# COLLECTION or GRANULE
+metadata_type: granule
+registry_base_url: http://localhost/registry
+onestop_base_url: http://localhost/onestop-search/search
+
+security:
+  enabled: False
