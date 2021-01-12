@@ -26,7 +26,9 @@ class S3UtilsTest(unittest.TestCase):
         boto_client = self.su.connect("s3_resource", None)
         s3_key = "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
-        boto_client.create_bucket(Bucket=bucket)
+        region = self.su.conf['s3_region']
+        location = {'LocationConstraint': region}
+        boto_client.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
         obj_uuid = str(uuid.uuid4())
         boto_client.Object(bucket, s3_key).put(Bucket=bucket, Key=s3_key, Body="my_body", Metadata={'object-uuid': obj_uuid})
 
@@ -52,7 +54,9 @@ class S3UtilsTest(unittest.TestCase):
         local_file = abspath_from_relative(__file__, "../data/file1.csv")
         s3_key= "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
-        boto_client.create_bucket(Bucket=bucket)
+        region = self.su.conf['s3_region']
+        location = {'LocationConstraint': region}
+        boto_client.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
         overwrite = True
 
         self.assertTrue(self.su.upload_s3(boto_client, local_file, bucket, s3_key, overwrite))
@@ -62,7 +66,9 @@ class S3UtilsTest(unittest.TestCase):
         boto_client = self.su.connect("s3", None)
         local_files = ["file1_s3.csv", "file2.csv", "file3.csv"]
         bucket = self.su.conf['s3_bucket']
-        boto_client.create_bucket(Bucket=bucket)
+        region = self.su.conf['s3_region']
+        location = {'LocationConstraint': region}
+        boto_client.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
         overwrite = True
         s3_file = None
         for file in local_files:
