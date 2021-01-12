@@ -19,6 +19,9 @@ class ImMessage:
         # Discovery
         self.discovery = {}
         self.links = []
+        self.spatialBounding = {}
+        self.coordinates= []
+        self.temporalBounding = {}
         self.parentIdentifier = {"parentIdentifier": None}
 
         # Record
@@ -63,7 +66,8 @@ class ImMessage:
                 "linkFunction": link.function
             })
 
-        discovery = {'links': link_list}
+        self.spatialBounding = {'coordinates': self.coordinates}
+        discovery = {'links': link_list, 'spatialBounding': self.spatialBounding, 'temporalBounding': self.temporalBounding}
         payload['discovery'] = discovery
         json_payload = json.dumps(payload, indent=2)
 

@@ -26,7 +26,9 @@ class S3UtilsTest(unittest.TestCase):
         boto_client = self.su.connect("s3_resource", None)
         s3_key = "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
-        boto_client.create_bucket(Bucket=bucket)
+        region = self.su.conf['s3_region']
+        location = {'LocationConstraint': region}
+        boto_client.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
         obj_uuid = str(uuid.uuid4())
         boto_client.Object(bucket, s3_key).put(Bucket=bucket, Key=s3_key, Body="my_body", Metadata={'object-uuid': obj_uuid})
 
@@ -34,10 +36,14 @@ class S3UtilsTest(unittest.TestCase):
 
     @mock_s3
     def test_add_uuid_metadata(self):
-        boto_client = self.su.connect("s3_resource", None)
+        region = self.su.conf['s3_region']
+        boto_client = self.su.connect("s3_resource", region)
+
         s3_key = "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
-        boto_client.create_bucket(Bucket=bucket)
+
+        location = {'LocationConstraint': region}
+        boto_client.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
         boto_client.Object(bucket, s3_key).put(Bucket=bucket, Key=s3_key, Body="my_body")
 
         self.assertTrue(self.su.add_uuid_metadata(boto_client, bucket, s3_key))
@@ -48,7 +54,9 @@ class S3UtilsTest(unittest.TestCase):
         local_file = abspath_from_relative(__file__, "../data/file1.csv")
         s3_key= "csv/file1.csv"
         bucket = self.su.conf['s3_bucket']
-        boto_client.create_bucket(Bucket=bucket)
+        region = self.su.conf['s3_region']
+        location = {'LocationConstraint': region}
+        boto_client.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
         overwrite = True
 
         self.assertTrue(self.su.upload_s3(boto_client, local_file, bucket, s3_key, overwrite))
@@ -58,7 +66,9 @@ class S3UtilsTest(unittest.TestCase):
         boto_client = self.su.connect("s3", None)
         local_files = ["file1_s3.csv", "file2.csv", "file3.csv"]
         bucket = self.su.conf['s3_bucket']
-        boto_client.create_bucket(Bucket=bucket)
+        region = self.su.conf['s3_region']
+        location = {'LocationConstraint': region}
+        boto_client.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
         overwrite = True
         s3_file = None
         for file in local_files:
@@ -77,18 +87,19 @@ class S3UtilsTest(unittest.TestCase):
 
         # makes connection to low level s3 client
         s3 = self.su.connect('s3', region)
-        s3.create_bucket(Bucket=bucket)
+        location = {'LocationConstraint': region}
+        s3.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
         s3.put_object(Bucket=bucket, Key=key, Body="body")
 
         # Reads object data and stores it into a variable
         file_data = self.su.read_bytes_s3(s3, bucket, key)
 
         # Redirecting upload to vault in second region
-        glacier = self.su.connect("glacier", self.su.conf['glacier_region'])
+        glacier = self.su.connect("glacier", self.su.conf['s3_region2'])
         vault_name = self.su.conf['vault_name']
         glacier.create_vault(vaultName=vault_name)
         print('vault name: ' + str(vault_name))
-        print('region name: ' + str(self.su.conf['glacier_region']))
+        print('region name: ' + str(self.su.conf['s3_region2']))
         print('-------file data---------')
         print(file_data)
         response = self.su.upload_archive(glacier, vault_name, file_data)
@@ -111,7 +122,8 @@ class S3UtilsTest(unittest.TestCase):
 
         # Create boto3 low level api connection
         s3 = self.su.connect('s3', region)
-        s3.create_bucket(Bucket=bucket)
+        location = {'LocationConstraint': region}
+        s3.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
         s3.put_object(Bucket=bucket, Key=key, Body="body")
 
         # Using the S3 util class invoke the change of storage class
@@ -127,14 +139,15 @@ class S3UtilsTest(unittest.TestCase):
         Uses high level api to restore object from glacier to s3
         """
 
-        region = self.su.conf['glacier_region']
+        region = self.su.conf['s3_region2']
         bucket = self.su.conf['s3_bucket']
         key = "csv/file1_s3.csv"
         days = 3
 
         # use high level api
         s3 = self.su.connect('s3_resource', region)
-        s3.create_bucket(Bucket=bucket)
+        location = {'LocationConstraint': region}
+        s3.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
         s3.Object(bucket, key).put(Bucket=bucket, Key=key, Body="body")
 
         self.assertTrue(self.su.s3_restore(s3, bucket, key, days) != None)
@@ -147,7 +160,7 @@ class S3UtilsTest(unittest.TestCase):
 
         # Using glacier api initiates job and returns archive results
         # Connect to your glacier vault for retrieval
-        glacier = self.su.connect("glacier", self.su.conf['glacier_region'])
+        glacier = self.su.connect("glacier", self.su.conf['s3_region2'])
         vault_name = self.su.conf['vault_name']
         glacier.create_vault(vaultName=vault_name)
 
