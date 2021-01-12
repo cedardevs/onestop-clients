@@ -31,8 +31,8 @@ class S3Utils:
                                        aws_secret_access_key=self.cred['sandbox']['secret_key'], region_name=region)
 
         if client_type == "s3_resource":
-            boto_client = boto3.resource("s3", aws_access_key_id=self.cred['sandbox']['access_key'],
-                                        aws_secret_access_key=self.cred['sandbox']['secret_key'] )
+            boto_client = boto3.resource("s3", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
+                                         aws_secret_access_key=self.cred['sandbox']['secret_key'] )
 
         if client_type == "glacier":
             boto_client = boto3.client("glacier", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],

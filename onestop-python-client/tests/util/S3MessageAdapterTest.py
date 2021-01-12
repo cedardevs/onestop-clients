@@ -1,5 +1,7 @@
 import unittest
-
+from moto import mock_s3
+from tests.utils import abspath_from_relative
+from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 
 
@@ -50,7 +52,10 @@ class S3MessageAdapterTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
-        self.s3ma = S3MessageAdapter("../../config/csb-data-stream-config.yml")
+        self.s3_utils = S3Utils(abspath_from_relative(__file__, "../../config/aws-util-config-dev.yml"),
+                                abspath_from_relative(__file__, "../../config/credentials-template.yml"))
+        self.s3ma = S3MessageAdapter(abspath_from_relative(__file__, "../../config/csb-data-stream-config.yml"),
+                                     self.s3_utils)
 
     def tearDown(self):
         print("Tear it down!")
@@ -58,7 +63,17 @@ class S3MessageAdapterTest(unittest.TestCase):
     def test_parse_config(self):
         self.assertFalse(self.s3ma.conf['collection_id']==None)
 
+    @mock_s3
     def test_transform(self):
+        s3 = self.s3_utils.connect('s3', self.s3_utils.conf['s3_region'])
+        location = {'LocationConstraint': self.s3_utils.conf['s3_region']}
+        bucket = 'nesdis-ncei-csb-dev'
+        key = 'csv/file1.csv'
+        key2 = 'csv/file2.csv'
+        s3.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
+        s3.put_object(Bucket=bucket, Key=key, Body="body")
+        s3.put_object(Bucket=bucket, Key=key2, Body="body")
+
         payload = self.s3ma.transform(self.recs1)
         print(payload)
 
