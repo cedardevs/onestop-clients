@@ -1,11 +1,10 @@
 import argparse
 import json
-import os
-
 from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.WebPublisher import WebPublisher
+
 
 def handler(recs):
     print("Handler...")
@@ -15,7 +14,7 @@ def handler(recs):
     bucket = None
 
     if recs is None:
-        print( "No records retrieved" )
+        print("No records retrieved")
     else:
         rec = recs[0]
         bucket = rec['s3']['bucket']['name']
@@ -36,26 +35,26 @@ def handler(recs):
 
     # Upload to archive
     file_data = s3_utils.read_bytes_s3(s3, bucket, s3_key)
-    glacier = s3_utils.connect("glacier", s3_utils.conf['region'])
+    glacier = s3_utils.connect("glacier", s3_utils.conf['s3_region'])
     vault_name = s3_utils.conf['vault_name']
 
-    resp_dict = s3_utils.upload_archive( glacier, vault_name, file_data )
+    resp_dict = s3_utils.upload_archive(glacier, vault_name, file_data)
 
     print("archiveLocation: " + resp_dict['location'])
     print("archiveId: " + resp_dict['archiveId'])
     print("sha256: " + resp_dict['checksum'])
 
     addlocPayload = {
-         "fileLocations": {
-             resp_dict['location']: {
-                 "uri": resp_dict['location'],
-                 "type": "ACCESS",
-                 "restricted": True,
-                 "locality": "us-east-1",
-                 "serviceType": "Amazon:AWS:Glacier",
-                 "asynchronous": True
-             }
-         }
+        "fileLocations": {
+            resp_dict['location']: {
+                "uri": resp_dict['location'],
+                "type": "ACCESS",
+                "restricted": True,
+                "locality": "us-east-1",
+                "serviceType": "Amazon:AWS:Glacier",
+                "asynchronous": True
+            }
+        }
     }
     json_payload = json.dumps(addlocPayload, indent=2)
     # Send patch request next with archive location
@@ -63,6 +62,23 @@ def handler(recs):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Launches e2e test")
+    parser.add_argument('-conf', dest="conf", required=True,
+                        help="AWS config filepath")
+
+    parser.add_argument('-cred', dest="cred", required=True,
+                        help="Credentials filepath")
+    args = vars(parser.parse_args())
+
+    # Get configuration file path locations
+    conf_loc = args.pop('conf')
+    cred_loc = args.pop('cred')
+
+    # Upload a test file to s3 bucket
+    s3_utils = S3Utils(conf_loc, cred_loc)
+
+    # Low-level api ? Can we just use high level revisit me!
+    s3 = s3_utils.connect("s3", None)
 
     print(os.environ.get("REGISTRY_USERNAME"))
     print(os.environ.get("REGISTRY_PASSWORD"))
