@@ -3,10 +3,25 @@ kind: Pod
 metadata:
   name: onestop-pyconsumer
 spec:
+  # Add the ConfigMap as a volume to the Pod
+  volumes:
+    # `name` here must match the name
+    # specified in the volume mount
+    - name: pyconsumer-configmap-volume
+      # Populate the volume with config map data
+      configMap:
+        # `name` here must match the name
+        # specified in the ConfigMap's YAML
+        name: pyconsumer-configmap
   containers:
   - name: onestop-pyconsumer
     image: onestop-pyconsumer:latest
     imagePullPolicy: Never
+    volumeMounts:
+        # `name` here must match the name
+        # from the volumes section of this pod
+    - name: pyconsumer-configmap-volume
+      mountPath: /etc/config
     env:
     - name: PYTHONUNBUFFERED
       value: "1"
@@ -31,4 +46,21 @@ spec:
              name: pyconsumer
              key: secret_key
 
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: pyconsumer-configmap
+data:
+  log_level: "INFO"
 
+  # AWS config values
+  sqs_url: https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs
+  sqs_max_polls: "2"
+  s3_region: "us-east-2"
+  s3_bucket: "archive-testing-demo"
+
+  #AWS config values for 2nd vault in different region
+  vault_name: "archive-vault-new"
+  s3_region2: "us-west-2"
+  s3_bucket2: "noaa-nccf-dev-archive"
