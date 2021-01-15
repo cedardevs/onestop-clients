@@ -1,0 +1,15 @@
+# Example config values for osim client
+log_level: DEBUG
+
+# AWS config values
+sqs_url: 'test-queue'
+sqs_name: 'foobar'
+sqs_max_polls: 1
+s3_region: 'us-east-2'
+s3_bucket: 'noaa-goes16'
+s3_key: 'ABI-L1b-RadF/2019/298/15/OR_ABI-L1b-RadF-M6C15_G16_s20192981500369_e20192981510082_c20192981510166.nc'
+
+#AWS config values for 2nd vault in different region
+vault_name: archive-vault-new
+s3_region2: 'us-west-2'
+s3_bucket2: noaa-nccf-dev-archive
