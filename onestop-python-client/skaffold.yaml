@@ -4,11 +4,11 @@ metadata:
   name: onestop-python-client
 build:
   artifacts:
-  - image: cedardevs/onestop-pyconsumer
+  - image: onestop-pyconsumer
     docker:
       dockerfile: Dockerfile
 deploy:
   kubectl:
     manifests:
-    - pyconsumer-pod.yml
-    - pyconsumer-secret.yml
+    - pyconsumer-secret.yaml
+    - pyconsumer-pod.yaml

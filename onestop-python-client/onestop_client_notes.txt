@@ -13,9 +13,9 @@ kubectl delete -f pyconsumer-pod.yml
 ## Add username password info...
 kubectl apply -f pyconsumer-secret.yml
 ## Check results
-kubectl get secret/registry-api -o yaml
+kubectl get secret/pyconsumer -o yaml
 ## Delete secret
-kubectl delete secret/registry-api
+kubectl delete secret/pyconsumer
 
 #################### Legacy review....
 

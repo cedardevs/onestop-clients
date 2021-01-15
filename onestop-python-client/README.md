@@ -172,3 +172,7 @@ consumer module have the following functions to import:
 from onestop.consumer import ... 
 
 ```   
+
+##Docker
+docker build --tag cedardevs/onestop-pyconsumer:latest
+docker push cedardevs/onestop-pyconsumer:latest

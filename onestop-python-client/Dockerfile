@@ -11,7 +11,8 @@ RUN pip install fastavro
 RUN pip install boto3
 RUN pip install botocore
 RUN pip install argparse
-RUN apt-get install vim -y
-CMD tail -f /dev/null
+
+ENTRYPOINT [ "python" ]
+CMD [ "launch_pyconsumer.py" ]
 
 

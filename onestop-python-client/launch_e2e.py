@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
@@ -80,8 +81,13 @@ if __name__ == '__main__':
     # Low-level api ? Can we just use high level revisit me!
     s3 = s3_utils.connect("s3", None)
 
-    print(os.environ.get("REGISTRY_USERNAME"))
-    print(os.environ.get("REGISTRY_PASSWORD"))
+    registry_user = os.environ.get("REGISTRY_USERNAME")
+    registry_pwd = os.environ.get("REGISTRY_PASSWORD")
+    print(registry_user)
+
+    access_key = os.environ.get("AWS_ACCESS")
+    access_secret = os.environ.get("AWS_SECRET")
+    print(access_key)
 
     # parser = argparse.ArgumentParser(description="Launches e2e test")
     # parser.add_argument('-conf', dest="conf", required=True,

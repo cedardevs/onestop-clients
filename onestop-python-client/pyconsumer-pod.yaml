@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: onestop-pyconsumer
+spec:
+  containers:
+  - name: onestop-pyconsumer
+    image: onestop-pyconsumer:latest
+    imagePullPolicy: Never
+    env:
+    - name: PYTHONUNBUFFERED
+      value: "1"
+    - name: REGISTRY_USERNAME
+      valueFrom:
+         secretKeyRef:
+             name: pyconsumer
+             key: registry_username
+    - name: REGISTRY_PASSWORD
+      valueFrom:
+         secretKeyRef:
+             name: pyconsumer
+             key: registry_password
+    - name: ACCESS_KEY
+      valueFrom:
+         secretKeyRef:
+             name: pyconsumer
+             key: access_key
+    - name: SECRET_KEY
+      valueFrom:
+         secretKeyRef:
+             name: pyconsumer
+             key: secret_key
+
+
