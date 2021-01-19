@@ -4,6 +4,7 @@ from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.WebPublisher import WebPublisher
+from onestop.extract.CsbExtractor import CsbExtractor
 
 
 def handler(recs):
@@ -27,7 +28,32 @@ def handler(recs):
             print("Adding uuid")
             s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
-    json_payload = s3ma.transform(recs)
+    im_message = s3ma.transform(recs)
+
+    # Add geospatial temporal bounds
+    # # Looks to see if the file is a csv file
+    if csb_extractor.is_csv(s3_key):
+        bounds_dict = csb_extractor.get_spatial_temporal_bounds('LON', 'LAT', 'TIME')
+        coords = bounds_dict["geospatial"]
+        min_lon = coords[0]
+        min_lat = coords[1]
+        max_lon = coords[2]
+        max_lat = coords[3]
+
+        date_rng = bounds_dict["temporal"]
+        begin_date_str = date_rng[0]
+        end_date_str = date_rng[1]
+
+        coords = csb_extractor.extract_coords(max_lon, max_lat, min_lon, min_lat)
+
+    for coord in coords:
+        im_message.coordinates.append(coord)
+
+    im_message.temporalBounding = {'beginDate': begin_date_str, 'endDate': end_date_str}
+
+    json_payload = im_message.serialize()
+    print(json_payload)
+
     registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
     print(registry_response.json())
 
@@ -97,6 +123,9 @@ if __name__ == '__main__':
     # Receive s3 message and MVM from SQS queue
     sqs_consumer = SqsConsumer(conf_loc, cred_loc)
     s3ma = S3MessageAdapter("config/csb-data-stream-config.yml", s3_utils)
+
+    # Retrieve data from s3 object
+    csb_extractor = CsbExtractor()
     wp = WebPublisher("config/web-publisher-config-dev.yml", cred_loc)
 
     queue = sqs_consumer.connect()
