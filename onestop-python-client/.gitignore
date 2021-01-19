@@ -1,2 +1,3 @@
 config/credentials.yml
 /venv/
+/pyconsumer-secret.yaml
