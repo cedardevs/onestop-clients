@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 import yaml
 import uuid
 import boto3
