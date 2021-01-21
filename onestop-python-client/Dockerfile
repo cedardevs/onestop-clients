@@ -11,6 +11,7 @@ RUN pip install fastavro
 RUN pip install boto3
 RUN pip install botocore
 RUN pip install argparse
+RUN pip install smart_open
 
 ENTRYPOINT [ "python" ]
 CMD [ "launch_pyconsumer.py" ]

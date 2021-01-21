@@ -102,11 +102,10 @@ class S3Utils:
                 print("The file was not found")
                 return False
 
-    def read_csv_s3(self, boto_client, bucket, key):
+    def get_csv_s3(self, boto_client, bucket, key):
         url = "s3://" + bucket + "/" + key
-        for line in sm_open(url, 'rb', transport_params={'session': boto_client}):
-            print("reading csv:" + line.decode('utf-8'))
-        return True
+        sm_open_file = sm_open(url, 'r', transport_params={'session': boto_client})
+        return sm_open_file
 
     def read_bytes_s3(self, boto_client, bucket, key):
         # Create a file object using the bucket and object key.

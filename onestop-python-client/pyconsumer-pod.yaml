@@ -16,7 +16,7 @@ spec:
   containers:
   - name: onestop-pyconsumer
     image: onestop-pyconsumer:latest
-    imagePullPolicy: Never
+    imagePullPolicy: IfNotPresent
     volumeMounts:
         # `name` here must match the name
         # from the volumes section of this pod
