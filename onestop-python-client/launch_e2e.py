@@ -29,11 +29,6 @@ def handler(recs):
             print("Adding uuid")
             s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
-<<<<<<< HEAD
-
-    json_payload = s3ma.transform(recs)
-    print(json_payload)
-=======
     im_message = s3ma.transform(recs)
 
     # Add geospatial temporal bounds
@@ -60,7 +55,6 @@ def handler(recs):
     json_payload = im_message.serialize()
     print(json_payload)
 
->>>>>>> master
     registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
     print(registry_response.json())
 
@@ -91,7 +85,6 @@ def handler(recs):
     # Send patch request next with archive location
     registry_response = wp.publish_registry("granule", object_uuid, json_payload, "PATCH")
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Launches e2e test")
     parser.add_argument('-conf', dest="conf", required=True,
@@ -111,7 +104,6 @@ if __name__ == '__main__':
     # Low-level api ? Can we just use high level revisit me!
     s3 = s3_utils.connect("s3", None)
 
-<<<<<<< HEAD
     registry_user = os.environ.get("REGISTRY_USERNAME")
     registry_pwd = os.environ.get("REGISTRY_PASSWORD")
     print(registry_user)
@@ -168,7 +160,7 @@ if __name__ == '__main__':
     #     print("Message queue consumption failed: {}".format(e))
     #
     #
-=======
+
     # High-level api
     s3_resource = s3_utils.connect("s3_resource", None)
 
@@ -200,4 +192,4 @@ if __name__ == '__main__':
 
     except Exception as e:
         print("Message queue consumption failed: {}".format(e))
->>>>>>> master
+

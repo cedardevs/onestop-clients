@@ -4,8 +4,8 @@ import uuid
 import boto3
 import botocore
 import json
+from smart_open import open as sm_open
 from botocore.exceptions import ClientError
-
 from onestop.util.ClientLogger import ClientLogger
 
 
@@ -26,18 +26,23 @@ class S3Utils:
     def connect(self, client_type, region):
 
         if client_type == "s3":
-            boto_client = boto3.client("s3", aws_access_key_id=self.cred['sandbox']['access_key'],
+            boto = boto3.client("s3", aws_access_key_id=self.cred['sandbox']['access_key'],
                                        aws_secret_access_key=self.cred['sandbox']['secret_key'], region_name=region)
 
         if client_type == "s3_resource":
-            boto_client = boto3.resource("s3", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
+            boto = boto3.resource("s3", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
                                          aws_secret_access_key=self.cred['sandbox']['secret_key'] )
 
         if client_type == "glacier":
-            boto_client = boto3.client("glacier", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
+            boto = boto3.client("glacier", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
                                        aws_secret_access_key=self.cred['sandbox']['secret_key'])
 
-        return boto_client
+        if client_type == "session":
+            boto = boto3.Session(
+                aws_access_key_id=self.cred['sandbox']['access_key'],
+                aws_secret_access_key=self.cred['sandbox']['secret_key'],
+            )
+        return boto
 
     def objectkey_exists(self, bucket, s3_key):
         exists = True
@@ -97,6 +102,12 @@ class S3Utils:
                 print("The file was not found")
                 return False
 
+    def read_csv_s3(self, boto_client, bucket, key):
+        url = "s3://" + bucket + "/" + key
+        for line in sm_open(url, 'rb', transport_params={'session': boto_client}):
+            print("reading csv:" + line.decode('utf-8'))
+        return True
+
     def read_bytes_s3(self, boto_client, bucket, key):
         # Create a file object using the bucket and object key.
         fileobj = boto_client.get_object(
@@ -150,7 +161,7 @@ class S3Utils:
 
     def s3_to_glacier(self, boto_client, bucket_name, key):
         # reads the file data in s3 and store into variable to pass into put_object
-        filedata = self.read_bytes_s3(boto_client,bucket_name,key)
+        filedata = self.read_bytes_s3(boto_client, bucket_name, key)
 
         response = boto_client.put_object(Body=filedata, Bucket= bucket_name,StorageClass='GLACIER', Key=key)
         print(response)

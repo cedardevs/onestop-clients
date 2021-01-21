@@ -1,6 +1,8 @@
 # OneStop Clients
 
 This python package provides an API to connect to OneStop's event stream (aka Inventory Manager). At this early stage there is only a single module for consuming messages from the kafka brokers that back OneStop.
+## AWS Credentials
+Copy credentials-template.yml to credentials.yml and insert your ACCESS_KEY and SECRET_KEY
 
 ## KafkaPublisher
 Relies on fastavro <1.0 and confluent-kafka <1.5 
