@@ -1,0 +1,10 @@
+{
+  "namespace": "org.cedar.schemas.avro.psi",
+  "name": "ValidDescriptor",
+  "type": "enum",
+  "symbols": [
+    "VALID",
+    "INVALID",
+    "UNDEFINED"
+  ]
+}
