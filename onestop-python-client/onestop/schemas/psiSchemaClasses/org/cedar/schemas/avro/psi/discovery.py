@@ -39,7 +39,7 @@ class Discovery:
     keywords: Optional[List[KeywordsElement]]
     topicCategories: Optional[List[str]]
     temporalBounding: Optional[TemporalBounding]
-    spatialBounding: Union[None, Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon]
+    spatialBounding: Optional[Union[None, Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon]]
     isGlobal: Optional[bool]
     acquisitionInstruments: Optional[List[Instruments]]
     acquisitionOperations: Optional[List[Operation]]
