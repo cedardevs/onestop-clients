@@ -1,6 +1,7 @@
 import logging
 import requests
 import yaml
+
 from onestop.util.ClientLogger import ClientLogger
 
 class WebPublisher:
@@ -23,8 +24,12 @@ class WebPublisher:
 
         registry_url = self.conf['registry_base_url'] + "/metadata/" + metadata_type + "/" + uuid
         print("Post: " + registry_url)
+
+        # Added this to fix the certificate request)
+        #http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
+
         if method == "POST":
-            response = requests.post(url=registry_url, headers=headers, auth=(self.cred['registry']['username'],
+            response = requests.post(url=registry_url, headers=headers,auth=(self.cred['registry']['username'],
                                                                        self.cred['registry']['password']),
                               data=payload, verify=False)
 
