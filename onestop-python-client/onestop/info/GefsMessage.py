@@ -20,8 +20,7 @@ class GefsMessage:
         self.parentDoi = ""
         self.rel_type = ""
 
-        self.obj_uri = uri
-        self.uri = uri
+        self.uri = ""
         self.type = ""
         self.deleted = False
         self.restricted = False
@@ -43,6 +42,10 @@ class GefsMessage:
         self.temporalBounding = {}
         self.parentIdentifier = {"parentIdentifier": None}
 
+        #this is only used for NOAA object tagging, not in onestop payload
+        self.s3Bucket = None
+        self.s3Key = None
+        self.S3Dir = None
         # Record
         self.file_messages = []
 
@@ -79,7 +82,7 @@ class GefsMessage:
             "checksums": self.chk_sums,
             "format": self.file_format,
             "headers":self.headers,
-            "optionalAttributes":, self.optAttrFileInfo}
+            "optionalAttributes": self.optAttrFileInfo}
 
         payload['fileInformation'] = file_information
         relationship ={
@@ -112,7 +115,7 @@ class GefsMessage:
         }
         discovery = {
             "title": self.file_name,
-            "fileIdentifier": self.fileIdentifier
+            "fileIdentifier": self.fileIdentifier,
             "links": link_list, 
             "parentIdentifier": self.parentIdentifier,
             "spatialBounding": self.spatialBounding, 

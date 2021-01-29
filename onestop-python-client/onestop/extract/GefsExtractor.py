@@ -13,7 +13,12 @@ from datetime import timedelta
 import  tarfile
 import shutil
 import sys
-from info.GefsMessage
+import yaml
+
+from onestop.util.S3Utils import S3Utils
+from onestop.WebPublisher import WebPublisher
+from onestop.info.GefsMessage import GefsMessage
+from onestop.info.Link import Link
 
 gefs_regex = r"(?P<variable>[a-z_]*)_(?P<run_dt>\d{10})_(?P<member>[cp]\d{2})\.grib2$"
 gefs_file = "ugrd_pres_2020121102_c02.grib2"
@@ -27,7 +32,7 @@ Author: Jeanne Lane, SAIC
 """
 
 class GefsExtractor():
-    def __init__(self, conf_loc, wp_config_file):
+    def __init__(self, conf_loc, wp_config_file, cred_file):
         """
         Class constructor
         """
@@ -36,10 +41,15 @@ class GefsExtractor():
         try:
             with open(conf_loc) as f:
                 self.conf = yaml.load(f, Loader=yaml.FullLoader)
+                print(self.conf)
+                print(type(self.conf))
                 self.queue_url = self.conf['queue_url']
                 self.region = self.conf['region']
             self.wp_config_file = wp_config_file
-        except Exception ex:
+            self.cred_file = cred_file
+            self.s3_utils = S3Utils(wp_config_file, cred_file)
+        except Exception as ex:
+            print('exception')
             self.logger.error("Exception occured while opening config file")
             self.logger.error(sys.exc_info())
 
@@ -53,12 +63,12 @@ class GefsExtractor():
         :return: dictionary of metadata extracted from file
         """
         meta_dict = {}
-        gefs = re.match(gefs_regex, 'filename')
+        gefs = re.match(gefs_regex, filename)
         print("testing regex")
         print(filename)
         if gefs:
 
-            meta_dict = self.parse_gefs_filename(filename)
+            meta_dict = self.parse_gefs_filename(gefs)
             meta_dict['headers'] = "" # can add method to extract gefs headers?
             meta_dict['optAttrFileInfo'] = "" #can add method to extract additional information
             #east,west,south,north
@@ -107,7 +117,7 @@ class GefsExtractor():
             str(west) + ", " + str(north) +
             "] \n ] \n ] \n" )
         gefs_mes.coordinates = polyStr
-        return meta_dict
+        return gefs_mes
 
 
     def transformMetadata(self, gefs_mes):
@@ -125,36 +135,36 @@ class GefsExtractor():
         return gefs_mes
 
 
-    def parse_gefs_filename(self, gefs_file):
+    def parse_gefs_filename(self, gefs_regex_match):
         """
         Extract metadata from filename
-        :param gefs_file: str for GEFS file to be parsed
+        :param gefs_regex_match: regex match group list
         :return: dictionary of parsed data
         """
         variable = ""
         run_dt = ""
         member = ""
-        m_list = re.match(gefs_regex, gefs_file)
         try:
-            variable = m_list.group('variable')
-            run_dt = m_list.group('run_dt')
-            member = m_list.group('member')
+            variable = gefs_regex_match.group('variable')
+            run_dt = gefs_regex_match.group('run_dt')
+            member = gefs_regex_match.group('member')
         except IndexError:
             print("gefs file name formed incorrectly")
         gefs_dict = {"variable": variable, "begin_dt": run_dt, "member": member}
         return gefs_dict
 
     # Create SQS client
-    def receive_messages(self):
+    def receive_messages(self, sqs_client):
         """
         Request and receive messages from AWS SQS, retrieve messages from response object, return list
+        :param sqs_client: client to AWS SQS service
         :return: list of dictionaries representing messages
         """
         messages = []
-        sqs = boto3.client('sqs',  region_name=self.region)
+        
 
         # Receive message from SQS queue
-        response = sqs.receive_message(
+        response = sqs_client.receive_message(
             QueueUrl=self.queue_url,
             AttributeNames=[
                 'All'
@@ -171,9 +181,10 @@ class GefsExtractor():
             print("no messages in response")
         return messages
 
-    def get_records_from_messages(self, messages):
+    def get_records_from_messages(self, sqs_client, messages):
         """
         Retrieve records from extracted AWS SQS messages
+        :param sqs_client: client to AWS SQS service
         :param messages: messages that were extracted from AWS SQS
         :return: list of dictionaries representing extracted records
         """
@@ -193,14 +204,14 @@ class GefsExtractor():
                         msg_records = body_message['Records']
                         #print(len(msg_records))
                         #print(msg_records)
-                        self.process_msg_records(msg_records)
+                        is_success = self.process_msg_records(msg_records)
                     else:
                         print("no records in body message")
                 else:
                     print('no Message in body')
                 print("deleting message:" + messages[indx]["ReceiptHandle"])
                 if is_success:
-                    sqs.delete_message(QueueUrl=self.queue_url,ReceiptHandle=messages[indx]["ReceiptHandle"])
+                    sqs_client.delete_message(QueueUrl=self.queue_url,ReceiptHandle=messages[indx]["ReceiptHandle"])
             else:
                 print('no body in outer message')
         return records
@@ -208,8 +219,8 @@ class GefsExtractor():
     def process_msg_records(self, records):
         is_success = False
         if len(records) > 0:
-            meta_list = self.process_records(records)
-            self.publishToOneStop(meta_list)
+            gefs_msg_list = self.process_records(records)
+            self.publishToOneStop(gefs_msg_list)
             gefs_tag_dict={
                 "noaa:programoffice": "esrl",
                 "noaa:environment": "dev",
@@ -221,9 +232,10 @@ class GefsExtractor():
                 "format":"grib2"
                 }
 
-            is_success = self.updateObjectTagsWithMetadata(meta_list, gefs_tag_dict)
+            is_success = self.updateObjectTagsWithMetadata(gefs_msg_list, gefs_tag_dict)
         else:
             print('no records at this time')
+            is_success = True
         return is_success
 
     def process_file(self, localfile, s3Key, s3Bucket, endpoint_url, lastModified, file_size=None):
@@ -235,32 +247,40 @@ class GefsExtractor():
         :param endpoint_url: string representing endpoint for AWS S3 bucket
         :param lastModified: timestamp for time s3Key file was last modified
         :param file_size: file size in byte of S3Key file
-        :return: dictionary of metadata
+        :return: GefsMessage populated or None
         """
         filename = localfile.split('/')[-1]
-        gefs_mes = GefsMessage()
-        meta_dict = self.extractMetadata(filename, gefschecksum_algorithm_mes)
-        gefs_mes = self.enhanceMetadata(meta_dict)
-        gefs_mes = self.transformMetadata(gefs_mes)
-        if file_size is None:
-            file_size = os.path.getsize(localfile)
-        gefs_mes.file_name = filename
-        gefs_mes.file_size = file_size
-        gefs_mes.s3Bucket = s3Bucket
-        gefs_mes.s3Key = s3Key
-        gefs_mes.s3Dir = 's3://' + s3Bucket + '/' + s3Key.rsplit('/',1)[0] + '/'
-        gefs_mes.s3Path = meta_dict['s3Dir'] + meta_dict['filename']
+        
+        #get initial dictionary from file
+        meta_dict = self.extractMetadata(filename)
+        if meta_dict["type"] == "gefs":
 
-        s3UrlStr = '{}/{}/{}'.format(endpoint_url, meta_dict['s3Bucket'], meta_dict['s3Key'])
-        gefs_mes.s3Url =s3UrlStr
-        link = Link("download", "Amazon S3", "HTTPS", s3UrlStr)
-        gefs_mes.append_link(link)
-        chk_sums = self.get_checksum(localfile)
-        gefs_mes.alg = chk_sums['checksum_algorithm']
-        gefs_mes.alg_value = chk_sums['checksum_value']
-        gefs_mes.lastModifiedMillis = lastModified
-        gefs_mes.optAttrFileLoc =""
-        gefs_mes.fileIdentifier = str( uuid.uuid1() )
+            #populate object with dictionary and enrich with known information about file
+            gefs_mes = self.createMetadataMessage(meta_dict)
+            #transfrom data in object for use in JSON
+            gefs_mes = self.transformMetadata(gefs_mes)
+            if file_size is None:
+                file_size = os.path.getsize(localfile)
+            gefs_mes.file_name = filename
+            gefs_mes.file_size = file_size
+            gefs_mes.s3Bucket = s3Bucket
+            gefs_mes.s3Key = s3Key
+            gefs_mes.s3Dir = 's3://' + s3Bucket + '/' + s3Key.rsplit('/',1)[0] + '/'
+            gefs_mes.s3Path = gefs_mes.s3Dir + filename
+
+            s3UrlStr = '{}/{}/{}'.format(endpoint_url, gefs_mes.s3Bucket, gefs_mes.s3Key)
+            gefs_mes.s3Url =s3UrlStr
+            link = Link("download", "Amazon S3", "HTTPS", s3UrlStr)
+            gefs_mes.append_link(link)
+            chk_sums = self.get_checksum(localfile)
+            gefs_mes.alg = chk_sums['checksum_algorithm']
+            gefs_mes.alg_value = chk_sums['checksum_value']
+            gefs_mes.lastModifiedMillis = lastModified
+            gefs_mes.optAttrFileLoc =""
+            gefs_mes.fileIdentifier = str( uuid.uuid1() )
+        else:
+            self.logger.error("error occured while parsing")
+            gefs_mes = None
         return gefs_mes
 
 
@@ -268,14 +288,14 @@ class GefsExtractor():
         """
         Extract file information from record and download file, update meta_dict with information from record
         :param records: list of dictionaries representing records
-        :return: lJSON representation of list of objects
+        :return: list of GefsMessage objects
         """
         print('processing records')
         print(len(records))
         print("*********************************************************")
         #print(records)
         s3_client = boto3.client('s3', region_name='us-east-1')
-        payload_list = []
+        gefs_mes_list = []
         for record in records:
             s3Bucket = record.get("s3").get("bucket").get("name")
             s3Key = record.get("s3").get("object").get("key")
@@ -314,23 +334,23 @@ class GefsExtractor():
                             memberFile = os.path.join(self.conf['temp_dir'], member.name)
                             print(memberFile)
                             gefs_mes = self.process_file(memberFile, s3Key, s3Bucket, endpoint_url, lastModified)
-                            payload = gefs_mes.serialize()
-                            payload_list.append(payload)
+                            if gefs_mes is not None:
+                                gefs_mes_list.append(gefs_mes)
                 except ValueError:
                     self.logger.error("Error unpacking archive")
                     self.logger.error
 
             else:
                 gefs_mes = self.process_file(localFile, s3Key, s3Bucket, endpoint_url, lastModified, s3Filesize)
-                payload = gefs_mes.serialize()
-                payload_list.append(payload)
-        json_payload = json.dumps(payload_list, indent=2)
-        return json_payload
+                if gefs_mes is not None:
+                    gefs_mes_list.append(gefs_mes)
+        return gefs_mes_list
 
     def untar_members(self, members):
         """
         return a list of untarred
         """
+        #TODO
         return members
 
     def get_checksum(self, localFile):
@@ -354,35 +374,49 @@ class GefsExtractor():
         checksum_dict['checksum_value'] = sha1Val
         return checksum_dict
 
-    def publishToOneStop(self, meta_list):
+    def publishToOneStop(self, gefs_message_list):
         """
-        Send list of metadata dictionaries to OneStop as SNS in format of Granular Template
-        :param meta_list: list of metadata dictionaries
-        :return: void
+        Send serialized GefsMessage object list to OneStop as in format of Granular Template
+        via WebPublisher
+        :param gefs_message_list: list of GefsMessage objects
+        :return: boolean, True if success
         """
-        wp = WebPublisher(self.wp_config_file, cred_loc)
-        for gefsMessage in meta_list:
-            if gefsMessage.type != 'n/a':
-                json_payload = self.create_msg_body(meta_dict)
+        send_to_onestop = True
+        is_success = False
+        for gefs_mes in gefs_message_list:
+            payload = gefs_mes.serialize()
+
+            json_payload = json.dumps(payload, indent=2)
+            print(json_payload)
+            if send_to_onestop:
                 print("sending to OneStop")
+                wp = WebPublisher(self.wp_config_file, self.cred_file)
+                s3_resource = self.s3_utils.connect("s3_resource", None)
+                object_uuid = self.s3_utils.get_uuid_metadata(s3_resource, gefs_mes.s3Bucket, gefs_mes.s3Key)
                 registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
                 print(registry_response.json())
+                #is_success logic
+                is_success = True
+            else:
+                print("not sending to OneStop")
+                is_success = True
+        return is_success
 
     def updateObjectTagsWithMetadata(self, meta_list, tag_dict):
         """
-        Send list of metadata dictionaries to OneStop as SNS in format of Granular Template
-        :param meta_list: list of metadata dictionaries
+        Update objects with NOAA AWS Tags
+        :param meta_list: list of GefsMessage objects
         :return: boolean if successful response
         """
 
         is_success = True
         s3_client = boto3.client('s3',  region_name=self.region)
-        for meta_dict in meta_list:
-            if meta_dict['type'] != 'n/a':
+        for gefs_mes in meta_list:
+            if gefs_mes != 'n/a':
                 tag_list = [{'Key': str(k), 'Value': str(v)} for k, v in tag_dict.items()]
                 response = s3_client.put_object_tagging(
-                    Bucket=meta_dict['s3Bucket'],
-                    Key=meta_dict['s3Key'],
+                    Bucket=gefs_mes.s3Bucket,
+                    Key=gefs_mes.s3Key,
                     Tagging={
                         'TagSet': tag_list
                         }
@@ -396,9 +430,10 @@ class GefsExtractor():
         Run main logic: retrieve messages from S3/SNS/SQS, extract file information from messages, download file,
         extract metadata, reformat metadata to required template, and send to OneStop SNS
         """
-        messages = self.receive_messages()
+        sqs_client = boto3.client('sqs',  region_name=self.region)
+        messages = self.receive_messages(sqs_client)
         #print(messages)
-        records = self.get_records_from_messages(messages)
+        records = self.get_records_from_messages(sqs_client, messages)
         
         #print(messages)
 
@@ -424,7 +459,11 @@ def run():
     """
     Entry point for module
     """
-    gefs = GefsExtractor("config/gefs-extraction-config.yml","config/web-publisher-config-dev.yml")
+    config_path = "/home/siteadm/onestop-clients/onestop-python-client/config/"
+    gefs_config = config_path + "gefs-extraction-config.yml"
+    wp_config = config_path + "web-publisher-config-dev.yml"
+    cred_config = config_path + "credentials-template.yml"
+    gefs = GefsExtractor(gefs_config, wp_config, cred_config)
     gefs.run_interval_tracker()
 
 if __name__ == '__main__':

@@ -3,8 +3,8 @@ log_level: INFO
 
 # COLLECTION or GRANULE
 metadata_type: granule
-registry_base_url: https://ab76afcf90ee844ea95ba43a75c3624c-1204932138.us-east-1.elb.amazonaws.com/registry
-onestop_base_url: https://ab76afcf90ee844ea95ba43a75c3624c-1204932138.us-east-1.elb.amazonaws.com/onestop-search/search
+registry_base_url: http://internal-aedcb94123a514f679c943e66cb7d3c0-979069726.us-east-1.elb.amazonaws.com/registry
+onestop_base_url: http://internal-aedcb94123a514f679c943e66cb7d3c0-979069726.us-east-1.elb.amazonaws.com/onestop-search/search
 
 security:
   enabled: True
