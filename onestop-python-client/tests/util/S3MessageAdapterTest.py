@@ -4,7 +4,6 @@ from tests.utils import abspath_from_relative
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 
-
 class S3MessageAdapterTest(unittest.TestCase):
     s3ma = None
 
@@ -63,6 +62,7 @@ class S3MessageAdapterTest(unittest.TestCase):
     def test_parse_config(self):
         self.assertFalse(self.s3ma.conf['collection_id']==None)
 
+
     @mock_s3
     def test_transform(self):
         s3 = self.s3_utils.connect('s3', self.s3_utils.conf['s3_region'])
@@ -81,5 +81,4 @@ class S3MessageAdapterTest(unittest.TestCase):
         print(payload)
         self.assertTrue(payload!=None)
 
-if __name__ == '__main__':
-    unittest.main()
+
