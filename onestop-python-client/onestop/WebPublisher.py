@@ -60,12 +60,15 @@ class WebPublisher:
                                                                          self.cred['registry']['password']), verify=False)
         return response
 
-    def get_granules_onestop(self, metadata_type, uuid):
-        payload = '{"queries":[],"filters":[{"type":"collection","values":["' + uuid +  '"]}],"facets":true,"page":{"max":50,"offset":0}}'
-
+    def search_onestop(self, metadata_type, payload):
         headers = {'Content-Type': 'application/json'}
         onestop_url = self.conf['onestop_base_url'] + "/" + metadata_type
 
         print("Get: " + onestop_url)
         response = requests.get(url=onestop_url, headers=headers, data=payload, verify=False)
         return response
+
+    def get_granules_onestop(self, metadata_type, uuid):
+        payload = '{"queries":[],"filters":[{"type":"collection","values":["' + uuid +  '"]}],"facets":true,"page":{"max":50,"offset":0}}'
+
+        self.search_onestop(metadata_type, payload)
