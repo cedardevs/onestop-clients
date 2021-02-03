@@ -179,7 +179,7 @@ if __name__ == '__main__':
 
     # Receive s3 message and MVM from SQS queue
     sqs_consumer = SqsConsumer(conf_loc, cred_loc)
-    s3ma = S3MessageAdapter("config/csb-data-stream-config.yml", s3_utils)
+    s3ma = S3MessageAdapter("scripts/config/csb-data-stream-config.yml", s3_utils)
 
     # Retrieve data from s3 object
     csb_extractor = CsbExtractor()
