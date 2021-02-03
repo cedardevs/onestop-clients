@@ -53,6 +53,7 @@ if __name__ == '__main__':
 
     f = open(cred_loc, "w+")
 
+#TODO revisit this when we make a standard that all scripts will follow
     #write creds to a file to avoid changing the python library
     s = """sandbox:
   access_key: {key}
@@ -75,7 +76,10 @@ registry:
     try:
         debug = False
         # # Pass in the handler method
-        sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
+        #Hack to make this stay up forever
+        #TODO add feature to client library for polling indefinitely
+        while True:
+            sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
 
     except Exception as e:
         print("Message queue consumption failed: {}".format(e))
