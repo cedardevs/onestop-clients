@@ -16,12 +16,7 @@ class S3MessageAdapter:
         self.logger.info("Initializing " + self.__class__.__name__)
         self.s3_utils = s3_utils
 
-        self.prefix_mapping = {
-            'NESDIS/CSB': '73d16fe3-7ccb-4918-b77f-30e343cdd378',
-            'NESDIS/H8': '0fad03df-0805-434a-86a6-7dc42d68480e',
-            'NESDIS/GOES': '11111111-1111-1111-1111-111111111111',
-            'NESDIS/SAB': '98e03b47-069a-4f2c-8071-649e8c4254d6'
-        }
+        self.prefix_mapping = self.conf['prefixMap']
 
     # Returns appropiate Collection ID with given s3_key
     def collection_id_map(self,s3_key):
