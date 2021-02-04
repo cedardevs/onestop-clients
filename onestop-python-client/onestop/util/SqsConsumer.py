@@ -26,6 +26,7 @@ class SqsConsumer:
         # Get the queue. This returns an SQS.Queue instance
         sqs_session = boto_session.resource('sqs', region_name=self.conf['s3_region'])
         sqs_queue = sqs_session.Queue(self.conf['sqs_url'])
+        self.logger.info("Connecting to " + self.conf['sqs_url'])
         return sqs_queue
 
     def receive_messages(self, queue, sqs_max_polls, cb):
@@ -33,7 +34,7 @@ class SqsConsumer:
 
         i = 1
         while i <= sqs_max_polls:
-            print("loop attempt: " + str(i))
+            self.logger.info("Polling attempt: " + str(i))
             i = i + 1
 
             sqs_messages = queue.receive_messages(MaxNumberOfMessages=10, WaitTimeSeconds=10)
@@ -50,7 +51,8 @@ class SqsConsumer:
 
                     if 'Records' in message_content:
                         recs = message_content['Records']
-                        print('Records: ' + str(recs) )
+                        self.logger.info("Received message")
+                        self.logger.debug('Records: ' + str(recs))
                     else:
                         self.logger.info("s3 event without records content received.")
 

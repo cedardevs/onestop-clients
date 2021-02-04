@@ -23,7 +23,7 @@ class WebPublisher:
         urllib3.disable_warnings()
         headers = {'Content-Type': 'application/json'}
         registry_url = self.conf['registry_base_url'] + "/metadata/" + metadata_type + "/" + uuid
-        print("Post: " + registry_url)
+        self.logger.info("Posting " + metadata_type + " with ID " + uuid + " to " + registry_url)
         if method == "POST":
             response = requests.post(url=registry_url, headers=headers, auth=(self.cred['registry']['username'],
                                                                        self.cred['registry']['password']),

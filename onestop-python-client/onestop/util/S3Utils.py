@@ -81,7 +81,7 @@ class S3Utils:
         s3_object.copy_from(
             CopySource={'Bucket': bucket, 'Key': s3_key},
             Metadata=s3_object.metadata, MetadataDirective='REPLACE' )
-        return True
+        return obj_uuid
 
     def upload_s3(self, boto_client, local_file, bucket, s3_key, overwrite):
         self.logger.debug("Receive messages")

@@ -18,6 +18,8 @@ def handler(recs):
         bucket = rec['s3']['bucket']['name']
         s3_key = rec['s3']['object']['key']
 
+        s3_resource = s3_utils.connect("s3_resource", None)
+        print(s3_resource)
         # Fetch the object to get the uuid
         object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
 
@@ -25,7 +27,7 @@ def handler(recs):
             print("Retrieved object-uuid: " + object_uuid)
         else:
             print("Adding uuid")
-            s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
+            object_uuid = s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
     # Convert s3 message to IM message
     s3ma = S3MessageAdapter(conf_loc, s3_utils)
@@ -38,7 +40,10 @@ def handler(recs):
     print(registry_response.json())
 
 if __name__ == '__main__':
+
+    #This is where helm will mount the config
     conf_loc = "/etc/config/config.yml"
+    #this is where we are about to write the cred yaml
     cred_loc = "creds.yml"
 
     registry_user = os.environ.get("REGISTRY_USERNAME")
@@ -48,6 +53,7 @@ if __name__ == '__main__':
 
     f = open(cred_loc, "w+")
 
+#TODO revisit this when we make a standard that all scripts will follow
     #write creds to a file to avoid changing the python library
     s = """sandbox:
   access_key: {key}
@@ -61,21 +67,6 @@ registry:
     f.close()
     r = open(cred_loc, "r")
 
-    s3_utils = S3Utils(conf_loc, cred_loc)
-    # Low-level api ? Can we just use high level revisit me!
-    s3 = s3_utils.connect("s3", None)
-    bucket = s3_utils.conf['s3_bucket']
-
-    overwrite = True
-
-    # Add 3 files to bucket
-    local_files = ["file1.csv", "file4.csv"]
-    s3_file = None
-    for file in local_files:
-        local_file = "tests/data/" + file
-        s3_file = "csv/" + file
-        s3_utils.upload_s3(s3, local_file, bucket, s3_file, overwrite)
-
     # # Receive s3 message and MVM from SQS queue
     s3_utils = S3Utils(conf_loc, cred_loc)
     sqs_max_polls = s3_utils.conf['sqs_max_polls']
@@ -85,7 +76,10 @@ registry:
     try:
         debug = False
         # # Pass in the handler method
-        sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
+        #Hack to make this stay up forever
+        #TODO add feature to client library for polling indefinitely
+        while True:
+            sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
 
     except Exception as e:
         print("Message queue consumption failed: {}".format(e))
