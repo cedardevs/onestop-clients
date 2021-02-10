@@ -277,7 +277,7 @@ class GefsExtractor():
             gefs_mes.alg_value = chk_sums['checksum_value']
             gefs_mes.lastModifiedMillis = lastModified
             gefs_mes.optAttrFileLoc =""
-            gefs_mes.fileIdentifier = str( uuid.uuid1() )
+            gefs_mes.fileIdentifier = str( uuid.uuid4() )
         else:
             self.logger.error("error occured while parsing")
             gefs_mes = None
@@ -392,7 +392,8 @@ class GefsExtractor():
                 print("sending to OneStop")
                 wp = WebPublisher(self.wp_config_file, self.cred_file)
                 s3_resource = self.s3_utils.connect("s3_resource", None)
-                object_uuid = self.s3_utils.get_uuid_metadata(s3_resource, gefs_mes.s3Bucket, gefs_mes.s3Key)
+                #object_uuid = self.s3_utils.get_uuid_metadata(s3_resource, gefs_mes.s3Bucket, gefs_mes.s3Key)
+                object_uuid = gefs_mes.fileIdentifier
                 registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
                 print(registry_response.json())
                 #is_success logic
