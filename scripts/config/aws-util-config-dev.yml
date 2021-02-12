@@ -6,6 +6,7 @@ sqs_url: https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-s
 sqs_max_polls: 2
 s3_region: "us-east-2"
 s3_bucket: archive-testing-demo
+#s3_bucket: noaa-nccf-dev
 
 #AWS config values for 2nd vault in different region
 vault_name: archive-vault-new

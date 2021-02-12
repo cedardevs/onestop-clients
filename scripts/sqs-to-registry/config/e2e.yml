@@ -1,0 +1,35 @@
+log_level: INFO
+
+# AWS config values
+sqs_url: https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs
+sqs_max_polls: 2
+s3_region: us-east-2
+s3_bucket: archive-testing-demo
+
+#AWS config values for 2nd vault in different region
+vault_name: archive-vault-new
+s3_region2: us-west-2
+s3_bucket2: noaa-nccf-dev-archive
+
+#CSB stream config
+format: csv
+headers: UNIQUE_ID,FILE_UUID,LON,LAT,DEPTH,TIME,PLATFORM_NAME,PROVIDER
+type: COLLECTION
+collection_id: fdb56230-87f4-49f2-ab83-104cfd073177
+access_bucket: https://archive-testing-demo.s3-us-east-2.amazonaws.com
+#access_bucket: https://odp-noaa-nesdis-ncei-test.s3-us-west-2.amazonaws.com
+file_identifier_prefix: "gov.noaa.ncei.csb:"
+
+# COLLECTION or GRANULE
+metadata_type: granule
+registry_base_url: http://onestop-registry:80
+onestop_base_url: http://onestop-search:8080
+
+security:
+  enabled: True
+
+prefixMap:
+  NESDIS/CSB: '73d16fe3-7ccb-4918-b77f-30e343cdd378'
+  NESDIS/H8: '0fad03df-0805-434a-86a6-7dc42d68480e'
+  NESDIS/GOES: '11111111-1111-1111-1111-111111111111'
+  NESDIS/SAB: '98e03b47-069a-4f2c-8071-649e8c4254d6'

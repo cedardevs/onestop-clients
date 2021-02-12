@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: onestop-pyconsumer
+spec:
+  # Add the ConfigMap as a volume to the Pod
+  volumes:
+    # `name` here must match the name
+    # specified in the volume mount
+    - name: pyconsumer-configmap-volume
+      # Populate the volume with config map data
+      configMap:
+        # `name` here must match the name
+        # specified in the ConfigMap's YAML
+        name: pyconsumer-configmap
+  containers:
+  - name: onestop-pyconsumer
+    image: onestop-pyconsumer:latest
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+        # `name` here must match the name
+        # from the volumes section of this pod
+    - name: pyconsumer-configmap-volume
+      mountPath: /etc/config
+    env:
+    - name: PYTHONUNBUFFERED
+      value: "1"
+    - name: REGISTRY_USERNAME
+      valueFrom:
+         secretKeyRef:
+             name: pyconsumer
+             key: registry_username
+    - name: REGISTRY_PASSWORD
+      valueFrom:
+         secretKeyRef:
+             name: pyconsumer
+             key: registry_password
+    - name: ACCESS_KEY
+      valueFrom:
+         secretKeyRef:
+             name: pyconsumer
+             key: access_key
+    - name: SECRET_KEY
+      valueFrom:
+         secretKeyRef:
+             name: pyconsumer
+             key: secret_key
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: pyconsumer-configmap
+data:
+  pyconsumer.yaml: |-
+    log_level: INFO
+
+    # AWS config values
+    aws:
+      sqs_url: https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs
+      sqs_max_polls: 2
+      s3_region: us-east-2
+      s3_bucket: archive-testing-demo
+
+      #AWS config values for 2nd vault in different region
+      vault_name: archive-vault-new
+      s3_region2: us-west-2
+      s3_bucket2: noaa-nccf-dev-archive
+
+    csb:
+      format: csv
+      headers: UNIQUE_ID,FILE_UUID,LON,LAT,DEPTH,TIME,PLATFORM_NAME,PROVIDER
+      type: COLLECTION
+      collection_id: fdb56230-87f4-49f2-ab83-104cfd073177
+      psi_registry_url: https://cedardevs.org/
+      access_bucket: https://archive-testing-demo.s3-us-east-2.amazonaws.com
+      #access_bucket: https://odp-noaa-nesdis-ncei-test.s3-us-west-2.amazonaws.com
+      file_identifier_prefix: "gov.noaa.ncei.csb:"
+
+    # Web Publisher
+    web:
+      # COLLECTION or GRANULE
+      metadata_type: granule
+      registry_base_url: https://cedardevs.org/onestop/registry-api
+      onestop_base_url: https://cedardevs.org/onestop/search-api
+
+      security:
+        enabled: True

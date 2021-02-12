@@ -1,7 +1,6 @@
 import logging
 import requests
 import yaml
-
 from onestop.util.ClientLogger import ClientLogger
 
 class WebPublisher:
@@ -24,10 +23,6 @@ class WebPublisher:
 
         registry_url = self.conf['registry_base_url'] + "/metadata/" + metadata_type + "/" + uuid
         print("Post: " + registry_url)
-
-        # Added this to fix the certificate request)
-        #http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
-
         if method == "POST":
             response = requests.post(url=registry_url, headers=headers,auth=(self.cred['registry']['username'],
                                                                        self.cred['registry']['password']),
@@ -64,12 +59,15 @@ class WebPublisher:
                                                                          self.cred['registry']['password']), verify=False)
         return response
 
-    def get_granules_onestop(self, metadata_type, uuid):
-        payload = '{"queries":[],"filters":[{"type":"collection","values":["' + uuid +  '"]}],"facets":true,"page":{"max":50,"offset":0}}'
-
+    def search_onestop(self, metadata_type, payload):
         headers = {'Content-Type': 'application/json'}
         onestop_url = self.conf['onestop_base_url'] + "/" + metadata_type
 
         print("Get: " + onestop_url)
         response = requests.get(url=onestop_url, headers=headers, data=payload, verify=False)
         return response
+
+    def get_granules_onestop(self, metadata_type, uuid):
+        payload = '{"queries":[],"filters":[{"type":"collection","values":["' + uuid +  '"]}],"facets":true,"page":{"max":50,"offset":0}}'
+
+        self.search_onestop(metadata_type, payload)
