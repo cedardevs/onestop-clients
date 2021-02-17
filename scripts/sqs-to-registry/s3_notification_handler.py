@@ -3,6 +3,12 @@ from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.WebPublisher import WebPublisher
+from onestop.util.SqsHandlers import create_delete_handler
+from onestop.util.SqsHandlers import create_upload_handler
+from onestop.util.SqsHandlers import create_copy_handler
+from datetime import date
+import yaml
+import argparse
 
 
 def handler(recs):
@@ -12,65 +18,93 @@ def handler(recs):
     object_uuid = None
 
     if recs is None:
-        print("No records retrieved")
+        print("No records retrieved" + date.today())
     else:
         rec = recs[0]
-        bucket = rec['s3']['bucket']['name']
-        s3_key = rec['s3']['object']['key']
+        if 'ObjectRemoved' in rec['eventName']:
+            print("SME - calling delete handler")
+            delete_handler(recs)
+        elif 'ObjectCreated:Put' in rec['eventName']:
+            print("SME - calling upload handler")
+            upload_handler(recs)
+            copy_handler(recs)
 
-        s3_resource = s3_utils.connect("s3_resource", None)
-        print(s3_resource)
-        # Fetch the object to get the uuid
-        object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
-
-        if object_uuid is not None:
-            print("Retrieved object-uuid: " + object_uuid)
-        else:
-            print("Adding uuid")
-            object_uuid = s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
-
-    # Convert s3 message to IM message
-    s3ma = S3MessageAdapter(conf_loc, s3_utils)
-    json_payload = s3ma.transform(recs)
-
-    #Send the message to Onestop
-    wp = WebPublisher(conf_loc, cred_loc)
-    registry_response = wp.publish_registry("granule", object_uuid, json_payload.serialize(), "POST")
-    print("RESPONSE: ")
-    print(registry_response.json())
 
 if __name__ == '__main__':
 
-    #This is where helm will mount the config
-    conf_loc = "/etc/config/config.yml"
-    #this is where we are about to write the cred yaml
-    cred_loc = "creds.yml"
+    parser = argparse.ArgumentParser(description="Launch SQS to Registry consumer")
+    parser.add_argument('-conf', dest="conf", required=False,
+                        help="Config filepath")
 
-    registry_user = os.environ.get("REGISTRY_USERNAME")
-    registry_pwd = os.environ.get("REGISTRY_PASSWORD")
-    access_key = os.environ.get("ACCESS_KEY")
-    access_secret = os.environ.get("SECRET_KEY")
+    parser.add_argument('-cred', dest="cred", required=False,
+                        help="Credentials filepath")
 
-    f = open(cred_loc, "w+")
+    args = vars(parser.parse_args())
+    cred_loc = args.pop('cred')
 
-#TODO revisit this when we make a standard that all scripts will follow
-    #write creds to a file to avoid changing the python library
-    s = """sandbox:
-  access_key: {key}
-  secret_key: {secret}
+    #credentials from either file or env
+    registry_username = None
+    registry_password = None
+    access_key = None
+    access_secret = None
 
-registry:
-  username: {user}
-  password: {pw}
-    """.format(key=access_key, secret=access_secret, user=registry_user, pw=registry_pwd)
-    f.write(s)
-    f.close()
-    r = open(cred_loc, "r")
+    if cred_loc is not None:
+        with open(cred_loc) as f:
+            creds = yaml.load(f, Loader=yaml.FullLoader)
+        registry_username = creds['registry']['username']
+        registry_password = creds['registry']['password']
+        access_key = creds['sandbox']['access_key']
+        access_secret = creds['sandbox']['secret_key']
+    else:
+        print("else")
+        registry_username = os.environ.get("REGISTRY_USERNAME")
+        registry_password = os.environ.get("REGISTRY_PASSWORD")
+        access_key = os.environ.get("ACCESS_KEY")
+        access_secret = os.environ.get("SECRET_KEY")
 
-    # # Receive s3 message and MVM from SQS queue
-    s3_utils = S3Utils(conf_loc, cred_loc)
-    sqs_max_polls = s3_utils.conf['sqs_max_polls']
-    sqs_consumer = SqsConsumer(conf_loc, cred_loc)
+    # default config location mounted in pod
+    conf_loc = args.pop('conf') if not None else "/etc/config/config.yml"
+
+    conf = None
+    with open(conf_loc) as f:
+        conf = yaml.load(f, Loader=yaml.FullLoader)
+
+    #TODO organize the config
+    #System
+    log_level = conf['log_level']
+    sqs_max_polls = conf['sqs_max_polls']
+
+    #Destination
+    registry_base_url = conf['registry_base_url']
+
+    #Source
+    access_bucket = conf['access_bucket']
+    sqs_url = conf['sqs_url']
+    s3_region = conf['s3_region']
+    s3_bucket2 = conf['s3_bucket2']
+    s3_region2 = conf['s3_region2']
+
+
+    #Onestop related
+    prefix_map = conf['prefixMap']
+    file_id_prefix = conf['file_identifier_prefix']
+    file_format = conf['format']
+    headers = conf['headers']
+    type = conf['type']
+
+    sqs_consumer = SqsConsumer(access_key, access_secret, s3_region, sqs_url, log_level)
+
+    wp = WebPublisher(registry_base_url=registry_base_url, username=registry_username, password=registry_password, log_level=log_level)
+
+    s3_utils = S3Utils(access_key, access_secret, log_level)
+    s3ma = S3MessageAdapter(access_bucket, prefix_map, format, headers, type, file_id_prefix, log_level)
+
+    delete_handler = create_delete_handler(wp)
+    upload_handler = create_upload_handler(wp, s3_utils, s3ma)
+
+    #TODO this is going away in favor of replication at the bucket level
+    copy_handler = create_copy_handler(wp, s3_utils, s3ma, destination_bucket=s3_bucket2, destination_region=s3_region2)
+
     queue = sqs_consumer.connect()
 
     try:

@@ -10,38 +10,33 @@ from onestop.util.ClientLogger import ClientLogger
 
 
 class S3Utils:
-    conf = None
 
-    def __init__(self, conf_loc, cred_loc):
-
-        with open(conf_loc) as f:
-            self.conf = yaml.load(f, Loader=yaml.FullLoader)
-
-        with open(cred_loc) as f:
-            self.cred = yaml.load(f, Loader=yaml.FullLoader)
-
-        self.logger = ClientLogger.get_logger(self.__class__.__name__, self.conf['log_level'], False)
+    def __init__(self, access_key, secret_key, log_level = 'INFO'):
+        self.access_key = access_key
+        self.secret_key = secret_key
+        self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
     def connect(self, client_type, region):
-
+        self.logger.info("Connecting to " + client_type)
         if client_type == "s3":
-            boto = boto3.client("s3", aws_access_key_id=self.cred['sandbox']['access_key'],
-                                       aws_secret_access_key=self.cred['sandbox']['secret_key'], region_name=region)
+            boto = boto3.client("s3", aws_access_key_id=self.access_key,
+                                       aws_secret_access_key=self.secret_key, region_name=region)
 
         if client_type == "s3_resource":
-            boto = boto3.resource("s3", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
-                                         aws_secret_access_key=self.cred['sandbox']['secret_key'] )
+            boto = boto3.resource("s3", region_name=region, aws_access_key_id=self.access_key,
+                                         aws_secret_access_key=self.secret_key )
 
         if client_type == "glacier":
-            boto = boto3.client("glacier", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
-                                       aws_secret_access_key=self.cred['sandbox']['secret_key'])
+            boto = boto3.client("glacier", region_name=region, aws_access_key_id=self.access_key,
+                                       aws_secret_access_key=self.secret_key)
 
         if client_type == "session":
             boto = boto3.Session(
-                aws_access_key_id=self.cred['sandbox']['access_key'],
-                aws_secret_access_key=self.cred['sandbox']['secret_key'],
+                aws_access_key_id=self.secret_key,
+                aws_secret_access_key=self.secret_key,
             )
+
         return boto
 
     def objectkey_exists(self, bucket, s3_key):
@@ -60,16 +55,13 @@ class S3Utils:
 
     def get_uuid_metadata(self, boto_client, bucket, s3_key):
         obj_uuid = None
-        self.logger.debug("Get metadata")
+        self.logger.info("Getting UUID for " + bucket + "/" + s3_key)
         s3_object = boto_client.Object(bucket, s3_key)
 
-        self.logger.info("bucket: " + bucket)
-        self.logger.info("key: " + s3_key)
-
         s3_metadata = s3_object.metadata
-        print(s3_metadata)
+
         if 'object-uuid' in s3_metadata:
-            self.logger.info("object-uuid: " + s3_metadata['object-uuid'])
+            self.logger.info("Object has object-uuid: " + s3_metadata['object-uuid'])
             obj_uuid = s3_metadata['object-uuid']
         return obj_uuid
 
