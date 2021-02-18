@@ -90,7 +90,7 @@ class GefsExtractor():
         gefs_mes.file_format = "grib2"
         
         #relationships
-        gefs_mes.parentUuid = "5b58de08-afef-49fb-99a1-9c5d5c003bde"
+        gefs_mes.parentUuid = "6b4f0954-628e-486e-914e-ce2dffffca90"
         gefs_mes.rel_type = "COLLECTION"
         #discovery
         gefs_mes.type = "ACCESS"
@@ -98,7 +98,8 @@ class GefsExtractor():
         gefs_mes.service_type = "Amazon:AWS:S3"
         gefs_mes.asynchronous = False
         gefs_mes.deleted = False
-        gefs_mes.parentDoi ="5b58de08-afef-49fb-99a1-9c5d5c003bde"
+        #gefs_mes.parentDoi ="5b58de08-afef-49fb-99a1-9c5d5c003bde"
+        gefs_mes.parentIdentifier = "6b4f0954-628e-486e-914e-ce2dffffca90"
         west = 0
         east = 359.75
         south = -90

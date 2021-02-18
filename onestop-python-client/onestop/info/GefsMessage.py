@@ -17,7 +17,7 @@ class GefsMessage:
                 # Relationships
         self.relationships = []
         self.parentUuid = ""
-        self.parentDoi = ""
+        #self.parentDoi = ""
         self.rel_type = ""
 
         self.uri = ""
@@ -40,7 +40,7 @@ class GefsMessage:
         self.begin_date_str = ""
         self.end_date_str = ""
         self.temporalBounding = {}
-        self.parentIdentifier = {"parentIdentifier": None}
+        self.parentIdentifier = None
 
         #this is only used for NOAA object tagging, not in onestop payload
         self.s3Bucket = None
@@ -85,6 +85,8 @@ class GefsMessage:
             "optionalAttributes": self.optAttrFileInfo}
 
         payload['fileInformation'] = file_information
+
+        #set in GefsExtractor.createMetadataMessage()
         relationship ={
             "id":self.parentUuid,
             "type":self.rel_type
