@@ -14,6 +14,8 @@ import  tarfile
 import shutil
 import sys
 import yaml
+import pygrib
+import numpy as np
 
 from onestop.util.S3Utils import S3Utils
 from onestop.WebPublisher import WebPublisher
@@ -52,6 +54,37 @@ class GefsExtractor():
             print('exception')
             self.logger.error("Exception occured while opening config file")
             self.logger.error(sys.exc_info())
+
+
+    def extract_metadata_from_gribfile(self, filename):
+        """
+        Extracts metadata from GRIB2 format file.
+        :param filename: input GRIB2 file path
+        :return: dictionary containing metadata
+        """
+        grib_file = pygrib.open(filename)
+        data, lats, lons = grib_file.message(1).data()
+        #print(lats.shape)
+        meta_dict['south'] = lats.min()
+        meta_dict['north'] = lats.max()
+        meta_dict['west'] = lons.min()
+        meta_dict['east'] = lons.max()
+        var_set = set()
+        date_set = set()
+        for grb in grib_file:
+            var_set.add(grb.name)
+        #if grb.validDate not in date_set:
+         #   print(grb.name)
+
+          #  print(grb)
+           # print(grb.validDate)
+            date_set.add(grb.validDate)
+        begin_date = min(date_set)
+        end_date = max(date_set)
+        meta_dict['beginDate'] = begin_date
+        meta_dict['endDate'] = end_date
+        meta_dict['keywords']  = list(var_set)
+        return meta_dict
 
         
 
@@ -100,14 +133,15 @@ class GefsExtractor():
         gefs_mes.deleted = False
         #gefs_mes.parentDoi ="5b58de08-afef-49fb-99a1-9c5d5c003bde"
         gefs_mes.parentIdentifier = "6b4f0954-628e-486e-914e-ce2dffffca90"
-        west = 0
-        east = 359.75
-        south = -90
-        north = 90
-        begin_dt = datetime.datetime.strptime(meta_dict['begin_dt'], '%Y%m%d%H')
-        end_dt = begin_dt + timedelta(days=16)
+        west = meta_dict['west']
+        east = meta_dict['east']
+        south = meta_dict['south']
+        north = meta_dict['north']
+        begin_dt = meta_dict['beginDate']
+        end_dt = meta_dict['endDate']
         gefs_mes.begin_dt = begin_dt
         gefs_mes.end_dt = end_dt
+        gefs_mes.keywords = meta_dict['keywords']
         
         polyStr = (
             " [  \n [ \n [ " +
@@ -253,13 +287,15 @@ class GefsExtractor():
         filename = localfile.split('/')[-1]
         
         #get initial dictionary from file
-        meta_dict = self.extractMetadata(filename)
-        if meta_dict["type"] == "gefs":
+        #meta_dict = self.extractMetadata(filename)
+        meta_dict = self.extract_metadata_from_gribfile(localfile)
+        if True:
 
             #populate object with dictionary and enrich with known information about file
             gefs_mes = self.createMetadataMessage(meta_dict)
-            #transfrom data in object for use in JSON
+            #transform data in object for use in JSON
             gefs_mes = self.transformMetadata(gefs_mes)
+
             if file_size is None:
                 file_size = os.path.getsize(localfile)
             gefs_mes.file_name = filename
@@ -322,7 +358,8 @@ class GefsExtractor():
                 try:
                     tar = tarfile.open(localFile)
                     members = tar.getmembers()
-                    shutil.unpack_archive(localFile, self.conf['temp_dir'])
+                    #shutil.unpack_archive(localFile, self.conf['temp_dir'])
+                    tar.extractall(path=self.conf['temp_dir'])
                     print("untarred members")
                     print(members)
                     print(len(members))

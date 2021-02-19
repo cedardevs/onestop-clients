@@ -41,6 +41,7 @@ class GefsMessage:
         self.end_date_str = ""
         self.temporalBounding = {}
         self.parentIdentifier = None
+        self.keywords = []
 
         #this is only used for NOAA object tagging, not in onestop payload
         self.s3Bucket = None
@@ -121,7 +122,8 @@ class GefsMessage:
             "links": link_list, 
             "parentIdentifier": self.parentIdentifier,
             "spatialBounding": self.spatialBounding, 
-            "temporalBounding": self.temporalBounding}
+            "temporalBounding": self.temporalBounding,
+            "keywords":self.keywords}
         payload["discovery"] = discovery
         #json_payload = json.dumps(payload, indent=2)
 
