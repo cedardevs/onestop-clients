@@ -4,7 +4,7 @@ import boto3
 
 from moto import mock_s3
 from moto import mock_sqs
-from tests.utils import abspath_from_relative, create_delete_message
+from ..utils import abspath_from_relative, create_delete_message
 from onestop.WebPublisher import WebPublisher
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
