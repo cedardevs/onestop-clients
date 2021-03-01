@@ -20,3 +20,5 @@ class ChecksumAlgorithm(Enum):
             "SHA512"
         ]
     }"""
+
+

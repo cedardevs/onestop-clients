@@ -1,13 +1,18 @@
 from onestop.consumer import consume
 from onestop.producer_legacy_script import produce
 import argparse
+import json
 
 def handler(key, value):
     print(key)
+    print('VALUE-------')
+    print(value)
+    """
     if (value['type'] == 'collection' or not bool(value['fileInformation'])):
         print(value['discovery']['fileIdentifier'])
     else:
         print(value['fileInformation']['name'])
+    """
 
 
 if __name__ == '__main__':

@@ -45,12 +45,76 @@ def consume(config, topic, handler):
         try:
             msg = c.poll(10)
             if msg is None:
+                print('No Messages')
                 continue
             if msg.error():
                 log.error("Consumer error: {}".format(msg.error()))
                 continue
             key = msg.key().decode('utf-8')
             value = ser.decode_message(msg.value(), is_key=False)
+        except Exception as e:
+            log.error("Message consumption failed: {}".format(e))
+            break
+        try:
+            handler(key, value)
+        except Exception as e:
+            log.error("Message handler failed: {}".format(e))
+            break
+    c.close()
+
+def consume2(config, topic, handler):
+    """
+        Starts a consumer and calls the given handler for each consumed message.
+        Assumes that keys are serialized as strings and values are serialized
+        as Avro objects with their schemas stored in a Confluent Schema Registry.
+        """
+    # values to be returned
+    values = []
+    no_message_counter= 0
+
+    c_conf = {}
+    for key, value in config.items():
+        if not key.startswith("schema.registry"):
+            if not value is None:
+                c_conf[key] = value.strip()
+
+    if "auto.offset.reset" in c_conf:
+        print("offset provided")
+    else:
+        c_conf['auto.offset.reset'] = 'earliest'
+
+    if "group.id" in c_conf:
+        print("group id provided")
+    else:
+        c_conf['group.id'] = 'sme_test'
+
+    c = Consumer(c_conf)
+
+    c.subscribe([topic])
+
+    sr_conf = {key.replace("schema.registry.", ""): value.strip()
+               for key, value in config.items() if key.startswith("schema.registry")}
+
+    sr = CachedSchemaRegistryClient(sr_conf)
+    ser = MessageSerializer(sr)
+
+    while True:
+        try:
+            msg = c.poll(10)
+            if msg is None:
+                print('No Messages')
+                no_message_counter +=1
+                if no_message_counter == 10:
+                    return values
+                continue
+            if msg.error():
+                log.error("Consumer error: {}".format(msg.error()))
+                continue
+            key = msg.key().decode('utf-8')
+            value = ser.decode_message(msg.value(), is_key=False)
+            # added this to test
+            values.append((key,value))
+            no_message_counter=0
         except Exception as e:
             log.error("Message consumption failed: {}".format(e))
             break

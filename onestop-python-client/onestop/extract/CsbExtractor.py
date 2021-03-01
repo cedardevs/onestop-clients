@@ -99,18 +99,19 @@ class CsbExtractor:
         # Keeps track of all coordinates that needs to be added to json payload
         coords = []
 
-        with open(self.file_name, newline='') as csv_file:
-            # reads data
-            csv_reader = csv.DictReader(csv_file)
+        boto_client = self.su.connect("session", None)
+        bucket = self.su.conf['s3_bucket']
+        sm_open_file = self.su.get_csv_s3(boto_client, bucket, self.key)
+        csv_reader = csv.DictReader(sm_open_file)
 
-            for row in csv_reader:
-                if float( row['LAT'] ) == min_lat or float( row['LAT'] ) == max_lat or float(
-                        row['LON'] ) == min_lon or float( row['LON'] ) == max_lon:
-                    coord = [float( row['LON'] ), float( row['LAT'] )]
+        for row in csv_reader:
+            if float( row['LAT'] ) == min_lat or float( row['LAT'] ) == max_lat or float(
+                    row['LON'] ) == min_lon or float( row['LON'] ) == max_lon:
+                coord = [float( row['LON'] ), float( row['LAT'] )]
 
-                    # check to see if that coordinate has already been appended to the list that is keeping track of our coordinates
-                    if coord not in coords:
-                        coords.append( coord )
+                # check to see if that coordinate has already been appended to the list that is keeping track of our coordinates
+                if coord not in coords:
+                    coords.append( coord )
 
         return coords
 

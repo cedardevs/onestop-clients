@@ -1,5 +1,10 @@
 import yaml
 from onestop.util.ClientLogger import ClientLogger
+"""
+from onestop.info.ImMessage import ImMessage
+from onestop.info.FileMessage import FileMessage
+from onestop.info.Link import Link
+"""
 
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.parsed_record import ParsedRecord, Publishing, ErrorEvent
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_location import FileLocation,FileLocationType
@@ -7,6 +12,8 @@ from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_informatio
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum import Checksum, ChecksumAlgorithm
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.relationship import Relationship, RelationshipType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.discovery import Discovery, Link
+
+
 
 class S3MessageAdapter:
 
@@ -29,9 +36,7 @@ class S3MessageAdapter:
 
 
     def transform(self, recs):
-        print('Hello-------------------------')
         self.logger.info("Transform!")
-        print('In Transfrom')
         rec = recs[0]  # This is standard format 1 record per message for now according to AWS docs
 
         s3_bucket = rec['s3']['bucket']['name']
@@ -77,10 +82,8 @@ class S3MessageAdapter:
         parsedRecord = ParsedRecord(fileInformation=fileInformation, fileLocations=fileLocation,
                                     relationships=[relationship], errors=[errorEvent], publishing=publishing,
                                     discovery=discovery)
-        print('Parsed Record Discover', parsedRecord.discovery)
         # Return parsedRecord object
         return parsedRecord
-
         """
         self.logger.info("Transform!")
         im_message = None
@@ -138,4 +141,5 @@ class S3MessageAdapter:
 
         return im_message
         """
+
 

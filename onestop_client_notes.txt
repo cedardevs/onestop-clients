@@ -33,6 +33,7 @@ python smeFunc.py -cmd consume -b onestop-dev-cp-kafka:9092 -s http://onestop-de
 
 
 python smeFunc.py -cmd produce -b onestop-dev-cp-kafka:9092 -s http://onestop-dev-cp-schema-registry:8081 -t psi-collection-input-unknown
+python sme.py -cmd produce -b onestop-dev-cp-kafka:9092 -s http://onestop-dev-cp-schema-registry:8081 -t psi-collection-input-unknown
 
 
 Test case DEM collection

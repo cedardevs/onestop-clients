@@ -30,12 +30,12 @@ class ParsedRecord:
     # Commenting out for now because causing errors
     #fileLocations: Dict[str, FileLocation]
 
-    fileLocations: FileLocation
-    publishing: Publishing
+    fileLocations: Optional[FileLocation]
+    publishing: Optional[Publishing]
 
     #: A record of this objects relationships to other objects in the inventory
-    relationships: List[Relationship]
-    errors: List[ErrorEvent]
+    relationships: Optional[List[Relationship]]
+    errors: Optional[List[ErrorEvent]]
 
         #: The Avro Schema associated to this class
     _schema: ClassVar[str] = """{
@@ -119,6 +119,7 @@ class ParsedRecord:
         Returns a dictionary version of this instance.
         """
         return asdict(self)
+
 
     @classmethod
     def from_dict(
