@@ -1,0 +1,19 @@
+# Example config values for osim client
+log_level: DEBUG
+
+# COLLECTION or GRANULE
+metadata_type: GRANULE
+
+# Kafka config values
+brokers: onestop-dev-cp-kafka:9092
+schema_registry: http://onestop-dev-cp-schema-registry:8081
+collection_topic: psi-granules-by-collection
+granule_topic: psi-granule-parsed
+#collection_topic: psi-collection-input-unknown
+#granule_topic: psi-granule-input-unknown
+
+security:
+  enabled: False
+  caLoc: /etc/pki/tls/cert.pem
+  keyLoc: /etc/pki/tls/private/kafka-user.key
+  certLoc: /etc/pki/tls/certs/kafka-user.crt

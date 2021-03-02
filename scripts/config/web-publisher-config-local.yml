@@ -1,0 +1,16 @@
+# Example config values for osim client
+log_level: INFO
+
+# COLLECTION or GRANULE
+metadata_type: granule
+registry_base_url: http://localhost/registry
+onestop_base_url: http://localhost/onestop-search/search
+
+security:
+  enabled: False
+
+prefixMap:
+  NESDIS/CSB: 'fdb56230-87f4-49f2-ab83-104cfd073177'
+  NESDIS/H8: '0fad03df-0805-434a-86a6-7dc42d68480e'
+  NESDIS/GOES: '11111111-1111-1111-1111-111111111111'
+  NESDIS/SAB: '98e03b47-069a-4f2c-8071-649e8c4254d6'
