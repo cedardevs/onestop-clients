@@ -49,7 +49,9 @@ def handler(key, value):
         parsed_record.discovery.temporalBounding= tempBounding
         parsed_record.discovery.spatialBounding= point
 
-       
+        # Insert data into postgres
+        script = script_generation(coords[0], key)
+        postgres_insert(script)
 
     # update content dict
     parsed_record.type = value['type']
