@@ -61,16 +61,21 @@ class S3Utils:
     def get_uuid_metadata(self, boto_client, bucket, s3_key):
         obj_uuid = None
         self.logger.debug("Get metadata")
-        s3_object = boto_client.Object(bucket, s3_key)
+        s3 = boto3.resource('s3')
+        s3object = s3.Object(bucket, s3_key)
+
+        #s3_object = boto_client.Object(bucket, s3_key)
 
         self.logger.info("bucket: " + bucket)
         self.logger.info("key: " + s3_key)
 
-        s3_metadata = s3_object.metadata
+        s3_metadata = s3object.metadata
         print(s3_metadata)
         if 'object-uuid' in s3_metadata:
             self.logger.info("object-uuid: " + s3_metadata['object-uuid'])
             obj_uuid = s3_metadata['object-uuid']
+        else:
+            print("no object-uuid found in metadata")
         return obj_uuid
 
     def add_uuid_metadata(self, boto_client, bucket, s3_key):

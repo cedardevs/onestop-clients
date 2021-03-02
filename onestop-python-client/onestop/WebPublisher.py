@@ -22,6 +22,8 @@ class WebPublisher:
         #TODO symptom of cert issues, fix me later
         urllib3.disable_warnings()
         headers = {'Content-Type': 'application/json'}
+        print("uuid " + uuid)
+        print("metadata type: " + metadata_type)
         registry_url = self.conf['registry_base_url'] + "/metadata/" + metadata_type + "/" + uuid
         self.logger.info("Posting " + metadata_type + " with ID " + uuid + " to " + registry_url)
         if method == "POST":
