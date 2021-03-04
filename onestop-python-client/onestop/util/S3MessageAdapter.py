@@ -1,5 +1,3 @@
-
-import yaml
 from onestop.info.ImMessage import ImMessage
 from onestop.info.FileMessage import FileMessage
 from onestop.info.Link import Link

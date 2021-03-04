@@ -1,4 +1,5 @@
 import os
+import yaml
 from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
@@ -6,10 +7,9 @@ from onestop.WebPublisher import WebPublisher
 from onestop.util.SqsHandlers import create_delete_handler
 from onestop.util.SqsHandlers import create_upload_handler
 from onestop.util.SqsHandlers import create_copy_handler
-from datetime import date
-import yaml
-import argparse
 
+from datetime import date
+import argparse
 
 def handler(recs):
     print("Handling message...")
@@ -21,13 +21,15 @@ def handler(recs):
         print("No records retrieved" + date.today())
     else:
         rec = recs[0]
+        print(rec)
         if 'ObjectRemoved' in rec['eventName']:
             print("SME - calling delete handler")
+            print(rec['eventName'])
             delete_handler(recs)
-        elif 'ObjectCreated:Put' in rec['eventName']:
+        else:
             print("SME - calling upload handler")
             upload_handler(recs)
-            copy_handler(recs)
+            #copy_handler(recs)
 
 
 if __name__ == '__main__':
@@ -56,14 +58,17 @@ if __name__ == '__main__':
         access_key = creds['sandbox']['access_key']
         access_secret = creds['sandbox']['secret_key']
     else:
-        print("else")
+        print("Using env variables for config parameters")
         registry_username = os.environ.get("REGISTRY_USERNAME")
         registry_password = os.environ.get("REGISTRY_PASSWORD")
         access_key = os.environ.get("ACCESS_KEY")
         access_secret = os.environ.get("SECRET_KEY")
 
     # default config location mounted in pod
-    conf_loc = args.pop('conf') if not None else "/etc/config/config.yml"
+    if args.pop('conf') is None:
+        conf_loc = "/etc/config/config.yml"
+    else:
+        conf_loc = args.pop('conf')
 
     conf = None
     with open(conf_loc) as f:
