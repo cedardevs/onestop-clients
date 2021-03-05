@@ -55,7 +55,7 @@ class S3MessageAdapter:
         parent_id = self.collection_id_map(s3_key)
 
         self.logger.info("Associating granule with " + parent_id)
-        relationship = {'type': str( type ),
+        relationship = {'type': self.type,
                         'id': parent_id}
         im_message.append_relationship(relationship)
 

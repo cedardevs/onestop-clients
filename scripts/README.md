@@ -36,5 +36,10 @@
 - Check logs
   kubectl logs <pod name>
   
-- Run your sme script when testing locally
-  python <sme_script>.py -cmd consume -b onestop-dev-cp-kafka:9092 -s http://onestop-dev-cp-schema-registry:8081 -t psi-granule-input-unknown -g sme-test -o earliest
+- Spin onestop locally, from the onestop repo
+  skaffold dev --status-check false
+  
+- Load test collections from onestop-test-data repo
+  ./upload.sh demo http://localhost/onestop/api/registry
+  
+- From the osim-deployment/staging-scripts directory load some data
