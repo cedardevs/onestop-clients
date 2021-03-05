@@ -23,7 +23,7 @@ if __name__ == '__main__':
                                   }
                     }
     # method one of POST, PUT, PATCH, DELETE
-    method = 'PUT' #Update
+    method = 'POST' #Update
 
     kafka_publisher = KafkaPublisher(conf_loc)
     metadata_producer = kafka_publisher.connect()

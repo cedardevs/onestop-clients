@@ -24,8 +24,8 @@ class KafkaPublisher:
         self.schema_registry = self.conf['schema_registry']
         self.security = self.conf['security']['enabled']
 
-        self.collection_topic = self.conf['collection_topic']
-        self.granule_topic = self.conf['granule_topic']
+        self.collection_topic = self.conf['collection_topic_produce']
+        self.granule_topic = self.conf['granule_topic_produce']
 
         if self.metadata_type not in ['COLLECTION', 'GRANULE']:
             raise ValueError("metadata_type must be 'COLLECTION' or 'GRANULE'")
@@ -135,13 +135,14 @@ class KafkaPublisher:
             raise
         collection_producer.poll()
 
-    def publish_granule(self, granule_producer, record_uuid, collection_uuid, content_dict, file_information,
-                        file_locations):
+    def publish_granule(self, granule_producer, record_uuid, collection_uuid, content_dict):
         self.logger.info('Publish granule')
+
         if type(record_uuid) == bytes:
             key = str(UUID(bytes=collection_uuid))
         else:
             key = str(UUID(hex=collection_uuid))
+        """
         if type(collection_uuid) == bytes:
             content_dict['relationships'] = [{"type": "COLLECTION", "id": collection_uuid.hex()}]
         else:
@@ -149,15 +150,29 @@ class KafkaPublisher:
 
         content_dict['fileInformation'] = file_information
         content_dict['fileLocations'] = file_locations
+        """
+
+        """
+                    'relationships': content_dict['relationships'],
+                    'discovery': content_dict['discovery'],
+                    'fileInformation': content_dict['fileInformation']
+                    """
 
         value_dict = {
             'type': 'granule',
-            'content': json.dumps(content_dict),
+            'content': json.dumps(content_dict, default=str),
+            #'contentType': 'application/json',
             'method': 'PUT',
             'source': 'unknown',
             'operation': None,
-            'relationships': [{'type': 'COLLECTION', 'id': collection_uuid}]
+            'relationships': content_dict['relationships'],
+            'errors': content_dict['errors'],
+            'analysis': content_dict['analysis'],
+            'fileLocations': {'fileLocation': content_dict['fileLocations']},
+            'fileInformation': content_dict['fileInformation'],
+            'discovery': content_dict['discovery']
         }
+
         try:
             granule_producer.produce(topic=self.granule_topic, value=value_dict, key=key,
                                      on_delivery=self.delivery_report)

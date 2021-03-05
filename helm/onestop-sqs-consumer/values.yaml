@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: cedardevs/onestop-s3-handler
+  repository: cedardevs/onestop-sme
   tag: latest
   pullPolicy: IfNotPresent
 

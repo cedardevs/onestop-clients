@@ -114,6 +114,7 @@ def produce(config, topic, input_messages):
     print(topics)
 
     if not topics:
+        print('Not Topics')
         raise RuntimeError()
     
     sr = CachedSchemaRegistryClient(schema_registry)
@@ -121,17 +122,21 @@ def produce(config, topic, input_messages):
     # get schema
     id, schema, version = sr.get_latest_schema(topic + "-value")
     if schema:
+        print('In If Schema')
         for key, value in input_messages.items():
             if validate_uuid4(key):
+                print('In validate in For loop')
                 serializedMessage = ser.encode_record_with_schema(topic, schema, value)
                 producer.produce(topic=topic, key=key, value=serializedMessage, callback=acked)
                 # producer.flush() # bad idea, it limits throughput to the broker round trip time
                 producer.poll(1)
             else:
+                print('In Else of For Loop')
                 logger.error('Invalid UUID String: ', key)
     
     else:
-         print('Schema not found for topic name: ', topic)
+        print('Schema not found for topic name: ', topic)
+        print('In Else Schema')
     sys.exit(1)
 
 

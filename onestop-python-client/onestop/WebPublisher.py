@@ -19,15 +19,12 @@ class WebPublisher:
         self.logger.info("Initializing " + self.__class__.__name__)
 
     def publish_registry(self, metadata_type, uuid, payload, method):
-        #TODO symptom of cert issues, fix me later
-        urllib3.disable_warnings()
+
         headers = {'Content-Type': 'application/json'}
-        print("uuid " + uuid)
-        print("metadata type: " + metadata_type)
         registry_url = self.conf['registry_base_url'] + "/metadata/" + metadata_type + "/" + uuid
         self.logger.info("Posting " + metadata_type + " with ID " + uuid + " to " + registry_url)
         if method == "POST":
-            response = requests.post(url=registry_url, headers=headers, auth=(self.cred['registry']['username'],
+            response = requests.post(url=registry_url, headers=headers,auth=(self.cred['registry']['username'],
                                                                        self.cred['registry']['password']),
                               data=payload, verify=False)
 
