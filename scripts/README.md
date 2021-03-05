@@ -21,7 +21,7 @@
   docker build ./scripts/sqs-to-registry -t cedardevs/onestop-s3-handler
   
 - Update helm values
-  Edit/update helm/values.yaml
+  Edit/update helm/values.yaml to add credentials if needed
 
 - Install the sme helm chart  
   helm uninstall sme
@@ -43,3 +43,4 @@
   ./upload.sh demo http://localhost/onestop/api/registry
   
 - From the osim-deployment/staging-scripts directory load some data
+  ./copyS3objects.sh -max_files=5 copy-config/archive-testing-demo-csb.sh
