@@ -2,16 +2,16 @@
 
 ## Quickstart 
 - Create a new conda environment and activate it
-  conda create -n onestop-clients python=3  
-  conda activate onestop-clients
-  pip install setuptools
+  - conda create -n onestop-clients python=3  
+  - conda activate onestop-clients
+  - pip install setuptools
 
 - Install any libraries needed by your sme script 
   pip install PyYaml  
 
 - Build the latest onestop-python-client
-  pip uninstall onestop-python-client-cedardevs
-  pip install ./onestop-python-client
+  - pip uninstall onestop-python-client-cedardevs
+  - pip install ./onestop-python-client
 
 - Update containers
   If the base library changes build both containers
@@ -24,8 +24,8 @@
   Edit/update helm/values.yaml to add credentials if needed
 
 - Install the sme helm chart  
-  helm uninstall sme
-  helm install sme helm/onestop-sqs-consumer
+  - helm uninstall sme
+  - helm install sme helm/onestop-sqs-consumer
 
 - Look for onestop-client pod
   kubectl get pods
