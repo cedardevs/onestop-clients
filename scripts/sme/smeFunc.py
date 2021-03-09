@@ -3,6 +3,16 @@ import json
 from onestop.KafkaConsumer import KafkaConsumer
 
 def handler(key,value):
+    '''
+    Prints key, value pair of items in topic
+
+    :param key: str
+        kafka key
+    :param value: dict
+        information from item associated with the key
+
+    :return: None
+    '''
     print(key)
     print('VALUE-------')
     print(value)

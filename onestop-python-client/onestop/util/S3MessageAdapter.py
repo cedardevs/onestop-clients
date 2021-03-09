@@ -16,8 +16,48 @@ from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.discovery impor
 
 
 class S3MessageAdapter:
+    """
+    A class used to extract information from sqs messages that have been triggered by s3 events and transform it into correct format for publishing to IM Registry
 
+    Attributes
+    ----------
+    conf: yaml file
+        csb-data-stream-config.yml
+    s3_utils: S3Utils object
+        used to access objects inside of s3 buckets
+    logger: ClientLogger object
+        utilizes python logger library and creates logging for our specific needs
+    logger.info: ClientLogger object
+        logging statement that occurs when the class is instantiated
+    prefix_mapping: Dict
+        contains mapping of various line offices and their associated collection id
+
+    Methods
+    -------
+    collection_id_map(s3_key)
+        given an s3 key that contains one of the NESDIS line offices in its path, it will provide the corresponding collection id
+
+    transform(recs)
+        transforms sqs message triggered by s3 event to correct format for publishing to IM registry
+    """
     def __init__(self, conf_loc, s3_utils):
+        """
+
+        :param conf_loc: yaml file
+            csb-data-stream-config.yml
+        :param s3_utils: S3Utils object
+            used to access objects inside of s3 buckets
+
+        Other Attributes
+        ----------------
+        logger: ClientLogger object
+            utilizes python logger library and creates logging for our specific needs
+        logger.info: ClientLogger object
+            logging statement that occurs when the class is instantiated
+        prefix_mapping: Dict
+            contains mapping of various line offices and their associated collection id
+
+        """
         with open(conf_loc) as f:
             self.conf = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -27,15 +67,33 @@ class S3MessageAdapter:
 
         self.prefix_mapping = self.conf['prefixMap']
 
-    # Returns appropiate Collection ID with given s3_key
-    def collection_id_map(self,s3_key):
-        # Looks through our prefix map and returns appropiate collection id
+    def collection_id_map(self, s3_key):
+        """
+        Given an s3 key that contains one of the NESDIS line offices in its path, it will provide the corresponding collection id
+
+        :param s3_key: str
+            key path of object in s3 bucket
+
+        :return: str
+            associated line office collection id
+        """
+        # Looks through our prefix map and returns appropriate collection id
         for key in self.prefix_mapping:
             if key in s3_key:
                 return self.prefix_mapping[key]
 
 
     def transform(self, recs):
+        """
+        Transforms sqs message triggered by s3 event to correct format for publishing to IM registry
+
+        :param recs: dict
+            sqs event message
+
+        :return: ParsedRecord Object
+            The Parsed Record class is an avro schema generated class
+        """
+
         self.logger.info("Transform!")
         rec = recs[0]  # This is standard format 1 record per message for now according to AWS docs
 
@@ -84,6 +142,9 @@ class S3MessageAdapter:
                                     discovery=discovery)
         # Return parsedRecord object
         return parsedRecord
+
+
+        ### Transform legacy code
         """
         self.logger.info("Transform!")
         im_message = None

@@ -2,10 +2,13 @@ import argparse
 from onestop.util.S3Utils import S3Utils
 
 
-"""
-Simultaneously upload files to main bucket 'noaa-nccf-dev' in us-east-2 and glacier in cross region bucket 'noaa-nccf-dev-archive' in us-west-2
-"""
 def handler():
+    '''
+    Simultaneously upload files to main bucket 'noaa-nccf-dev' in us-east-2 and glacier in cross region bucket 'noaa-nccf-dev-archive' in us-west-2.
+
+    :return: str
+        Returns response from boto3 indicating if upload was successful.
+    '''
     print("Handler...")
 
     # config for s3 low level api for us-east-2

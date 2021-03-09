@@ -9,6 +9,15 @@ from onestop.extract.CsbExtractor import CsbExtractor
 
 
 def handler(recs):
+    '''
+    Processes metadata information from sqs message triggered by S3 event and uploads to registry through web publisher (https). Also uploads s3 object to glacier.
+
+    :param recs: dict
+        sqs message triggered by s3 event
+
+    :return: str
+        IM registry response and boto3 glacier response
+    '''
     print("Handler...")
 
     # Now get boto client for object-uuid retrieval

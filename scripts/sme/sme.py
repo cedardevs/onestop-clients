@@ -13,6 +13,17 @@ from onestop.KafkaPublisher import KafkaPublisher
 from spatial import script_generation, postgres_insert
 
 def handler(key, value):
+    '''
+    Consumes message from psi-input-unknown, extracts geospatial data, uploads new payload to parsed-record topic in kafka, and uploads geospatial data to Postgres
+
+    :param key: str
+        kafka key
+    :param value: dict
+        information from item associated with the key
+
+    :return: str
+        returns response message from kafka
+    '''
     print('Key:', key)
     print('Value: ' ,value)
 

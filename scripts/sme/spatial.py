@@ -5,6 +5,18 @@ import json
 import yaml
 
 def script_generation(coords, granule_id):
+    '''
+    Generates a postgres script used for insertion into the database based on the coordinates and granule id given
+
+    :param coords: List[floats]
+        coordinates you want to upload to database
+
+    :param granule_id: str
+        granule id associated with the coordinates
+
+    :return:
+
+    '''
     # Create an insertion script based on the list of coordinates
     script = ''
     script= script + "insert into granule.data (id, coordinates) values('{}', 'POINT({} {})') ; ".format(granule_id,coords[0],coords[1])
@@ -13,6 +25,15 @@ def script_generation(coords, granule_id):
 
 
 def postgres_insert(script):
+    '''
+    Uploads data into spatial database
+
+    :param script: str
+        get from script_generation(coords, granule_id)
+
+    :return: str
+        response from postgres
+    '''
     with open('scripts/config/postgres-config-dev.yml') as f:
         conf = yaml.load(f, Loader=yaml.FullLoader)
 

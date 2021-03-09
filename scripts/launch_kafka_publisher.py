@@ -2,6 +2,9 @@ import argparse
 from onestop.KafkaPublisher import KafkaPublisher
 
 if __name__ == '__main__':
+    '''
+    Uploads collection to Kafka collection topic 
+    '''
     parser = argparse.ArgumentParser(description="Launches KafkaPublisher to publish kafkda topics")
     parser.add_argument('-conf', dest="conf", required=True,
                         help="Config filepath")
