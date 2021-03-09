@@ -55,13 +55,21 @@ def create_upload_handler(web_publisher, s3_utils, s3ma):
             print("Retrieved object-uuid: " + object_uuid)
         else:
             print("Adding uuid")
-            object_uuid = s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
+            # Can't add uuid to glacier and should be copied over
+            if "backup" not in bucket:
+                object_uuid = s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
         # Convert s3 message to IM message
         json_payload = s3ma.transform(records)
 
-        #Send the message to Onestop
-        registry_response = web_publisher.publish_registry("granule", object_uuid, json_payload.serialize(), "POST")
+        # Send the message to registry
+        print("BUCKET: " + bucket + "-----")
+        if "backup" not in bucket:
+            registry_response = web_publisher.publish_registry("granule", object_uuid, json_payload.serialize(), "POST")
+        # Backup location should be patched
+        else:
+            registry_response = web_publisher.publish_registry("granule", object_uuid, json_payload.serialize(), "PATCH")
+
         print("RESPONSE: ")
         print(registry_response.json())
         return registry_response
