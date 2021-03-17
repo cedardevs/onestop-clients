@@ -23,8 +23,11 @@ def create_delete_handler(web_publisher):
         search_response = web_publisher.search_onestop('granule', payload)
         response_json = search_response.json()
         if len(response_json['data']) != 0:
-            granule_uuid = response_json['data'][0]['id']
-            response = web_publisher.delete_registry('granule', granule_uuid)
+            object_uuid = response_json['data'][0]['id']
+            #Full delete response = web_publisher.delete_registry('granule', granule_uuid)
+            payload = '{"fileLocations": {"' + s3_url + '": {"deleted": true}}}'
+            #print("Delete Location Payload: " + payload + "\n\n")
+            response = web_publisher.publish_registry("granule", object_uuid, payload, "PATCH")
             return response
 
     return delete
@@ -68,7 +71,9 @@ def create_upload_handler(web_publisher, s3_utils, s3ma):
             registry_response = web_publisher.publish_registry("granule", object_uuid, json_payload.serialize(), "POST")
         # Backup location should be patched
         else:
-            registry_response = web_publisher.publish_registry("granule", object_uuid, json_payload.serialize(), "PATCH")
+            payload = json_payload.serialize()
+            print("New Location Payload:" + payload)
+            registry_response = web_publisher.publish_registry("granule", object_uuid, payload, "PATCH")
 
         print("RESPONSE: ")
         print(registry_response.json())

@@ -15,7 +15,7 @@
 
 - Update containers
   If the base library changes build both containers
-  docker build . -t cedardevs/onestop-python-client:latest && docker build ./scripts/sqs-to-registry -t cedardevs/onestop-s3-handler
+  docker build . -t cedardevs/onestop-python-client:latest
 
 - If just the sme script changes
   docker build ./scripts/sqs-to-registry -t cedardevs/onestop-s3-handler

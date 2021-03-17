@@ -7,10 +7,11 @@ from onestop.util.ClientLogger import ClientLogger
 class WebPublisher:
     conf = None
 
-    def __init__(self, registry_base_url, username = None, password = None, log_level = 'INFO'):
+    def __init__(self, registry_base_url=None, username=None, password=None, onestop_base_url=None, log_level='INFO'):
         self.registry_base_url = registry_base_url
         self.username = username
         self.password = password
+        self.onestop_base_url = onestop_base_url
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
@@ -20,6 +21,7 @@ class WebPublisher:
         headers = {'Content-Type': 'application/json'}
         registry_url = self.registry_base_url + "/metadata/" + metadata_type + "/" + uuid
         self.logger.info("Sending WP a " + method + " for " + metadata_type + " with ID " + uuid + " to " + registry_url)
+        self.logger.info("Payload:" + payload)
         if method == "POST":
             response = requests.post(url=registry_url, headers=headers, auth=(self.username,
                                                                        self.password),
@@ -60,7 +62,7 @@ class WebPublisher:
         self.logger.info("Searching for " + metadata_type )
         self.logger.info("Payload: " + payload)
         headers = {'Content-Type': 'application/json'}
-        onestop_url = self.conf['onestop_base_url'] + "/search/" + metadata_type
+        onestop_url = self.onestop_base_url + "/search/" + metadata_type
         self.logger.info("Sending search (POST) to: " + onestop_url)
         response = requests.get(url=onestop_url, headers=headers, data=payload, verify=False)
         self.logger.info(response.json())

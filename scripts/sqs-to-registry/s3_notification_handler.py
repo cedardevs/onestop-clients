@@ -81,6 +81,7 @@ if __name__ == '__main__':
 
     #Destination
     registry_base_url = conf['registry_base_url']
+    onestop_base_url = conf['onestop_base_url']
 
     #Source
     access_bucket = conf['access_bucket']
@@ -99,7 +100,8 @@ if __name__ == '__main__':
 
     sqs_consumer = SqsConsumer(access_key, access_secret, s3_region, sqs_url, log_level)
 
-    wp = WebPublisher(registry_base_url=registry_base_url, username=registry_username, password=registry_password, log_level=log_level)
+    wp = WebPublisher(registry_base_url=registry_base_url, username=registry_username, password=registry_password,
+                      onestop_base_url=onestop_base_url, log_level=log_level)
 
     s3_utils = S3Utils(access_key, access_secret, log_level)
     s3ma = S3MessageAdapter(access_bucket, prefix_map, format, headers, type, file_id_prefix, log_level)
