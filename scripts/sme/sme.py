@@ -26,10 +26,15 @@ def handler(key, value):
     '''
     print('Key:', key)
     print('Value: ' ,value)
-
     # Grabs the contents of the message and turns the dict string into a dictionary using json.loads
     try:
         content_dict = json.loads(value['content'])
+
+    except:
+        print('Invalid Format')
+        content_dict = None
+
+    if content_dict != None:
         # Creates a checksum algorithm object based on contents of the message
         checksum_alg = ChecksumAlgorithm(
             content_dict['fileInformation']['checksums'][0]['algorithm'].strip('ChecksumAlgorithm.'))
@@ -60,11 +65,9 @@ def handler(key, value):
             parsed_record.discovery.temporalBounding = tempBounding
             parsed_record.discovery.spatialBounding = point
 
-            """
             # Insert data into postgres
             script = script_generation(coords[0], key)
             postgres_insert(script)
-            """
 
         # update content dict
         parsed_record.type = value['type']
@@ -110,9 +113,6 @@ def handler(key, value):
             metadata_producer = kafka_publisher.connect()
             collection_id = parsed_record.relationships[0].id
             kafka_publisher.publish_granule(metadata_producer, collection_id, collection_id, content_dict)
-    except:
-        print('Invalid Format')
-
 
 if __name__ == '__main__':
     su = S3Utils("scripts/config/aws-util-config-dev.yml", "scripts/config/credentials-template.yml")
