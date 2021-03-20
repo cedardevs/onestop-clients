@@ -4,7 +4,7 @@
 Populate values for ACCESS_KEY and SECRET_KEY in credentials.yml
 
 ## Helm Values
-Update values in onestop-sqs-consumer/vaules.yaml. You will want to update the credentials section if you intend to use the mounted helm values. 
+Update values in onestop-sqs-consumer/vaules.yaml
 
 ## Prerequisites
 You will need a kafka broker and a schema-registry running to test this package. To bring up the OneStop stack, see the [OneStop quickstart documentation](https://github.com/cedardevs/onestop/blob/master/docs/developer/quickstart.md#quick-start-kubernetes--helm--skaffold)
@@ -18,7 +18,7 @@ You will need a kafka broker and a schema-registry running to test this package.
 
 ### Install onestop-python-client repo into directory 
 
-``pip install onestop-python-client``
+``pip install ./onestop-python-client ``
 
 ## Usage
 

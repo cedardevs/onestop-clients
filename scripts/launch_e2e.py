@@ -6,6 +6,7 @@ from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.WebPublisher import WebPublisher
 from onestop.extract.CsbExtractor import CsbExtractor
+from onestop.schemas.util.jsonEncoder import EnumEncoder
 
 
 def handler(recs):
@@ -18,6 +19,7 @@ def handler(recs):
     :return: str
         IM registry response and boto3 glacier response
     '''
+
     print("Handler...")
 
     # Now get boto client for object-uuid retrieval
@@ -41,17 +43,13 @@ def handler(recs):
 
     im_message = s3ma.transform(recs)
 
-    # need default str so that our enum classes don't throw an error
-    #json_payload = json.dumps(im_message.to_dict(), default=None, indent=2)
-
-    print(json.dumps(im_message.to_dict(), default=str, indent=2))
-    json_payload = json.dumps(im_message.to_dict(), default=str)
+    json_payload = json.dumps(im_message.to_dict(), cls=EnumEncoder)
 
     print(json_payload)
 
 
     registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
-    print(registry_response.json())
+    #print(registry_response.json())
 
     # Upload to archive
     file_data = s3_utils.read_bytes_s3(s3, bucket, s3_key)

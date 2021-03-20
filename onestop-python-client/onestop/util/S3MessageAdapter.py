@@ -118,7 +118,7 @@ class S3MessageAdapter:
         fileLocationType = FileLocationType(type='ARCHIVE')
         s3_obj_uri = "s3://" + s3_bucket + "/" + s3_key
         fileLocation = FileLocation(uri=s3_obj_uri, type=fileLocationType, deleted=False, restricted=True,
-                                    asynchronous=False, serviceType='Amazon:AWS:S3')
+                                    asynchronous=False, serviceType='Amazon:AWS:S3', optionalAttributes={})
 
         # Error Event
         errorEvent = ErrorEvent()
@@ -134,8 +134,13 @@ class S3MessageAdapter:
         parent_identifier = self.conf['collection_id']
         file_identifier = self.conf['file_identifier_prefix'] + file_name[:-4]
 
+        # Initializing most fields to their default values in the avro schema so that it doesn't cause an error in Kafka
         discovery = Discovery(links=[link1, link2], title=file_name, parentIdentifier=parent_identifier,
-                              fileIdentifier=file_identifier)
+                              fileIdentifier=file_identifier, keywords=[], topicCategories=[], acquisitionInstruments=[], acquisitionOperations=[],
+                              acquisitionPlatforms=[], dataFormats=[], responsibleParties=[], citeAsStatements=[], crossReferences=[], largerWorks=[],
+                              legalConstraints=[], dsmmAccessibility=0, dsmmDataIntegrity=0, dsmmDataQualityAssessment=0, dsmmDataQualityAssurance=0,
+                              dsmmDataQualityControlMonitoring=0, dsmmPreservability=0, dsmmProductionSustainability=0, dsmmTransparencyTraceability=0,
+                              dsmmUsability=0, dsmmAverage=0.0, services=[])
 
         parsedRecord = ParsedRecord(fileInformation=fileInformation, fileLocations=fileLocation,
                                     relationships=[relationship], errors=[errorEvent], publishing=publishing,

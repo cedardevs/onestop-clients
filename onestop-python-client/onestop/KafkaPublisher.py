@@ -268,7 +268,7 @@ class KafkaPublisher:
 
         value_dict = {
             'type': 'granule',
-            'content': json.dumps(content_dict, default=str),
+            'content': json.dumps(content_dict),
             #'contentType': 'application/json',
             'method': 'PUT',
             'source': 'unknown',

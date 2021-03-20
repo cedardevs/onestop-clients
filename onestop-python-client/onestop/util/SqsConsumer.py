@@ -97,7 +97,6 @@ class SqsConsumer:
 
             for sqs_message in sqs_messages:
                 try:
-                    print('IN Try')
                     # Log start time
                     dt_start = datetime.now(tz=timezone.utc)
                     self.logger.info("Started processing message")

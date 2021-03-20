@@ -38,7 +38,7 @@ class FileLocation:
     serviceType: Optional[str]
 
     #: A discretionary map of key/value pairs to capture arbitrary attributes
-    optionalAttributes: Optional[Dict[str, str]]
+    optionalAttributes: Dict[str, str]
 
     #: The Avro Schema associated to this class
     _schema: ClassVar[str] = """{
