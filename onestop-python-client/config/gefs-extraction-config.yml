@@ -1,0 +1,4 @@
+temp_dir: /home/siteadm/test_meta/tmp
+queue_url: https://sqs.us-east-1.amazonaws.com/494959360435/noaa-woc-datalake
+region: us-east-1
+sleep: 5

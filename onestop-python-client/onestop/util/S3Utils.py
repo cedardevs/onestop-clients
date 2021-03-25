@@ -63,6 +63,8 @@ class S3Utils:
         if 'object-uuid' in s3_metadata:
             self.logger.info("Object has object-uuid: " + s3_metadata['object-uuid'])
             obj_uuid = s3_metadata['object-uuid']
+        else:
+            print("no object-uuid found in metadata")
         return obj_uuid
 
     def add_uuid_metadata(self, boto_client, bucket, s3_key):
