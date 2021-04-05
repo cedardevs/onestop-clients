@@ -23,7 +23,7 @@ This directory contains scripts that use the onestop-python-library to send data
   - `pip uninstall onestop-python-client-cedardevs`
   - `pip install ./onestop-python-client` (run from root of this repository)
 
-- Input credentials for helm in `./helm/onestop-sqs-consumer/values.yaml`
+- Input credentials for helm in the file `helm/onestop-sqs-consumer/values.yaml`
   - Then:
       - `helm uninstall sme`
       - `helm install sme helm/onestop-sqs-consumer`
