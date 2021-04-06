@@ -33,7 +33,9 @@ def handler(recs):
         print(rec)
         bucket = rec['s3']['bucket']['name']
         s3_key = rec['s3']['object']['key']
-
+        print("Getting uuid")
+        # High-level api
+        s3_resource = s3_utils.connect("s3_resource", None)
         object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
         if object_uuid is not None:
             print("Retrieved object-uuid: " + object_uuid)
@@ -52,7 +54,7 @@ def handler(recs):
     #print(registry_response.json())
 
     # Upload to archive
-    file_data = s3_utils.read_bytes_s3(s3, bucket, s3_key)
+    file_data = s3_utils.read_bytes_s3(s3_client, bucket, s3_key)
     glacier = s3_utils.connect("glacier", s3_utils.conf['s3_region'])
     vault_name = s3_utils.conf['vault_name']
 
@@ -144,13 +146,9 @@ if __name__ == '__main__':
     s3_utils = S3Utils(conf_loc, cred_loc)
 
     # Low-level api ? Can we just use high level revisit me!
-    s3 = s3_utils.connect("s3", None)
-
-    # High-level api
-    s3_resource = s3_utils.connect("s3_resource", None)
+    s3_client = s3_utils.connect("s3", None)
 
     bucket = s3_utils.conf['s3_bucket']
-    overwrite = True
 
     sqs_max_polls = s3_utils.conf['sqs_max_polls']
 
@@ -158,10 +156,11 @@ if __name__ == '__main__':
     local_files = ["file1.csv", "file4.csv"]
     s3_file = None
     for file in local_files:
-        local_file = "/Users/jeffrey/Desktop/onestop-clients/onestop-python-client/tests/data/" + file
+        local_file = "data/" + file
         # s3_file = "csv/" + file
         s3_file = "NESDIS/CSB/" + file
-        s3_utils.upload_s3(s3, local_file, bucket, s3_file, overwrite)
+        if not s3_utils.upload_s3(s3_client, local_file, bucket, s3_file, True):
+            exit("Error setting up for e2e: The test files were not uploaded to the s3 bucket therefore the tests cannot continue.")
 
     # Receive s3 message and MVM from SQS queue
     sqs_consumer = SqsConsumer(conf_loc, cred_loc)
