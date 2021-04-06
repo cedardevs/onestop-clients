@@ -151,21 +151,20 @@ class S3Utils:
         """
         obj_uuid = None
         self.logger.debug("Get metadata")
-        s3 = boto3.resource('s3')
-        s3object = s3.Object(bucket, s3_key)
-
-        #s3_object = boto_client.Object(bucket, s3_key)
-
         self.logger.info("bucket: " + bucket)
         self.logger.info("key: " + s3_key)
 
-        s3_metadata = s3object.metadata
-        print(s3_metadata)
+        s3_object = boto_client.Object(bucket, s3_key)
+        s3_metadata = s3_object.metadata
+
+        self.logger.debug("s3_metadata: " + str(s3_metadata))
+
         if 'object-uuid' in s3_metadata:
-            self.logger.info("object-uuid: " + s3_metadata['object-uuid'])
             obj_uuid = s3_metadata['object-uuid']
+            self.logger.info("Retrieved object uuid: " + obj_uuid)
         else:
-            print("no object-uuid found in metadata")
+            self.logger.info("No uuid found in metadata")
+
         return obj_uuid
 
     def add_uuid_metadata(self, boto_client, bucket, s3_key):
@@ -209,7 +208,7 @@ class S3Utils:
         :return: boolean
             True if upload successful, false otherwise
         """
-        self.logger.debug("Receive messages")
+        self.logger.debug("Uploading to s3")
 
         key_exists = False
         obj_uuid = str(uuid.uuid4())
@@ -224,7 +223,7 @@ class S3Utils:
                 print("Upload successful.")
                 return True
             except FileNotFoundError:
-                print("The file was not found")
+                self.logger.error("File to upload was not found. Path: "+local_file)
                 return False
 
     def get_csv_s3(self, boto_client, bucket, key):
