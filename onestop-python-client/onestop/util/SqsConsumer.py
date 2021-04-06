@@ -7,27 +7,84 @@ from onestop.util.ClientLogger import ClientLogger
 
 
 class SqsConsumer:
+    """
+    A class used to consume messages from sqs queue
+
+    Attributes
+    ----------
+    conf: yaml file
+        aws-util-config-dev.yml
+    cred: yaml file
+        credentials.yml
+    logger: ClientLogger object
+            utilizes python logger library and creates logging for our specific needs
+    logger.info: ClientLogger object
+        logging statement that occurs when the class is instantiated
+
+    Methods
+    -------
+    connect()
+        connects a boto sqs instance based on configurations in conf and cred yml files
+
+    receive_messages(queue, sqs_max_polls, cb)
+        polls for messages in the queue
+    """
     conf = None
 
-    def __init__(self, access_key, access_secret, s3_region, sqs_url, log_level = 'INFO'):
+    def __init__(self, conf_loc, cred_loc):
+        """
 
-        self.access_key = access_key
-        self.access_secret = access_secret
-        self.s3_region = s3_region
-        self.sqs_url = sqs_url
-        self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
+        :param conf_loc: yaml file
+            aws-util-config-dev.yml
+        :param cred_loc: yaml file
+            credentials.yml
+
+        Other Attributes
+        ----------------
+        logger: ClientLogger object
+            utilizes python logger library and creates logging for our specific needs
+        logger.info: ClientLogger object
+            logging statement that occurs when the class is instantiated
+
+        """
+        with open(conf_loc) as f:
+            self.conf = yaml.load(f, Loader=yaml.FullLoader)
+
+        with open(cred_loc) as f:
+            self.cred = yaml.load(f, Loader=yaml.FullLoader)
+
+        self.logger = ClientLogger.get_logger(self.__class__.__name__, self.conf['log_level'], False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
     def connect(self):
-        boto_session = boto3.Session(aws_access_key_id=self.access_key,
-                                     aws_secret_access_key=self.access_secret)
+        """
+        Connects a boto sqs instance based on configurations in conf and cred yml files
+
+        :return: boto sqs
+            returns instance of boto sqs resource
+        """
+        boto_session = boto3.Session(aws_access_key_id=self.cred['sandbox']['access_key'],
+                                     aws_secret_access_key=self.cred['sandbox']['secret_key'])
         # Get the queue. This returns an SQS.Queue instance
-        sqs_session = boto_session.resource('sqs', region_name=self.s3_region)
-        self.logger.info("Connecting to " + self.sqs_url)
-        sqs_queue = sqs_session.Queue(self.sqs_url)
+        sqs_session = boto_session.resource('sqs', region_name=self.conf['s3_region'])
+        sqs_queue = sqs_session.Queue(self.conf['sqs_url'])
+        self.logger.info("Connecting to " + self.conf['sqs_url'])
         return sqs_queue
 
     def receive_messages(self, queue, sqs_max_polls, cb):
+        """
+        Polls for messages in the queue
+
+        :param queue: boto sqs resource
+            instance of boto sqs resource given from connect()
+        :param sqs_max_polls: int
+            number of polls
+        :param cb: function
+            call back function
+
+        :return: Dependent on the call back function
+
+        """
         self.logger.info("Receive messages")
 
         i = 1
@@ -35,7 +92,6 @@ class SqsConsumer:
             self.logger.info("Polling attempt: " + str(i))
             i = i + 1
 
-            #TODO MaxNumberOfMessages and WaitTimeSeconds configurable
             sqs_messages = queue.receive_messages(MaxNumberOfMessages=10, WaitTimeSeconds=10)
             self.logger.info("Received %d messages." % len(sqs_messages))
 

@@ -3,6 +3,12 @@ import json
 from onestop.util.S3Utils import S3Utils
 
 def handler():
+    '''
+    Creates bucket with defined key paths
+
+    :return: str
+        Returns boto3 response indicating if bucket creation was successful
+    '''
     # connect to low level api
     s3 = s3_utils.connect("s3", s3_utils.conf['s3_region'])
 

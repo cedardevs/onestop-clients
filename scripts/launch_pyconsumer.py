@@ -6,6 +6,15 @@ from onestop.WebPublisher import WebPublisher
 
 
 def handler(recs):
+    '''
+    Processes metadata information from sqs message triggered by S3 event and uploads to registry through web publisher (https). Utilizes helm for credentials and conf.
+
+    :param recs: dict
+        sqs message triggered by s3 event
+
+    :return: str
+        IM registry response
+    '''
     print("Handling message...")
 
     # Now get boto client for object-uuid retrieval

@@ -1,0 +1,75 @@
+{
+  "type": "record",
+  "namespace": "org.cedar.schemas.avro.psi",
+  "name": "ParsedRecord",
+  "doc": "",
+  "fields": [
+    {
+      "name": "type",
+      "type": [
+        "null",
+        "org.cedar.schemas.avro.psi.RecordType"
+      ],
+      "default": null
+    },
+    {
+      "name": "discovery",
+      "type": [
+        "null",
+        "org.cedar.schemas.avro.psi.Discovery"
+      ],
+      "default": null
+    },
+    {
+      "name": "analysis",
+      "type": [
+        "null",
+        "org.cedar.schemas.avro.psi.Analysis"
+      ],
+      "default": null
+    },
+    {
+      "name": "fileInformation",
+      "type": [
+        "null",
+        "org.cedar.schemas.avro.psi.FileInformation"
+      ],
+      "doc": "Details about the file that this input object is in reference to",
+      "default": null
+    },
+    {
+      "name": "fileLocations",
+      "type": {
+        "type": "map",
+        "values": "org.cedar.schemas.avro.psi.FileLocation"
+      },
+      "doc": "A list of location objects describing where the file is located",
+      "default": {}
+    },
+    {
+      "name": "publishing",
+      "type": "org.cedar.schemas.avro.psi.Publishing",
+      "default": {
+        "isPrivate": false,
+        "until": null
+      }
+    },
+    {
+      "name": "relationships",
+      "type": {
+        "type": "array",
+        "items": "org.cedar.schemas.avro.psi.Relationship"
+      },
+      "doc": "A record of this objects relationships to other objects in the inventory",
+      "default": []
+    },
+    {
+      "name": "errors",
+      "type": {
+        "type": "array",
+        "items": "org.cedar.schemas.avro.psi.ErrorEvent"
+      },
+      "default": []
+    }
+  ]
+}

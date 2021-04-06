@@ -6,9 +6,20 @@ from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.WebPublisher import WebPublisher
 from onestop.extract.CsbExtractor import CsbExtractor
+from onestop.schemas.util.jsonEncoder import EnumEncoder
 
 
 def handler(recs):
+    '''
+    Processes metadata information from sqs message triggered by S3 event and uploads to registry through web publisher (https). Also uploads s3 object to glacier.
+
+    :param recs: dict
+        sqs message triggered by s3 event
+
+    :return: str
+        IM registry response and boto3 glacier response
+    '''
+
     print("Handler...")
 
     # Now get boto client for object-uuid retrieval
@@ -22,7 +33,9 @@ def handler(recs):
         print(rec)
         bucket = rec['s3']['bucket']['name']
         s3_key = rec['s3']['object']['key']
-
+        print("Getting uuid")
+        # High-level api
+        s3_resource = s3_utils.connect("s3_resource", None)
         object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
         if object_uuid is not None:
             print("Retrieved object-uuid: " + object_uuid)
@@ -32,39 +45,19 @@ def handler(recs):
 
     im_message = s3ma.transform(recs)
 
-    """
-    # Add geospatial temporal bounds
-    # # Looks to see if the file is a csv file
-    if csb_extractor.is_csv(s3_key):
-        bounds_dict = csb_extractor.get_spatial_temporal_bounds('LON', 'LAT', 'TIME')
-        coords = bounds_dict["geospatial"]
-        min_lon = coords[0]
-        min_lat = coords[1]
-        max_lon = coords[2]
-        max_lat = coords[3]
+    json_payload = json.dumps(im_message.to_dict(), cls=EnumEncoder)
 
-        date_rng = bounds_dict["temporal"]
-        begin_date_str = date_rng[0]
-        end_date_str = date_rng[1]
-
-        coords = csb_extractor.extract_coords(max_lon, max_lat, min_lon, min_lat)
-
-    for coord in coords:
-        im_message.coordinates.append(coord)
-
-    im_message.temporalBounding = {'beginDate': begin_date_str, 'endDate': end_date_str}
-    """
-
-    json_payload = im_message.serialize()
     print(json_payload)
 
+
     registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
-    print(registry_response.json())
+    #print(registry_response.json())
 
     # Upload to archive
-    file_data = s3_utils.read_bytes_s3(s3, bucket, s3_key)
+    file_data = s3_utils.read_bytes_s3(s3_client, bucket, s3_key)
     glacier = s3_utils.connect("glacier", s3_utils.conf['s3_region'])
     vault_name = s3_utils.conf['vault_name']
+
 
     resp_dict = s3_utils.upload_archive(glacier, vault_name, file_data)
 
@@ -88,42 +81,34 @@ def handler(recs):
     # Send patch request next with archive location
     registry_response = wp.publish_registry("granule", object_uuid, json_payload, "PATCH")
 
+
 if __name__ == '__main__':
     """
     parser = argparse.ArgumentParser(description="Launches e2e test")
     parser.add_argument('-conf', dest="conf", required=True,
                         help="AWS config filepath")
-
     parser.add_argument('-cred', dest="cred", required=True,
                         help="Credentials filepath")
     args = vars(parser.parse_args())
-
     # Get configuration file path locations
     conf_loc = args.pop('conf')
     cred_loc = args.pop('cred')
-
     # Upload a test file to s3 bucket
     s3_utils = S3Utils(conf_loc, cred_loc)
-
     # Low-level api ? Can we just use high level revisit me!
     s3 = s3_utils.connect("s3", None)
-
     registry_user = os.environ.get("REGISTRY_USERNAME")
     registry_pwd = os.environ.get("REGISTRY_PASSWORD")
     print(registry_user)
-
     access_key = os.environ.get("AWS_ACCESS")
     access_secret = os.environ.get("AWS_SECRET")
     print(access_key)
-    
+
     # High-level api
     s3_resource = s3_utils.connect("s3_resource", None)
-
     bucket = s3_utils.conf['s3_bucket']
     overwrite = True
-
     sqs_max_polls = s3_utils.conf['sqs_max_polls']
-
     # Add 3 files to bucket
     local_files = ["file1.csv", "file4.csv"]
     s3_file = None
@@ -131,20 +116,16 @@ if __name__ == '__main__':
         local_file = "tests/data/" + file
         s3_file = "csv/" + file
         s3_utils.upload_s3(s3, local_file, bucket, s3_file, overwrite)
-
     # Receive s3 message and MVM from SQS queue
     sqs_consumer = SqsConsumer(conf_loc, cred_loc)
     s3ma = S3MessageAdapter("scripts/config/csb-data-stream-config.yml", s3_utils)
-
     # Retrieve data from s3 object
     #csb_extractor = CsbExtractor()
     wp = WebPublisher("config/web-publisher-config-dev.yml", cred_loc)
-
     queue = sqs_consumer.connect()
     try:
         debug = False
         sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
-
     except Exception as e:
         print("Message queue consumption failed: {}".format(e))
     """
@@ -165,24 +146,21 @@ if __name__ == '__main__':
     s3_utils = S3Utils(conf_loc, cred_loc)
 
     # Low-level api ? Can we just use high level revisit me!
-    s3 = s3_utils.connect("s3", None)
-
-    # High-level api
-    s3_resource = s3_utils.connect("s3_resource", None)
+    s3_client = s3_utils.connect("s3", None)
 
     bucket = s3_utils.conf['s3_bucket']
-    overwrite = True
 
-    sqs_max_polls =s3_utils.conf['sqs_max_polls']
+    sqs_max_polls = s3_utils.conf['sqs_max_polls']
 
     # Add 3 files to bucket
-    local_files = ["file1.csv", "file2.csv"]
+    local_files = ["file1.csv", "file4.csv"]
     s3_file = None
     for file in local_files:
-        local_file = "tests/data/" + file
+        local_file = "data/" + file
         # s3_file = "csv/" + file
         s3_file = "NESDIS/CSB/" + file
-        s3_utils.upload_s3(s3, local_file, bucket, s3_file, overwrite)
+        if not s3_utils.upload_s3(s3_client, local_file, bucket, s3_file, True):
+            exit("Error setting up for e2e: The test files were not uploaded to the s3 bucket therefore the tests cannot continue.")
 
     # Receive s3 message and MVM from SQS queue
     sqs_consumer = SqsConsumer(conf_loc, cred_loc)
@@ -196,8 +174,3 @@ if __name__ == '__main__':
 
     except Exception as e:
         print("Message queue consumption failed: {}".format(e))
-
-
-
-
-
