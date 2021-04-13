@@ -54,6 +54,7 @@ class WebPublisherTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
+
         self.wp = WebPublisher("../config/web-publisher-config-dev.yml", "../config/credentials.yml")
 
     def tearDown(self):
