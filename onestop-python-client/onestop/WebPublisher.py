@@ -8,14 +8,16 @@ class WebPublisher:
 
     Attributes
     ----------
-    conf_loc: yaml file
-        web-publisher-config-dev.yml
-    cred_loc: yaml file
-        credentials.yml
-    logger: ClientLogger object
-            utilizes python logger library and creates logging for our specific needs
-    logger.info: ClientLogger object
-        logging statement that occurs when the class is instantiated
+    registry_base_url: str
+        url for registry endpoint
+    registry_username: str
+        username for posting metadata to registry
+    registry_password: str
+        password for posting metadata to registry
+    onestop_base_url: str
+        url for onestop endpoint
+    logger.info: str
+        logging level
 
     Methods
     -------
@@ -125,7 +127,7 @@ class WebPublisher:
         headers = {'Content-Type': 'application/json'}
         onestop_url = self.onestop_base_url + "/" + metadata_type
 
-        print("Get: " + onestop_url)
+        print("Search: " + onestop_url)
         response = requests.get(url=onestop_url, headers=headers, data=payload, verify=False)
         return response
 
@@ -143,6 +145,6 @@ class WebPublisher:
         """
         payload = '{"queries":[],"filters":[{"type":"collection","values":["' + uuid +  '"]}],"facets":true,"page":{"max":50,"offset":0}}'
 
-        response = self.search_onestop("collection", payload)
+        response = self.search_onestop("granule", payload)
         self.logger.info( response )
         return response
