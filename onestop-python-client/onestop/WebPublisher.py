@@ -123,13 +123,13 @@ class WebPublisher:
             response message indicating if request was successful
         """
         headers = {'Content-Type': 'application/json'}
-        onestop_url = self.conf['onestop_base_url'] + "/" + metadata_type
+        onestop_url = self.onestop_base_url + "/" + metadata_type
 
         print("Get: " + onestop_url)
         response = requests.get(url=onestop_url, headers=headers, data=payload, verify=False)
         return response
 
-    def get_granules_onestop(self, metadata_type, uuid):
+    def get_granules_onestop(self, uuid):
         """
         Acquires granules from onestop given metadata type and uuid
 
@@ -143,4 +143,6 @@ class WebPublisher:
         """
         payload = '{"queries":[],"filters":[{"type":"collection","values":["' + uuid +  '"]}],"facets":true,"page":{"max":50,"offset":0}}'
 
-        self.search_onestop(metadata_type, payload)
+        response = self.search_onestop("collection", payload)
+        self.logger.info( response )
+        return response

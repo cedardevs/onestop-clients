@@ -8,7 +8,8 @@ class WebPublisherTest(unittest.TestCase):
     wp = None
     object_uuid = "9f0a5ff2-fcc0-5bcb-a225-024b669c9bba"
     collection_uuid = "fdb56230-87f4-49f2-ab83-104cfd073177"
-    payloadDict = {
+
+    granule_payloadDict = {
         "fileInformation": {
                 "name": "file2.csv",
                 "size": 1385,
@@ -50,8 +51,8 @@ class WebPublisherTest(unittest.TestCase):
         }
     }
 
-
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         print("Set it up!")
 
         cred_loc = "../config/credentials.yml"
@@ -80,23 +81,19 @@ class WebPublisherTest(unittest.TestCase):
             "onestop_base_url": onestop_base_url
         }
 
-        self.wp = WebPublisher(config_dict)
+        cls.wp = WebPublisher(config_dict)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         print("Tear it down!")
 
-    def test_parse_config(self):
-        self.assertFalse(self.wp.conf['url']==None)
-        self.assertFalse(self.wp.cred['registry']['username'] == None)
-
-    def test_publish(self):
-        payload = json.dumps(self.payloadDict)
+    def test_publish_granule(self):
+        payload = json.dumps(self.granule_payloadDict)
         response = self.wp.publish_registry("granule", self.object_uuid, payload, "POST")
         print (response.json())
 
     def test_get_granules(self):
-        payload = '{"queries":[],"filters":[{"type":"collection","values":["fdb56230-87f4-49f2-ab83-104cfd073177"]}],"facets":true,"page":{"max":20,"offset":0}}'
-        response = self.wp.get_granules_onestop("granule", self.collection_uuid, payload)
+        response = self.wp.get_granules_onestop(self.collection_uuid)
         print(response.json())
 
     def test_delete_granule(self):
@@ -104,9 +101,8 @@ class WebPublisherTest(unittest.TestCase):
         print(response.json())
 
     def test_delete_granules(self):
-        payload = '{"queries":[],"filters":[{"type":"collection","values":["fdb56230-87f4-49f2-ab83-104cfd073177"]}],"facets":true,"page":{"max":50,"offset":0}}'
-        response = self.wp.get_granules_onestop("granule", self.collection_uuid)
-        # print(response.json())
+        response = self.wp.get_granules_onestop(self.collection_uuid)
+        print(response.json())
         response_dict = json.loads(response.text)
         # items = response.json().items()
         data_list = response_dict['data']
