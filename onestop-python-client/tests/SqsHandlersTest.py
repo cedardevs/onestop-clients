@@ -1,7 +1,7 @@
 import json
 import unittest
 import boto3
-
+import yaml
 from moto import mock_s3
 from moto import mock_sqs
 from tests.utils import abspath_from_relative, create_delete_message
@@ -54,9 +54,22 @@ class SqsHandlerTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
+
+        with open(abspath_from_relative(__file__, "../config/csb-data-stream-config-template.yml")) as f:
+            self.stream_conf = yaml.load(f, Loader=yaml.FullLoader)
+        with open(abspath_from_relative(__file__, "../config/aws-util-config-dev.yml")) as f:
+            self.cloud_conf = yaml.load(f, Loader=yaml.FullLoader)
+        with open(abspath_from_relative(__file__, "../config/credentials-template.yml")) as f:
+            self.cred = yaml.load(f, Loader=yaml.FullLoader)
+
         self.wp = WebPublisher(self.wp_config, self.cred_config)
-        self.su = S3Utils(self.aws_config, self.cred_config)
-        self.s3ma = S3MessageAdapter(self.csb_config, self.su)
+        self.su = S3Utils(self.cred['sandbox']['access_key'],
+                          self.cred['sandbox']['secret_key'],
+                          "DEBUG")
+        self.s3ma = S3MessageAdapter(self.stream_conf['access_bucket'],
+                                     self.stream_conf['type'],
+                                     self.stream_conf['file_identifier_prefix'],
+                                     self.stream_conf['collection_id'])
 
     def tearDown(self):
         print("Tear it down!")
@@ -64,19 +77,21 @@ class SqsHandlerTest(unittest.TestCase):
     @mock_s3
     @mock_sqs
     def init_s3(self):
-        bucket = self.su.conf['s3_bucket']
-        key = self.su.conf['s3_key']
+        bucket = self.cloud_conf['s3_bucket']
+        key = self.cloud_conf['s3_key']
         boto_client = self.su.connect("s3", None)
         boto_client.create_bucket(Bucket=bucket)
         boto_client.put_object(Bucket=bucket, Key=key, Body="foobar")
 
-        sqs_client = boto3.client('sqs', region_name=self.su.conf['s3_region'])
-        sqs_queue = sqs_client.create_queue(QueueName=self.su.conf['sqs_name'])
+        sqs_client = boto3.client('sqs', region_name=self.cloud_conf['s3_region'])
+        sqs_queue = sqs_client.create_queue(QueueName=self.cloud_conf['sqs_name'])
         self.sqs = SqsConsumer(self.aws_config, self.cred_config)
-        message = create_delete_message(self.su.conf['s3_region'], bucket, key)
+        message = create_delete_message(self.cloud_conf['s3_region'], bucket, key)
         sqs_client.send_message(QueueUrl=sqs_queue['QueueUrl'], MessageBody=json.dumps(message))
-        return sqs_queue['QueueUrl']
+        sqs_queue['QueueUrl']
 
+    @mock_s3
+    @mock_sqs
     def delete_handler_wrapper(self, recs):
         handler = create_delete_handler(self.wp)
         result = handler(recs)
@@ -85,5 +100,8 @@ class SqsHandlerTest(unittest.TestCase):
     @mock_sqs
     def test_delete_handler(self):
         mock_queue_url = self.init_s3()
-        sqs_queue = boto3.resource('sqs', region_name=self.su.conf['s3_region']).Queue(mock_queue_url)
-        self.sqs.receive_messages(sqs_queue, self.su.conf['sqs_max_polls'], self.delete_handler_wrapper)
+        sqs_queue = boto3.resource('sqs', region_name=self.stream_conf['s3_region']).Queue(mock_queue_url)
+        self.sqs.receive_messages(sqs_queue, self.stream_conf['sqs_max_polls'], self.delete_handler_wrapper)
+
+if __name__ == '__main__':
+    unittest.main()

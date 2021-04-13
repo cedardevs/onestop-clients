@@ -1,4 +1,6 @@
 import unittest
+import yaml
+
 from moto import mock_s3
 from tests.utils import abspath_from_relative
 from onestop.util.S3Utils import S3Utils
@@ -51,22 +53,35 @@ class S3MessageAdapterTest(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
-        self.s3_utils = S3Utils(abspath_from_relative(__file__, "../../config/aws-util-config-dev.yml"),
-                                abspath_from_relative(__file__, "../../config/credentials-template.yml"))
-        self.s3ma = S3MessageAdapter(abspath_from_relative(__file__, "../../config/csb-data-stream-config-template.yml"),
-                                     self.s3_utils)
+
+        with open(abspath_from_relative(__file__, "../../config/csb-data-stream-config-template.yml")) as f:
+            self.stream_conf = yaml.load(f, Loader=yaml.FullLoader)
+        with open(abspath_from_relative(__file__, "../../config/aws-util-config-dev.yml")) as f:
+            self.cloud_conf = yaml.load(f, Loader=yaml.FullLoader)
+        with open(abspath_from_relative(__file__, "../../config/credentials-template.yml")) as f:
+            self.cred = yaml.load(f, Loader=yaml.FullLoader)
+
+        self.s3_utils = S3Utils(self.cred['sandbox']['access_key'],
+                                self.cred['sandbox']['secret_key'],
+                                "DEBUG")
+        self.s3ma = S3MessageAdapter(self.stream_conf['access_bucket'],
+                                     self.stream_conf['type'],
+                                     self.stream_conf['file_identifier_prefix'],
+                                     self.stream_conf['collection_id'])
+
+        self.region = self.cloud_conf['s3_region']
+        self.bucket = self.cloud_conf['s3_bucket']
 
     def tearDown(self):
         print("Tear it down!")
 
     def test_parse_config(self):
-        self.assertFalse(self.s3ma.conf['collection_id']==None)
-
+        self.assertFalse(self.stream_conf['collection_id'] == None)
 
     @mock_s3
     def test_transform(self):
-        s3 = self.s3_utils.connect('s3', self.s3_utils.conf['s3_region'])
-        location = {'LocationConstraint': self.s3_utils.conf['s3_region']}
+        s3 = self.s3_utils.connect('s3', self.region)
+        location = {'LocationConstraint': self.region}
         bucket = 'nesdis-ncei-csb-dev'
         key = 'csv/file1.csv'
         key2 = 'csv/file2.csv'
@@ -81,4 +96,14 @@ class S3MessageAdapterTest(unittest.TestCase):
         print(payload)
         self.assertTrue(payload!=None)
 
+    @mock_s3
+    def test_extra_parameters_constructor(self):
+        testParams = {"access_bucket": "blah1",
+                      "type": "blah2",
+                      "file_id_prefix": "blah3",
+                      "collection_id": "blah4",
+                      "extra": "extra value"}
+        self.assertRaises(Exception, S3MessageAdapter(**testParams))
 
+if __name__ == '__main__':
+    unittest.main()

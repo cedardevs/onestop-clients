@@ -1,5 +1,5 @@
 import logging
-import yaml
+
 import uuid
 import boto3
 import botocore
@@ -15,68 +15,69 @@ class S3Utils:
 
     Attributes
     ----------
-    conf: yaml file
-        aws-util-config-dev.yml
-    cred: yaml file
-        credentials.yml
-    logger: ClientLogger object
-            utilizes python logger library and creates logging for our specific needs
-    logger.info: ClientLogger object
-        logging statement that occurs when the class is instantiated
+        access_key: str
+            Cloud access key
+
+        secret_key: str
+            Cloud secret key
+
+        log_level: str
+            The log level to use for this class (Defaults to 'INFO')
+
+        logger: ClientLogger object
+            Creates logging for us to log to.
 
     Methods
     -------
-    connect(client_type, region)
-        connects to a boto3 client
+        connect(client_type, region)
+            connects to a boto3 client
 
-    objectkey_exists(bucket, s3_key)
-        checks to see if a s3 key path exists in a particular bucket
+        objectkey_exists(bucket, s3_key)
+            checks to see if a s3 key path exists in a particular bucket
 
-    get_uuid_metadata(boto_client, bucket, s3_key)
-        returns metadata uuid of an s3 object if it has one, otherwise prints that one does not exist
+        get_uuid_metadata(boto_client, bucket, s3_key)
+            returns metadata uuid of an s3 object if it has one, otherwise prints that one does not exist
 
-    add_uuid_metadata(boto_client, bucket, s3_key)
-        adds metadata uuid to an s3 object
+        add_uuid_metadata(boto_client, bucket, s3_key)
+            adds metadata uuid to an s3 object
 
-    upload_s3(boto_client, local_file, bucket, s3_key, overwrite)
-        uploads a file to s3 bucket
+        upload_s3(boto_client, local_file, bucket, s3_key, overwrite)
+            uploads a file to s3 bucket
 
-    get_csv_s3(boto_client, bucket, key)
-        gets a csv file from s3 bucket using smart open library
+        get_csv_s3(boto_client, bucket, key)
+            gets a csv file from s3 bucket using smart open library
 
-    read_bytes_s3(boto_client, bucket, key)
-        returns raw information of s3 object
+        read_bytes_s3(boto_client, bucket, key)
+            returns raw information of s3 object
 
-    upload_archive(boto_client, vault_name, src_data)
-        Add an archive to an Amazon S3 Glacier vault. The upload occurs synchronously.
+        upload_archive(boto_client, vault_name, src_data)
+            Add an archive to an Amazon S3 Glacier vault. The upload occurs synchronously.
 
-    s3_to_glacier(boto_client, bucket_name, key)
-        Changes storage class of s3 object from s3 -> glacier. Utilizes s3 client type
+        s3_to_glacier(boto_client, bucket_name, key)
+            Changes storage class of s3 object from s3 -> glacier. Utilizes s3 client type
 
-    s3_to_glacier_object_lock(boto_client, bucket_name, key, object_lock_mode, object_lock_retention)
-        Changes storage class of s3 object from s3 -> glacier and places it in object lock mode. Utilizes s3 client type
+        s3_to_glacier_object_lock(boto_client, bucket_name, key, object_lock_mode, object_lock_retention)
+            Changes storage class of s3 object from s3 -> glacier and places it in object lock mode. Utilizes s3 client type
 
-    s3_restore(boto_client, bucket_name, key, days)
-        Restores an object in S3 glacier back to S3 for specified amount of days
+        s3_restore(boto_client, bucket_name, key, days)
+            Restores an object in S3 glacier back to S3 for specified amount of days
 
-    retrieve_inventory(boto_client, vault_name)
-        Initiate an Amazon Glacier inventory-retrieval job
+        retrieve_inventory(boto_client, vault_name)
+            Initiate an Amazon Glacier inventory-retrieval job
 
-    retrieve_inventory_results(vault_name, boto_client, job_id)
-        Retrieve the results of an Amazon Glacier inventory-retrieval job
+        retrieve_inventory_results(vault_name, boto_client, job_id)
+            Retrieve the results of an Amazon Glacier inventory-retrieval job
     """
     conf = None
 
-    def __init__(self, conf_loc, cred_loc):
-
-        with open(conf_loc) as f:
-            self.conf = yaml.load(f, Loader=yaml.FullLoader)
-
-        with open(cred_loc) as f:
-            self.cred = yaml.load(f, Loader=yaml.FullLoader)
-
-        self.logger = ClientLogger.get_logger(self.__class__.__name__, self.conf['log_level'], False)
+    def __init__(self, access_key, secret_key, log_level = 'INFO', **wildargs):
+        self.access_key = access_key
+        self.secret_key = secret_key
+        self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
+
+        if wildargs:
+            self.logger.error("There were extra constructor arguments: " + str(wildargs))
 
     def connect(self, client_type, region):
         """
@@ -92,21 +93,29 @@ class S3Utils:
         """
 
         if client_type == "s3":
-            boto = boto3.client("s3", aws_access_key_id=self.cred['sandbox']['access_key'],
-                                       aws_secret_access_key=self.cred['sandbox']['secret_key'], region_name=region)
+            boto = boto3.client(
+                "s3",
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key,
+                region_name=region)
 
         if client_type == "s3_resource":
-            boto = boto3.resource("s3", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
-                                         aws_secret_access_key=self.cred['sandbox']['secret_key'] )
+            boto = boto3.resource(
+                "s3",
+                region_name=region,
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key)
 
         if client_type == "glacier":
-            boto = boto3.client("glacier", region_name=region, aws_access_key_id=self.cred['sandbox']['access_key'],
-                                       aws_secret_access_key=self.cred['sandbox']['secret_key'])
+            boto = boto3.client(
+                "glacier",
+                region_name=region,aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key)
 
         if client_type == "session":
             boto = boto3.Session(
-                aws_access_key_id=self.cred['sandbox']['access_key'],
-                aws_secret_access_key=self.cred['sandbox']['secret_key'],
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key,
             )
         return boto
 

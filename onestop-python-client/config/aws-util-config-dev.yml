@@ -3,9 +3,11 @@ log_level: INFO
 
 # AWS config values
 sqs_url: https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs
+sqs_name: 'foobar'
 sqs_max_polls: 2
 s3_region: "us-east-2"
 s3_bucket: archive-testing-demo
+s3_key: 'ABI-L1b-RadF/2019/298/15/OR_ABI-L1b-RadF-M6C15_G16_s20192981500369_e20192981510082_c20192981510166.nc'
 
 #AWS config values for 2nd vault in different region
 vault_name: archive-vault-new
