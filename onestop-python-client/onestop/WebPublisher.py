@@ -25,11 +25,11 @@ class WebPublisher:
     """
     conf = None
 
-    def __init__(self, config_dict, log_level="INFO"):
-        self.registry_base_url = config_dict.get("registry_base_url")
-        self.username = config_dict.get("registry_username")
-        self.password = config_dict.get("registry_password")
-        self.onestop_base_url = config_dict.get("onestop_base_url")
+    def __init__(self, registry_base_url, registry_username, registry_password, onestop_base_url, log_level="INFO", **kwargs):
+        self.registry_base_url = registry_base_url
+        self.registry_username = registry_username
+        self.registry_password = registry_password
+        self.onestop_base_url = onestop_base_url
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
@@ -54,18 +54,18 @@ class WebPublisher:
         self.logger.info("Sending WP a " + method + " for " + metadata_type + " with ID " + uuid + " to " + registry_url)
         self.logger.info("Payload:" + payload)
         if method == "POST":
-            response = requests.post(url=registry_url, headers=headers, auth=(self.username,
-                                                                       self.password),
+            response = requests.post(url=registry_url, headers=headers, auth=(self.registry_username,
+                                                                       self.registry_password),
                               data=payload, verify=False)
 
         if method == "PATCH":
-            response = requests.patch(url=registry_url, headers=headers, auth=(self.username,
-                                                                       self.password),
+            response = requests.patch(url=registry_url, headers=headers, auth=(self.registry_username,
+                                                                       self.registry_password),
                               data=payload, verify=False)
 
         if method == "PUT":
-            response = requests.put(url=registry_url, headers=headers, auth=(self.username,
-                                                                       self.password),
+            response = requests.put(url=registry_url, headers=headers, auth=(self.registry_username,
+                                                                       self.registry_password),
                               data=payload, verify=False)
         return response
 
@@ -85,8 +85,8 @@ class WebPublisher:
         headers = {'Content-Type': 'application/json'}
         registry_url = self.registry_base_url + "/metadata/" + metadata_type + "/" + uuid
         self.logger.info("Sending DELETE by ID to: " + registry_url)
-        response = requests.delete(url=registry_url, headers=headers, auth=(self.username,
-                                                                            self.password), verify=False)
+        response = requests.delete(url=registry_url, headers=headers, auth=(self.registry_username,
+                                                                            self.registry_password), verify=False)
         self.logger.info(response)
         return response
 

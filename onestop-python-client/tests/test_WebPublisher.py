@@ -81,7 +81,7 @@ class WebPublisherTest(unittest.TestCase):
             "onestop_base_url": onestop_base_url
         }
 
-        cls.wp = WebPublisher(config_dict)
+        cls.wp = WebPublisher(**config_dict)
 
     @classmethod
     def tearDownClass(cls):
