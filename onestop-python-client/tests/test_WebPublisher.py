@@ -1,9 +1,8 @@
+import yaml
 import json
 import unittest
 
 from onestop.WebPublisher import WebPublisher
-from onestop.info.ImMessage import ImMessage
-from onestop.info.FileMessage import FileMessage
 
 class WebPublisherTest(unittest.TestCase):
     wp = None
@@ -55,7 +54,33 @@ class WebPublisherTest(unittest.TestCase):
     def setUp(self):
         print("Set it up!")
 
-        self.wp = WebPublisher("../config/web-publisher-config-dev.yml", "../config/credentials.yml")
+        cred_loc = "../config/credentials.yml"
+        conf_loc = "../config/csb-data-stream-config-template.yml"
+
+        with open(cred_loc) as f:
+            creds = yaml.load(f, Loader=yaml.FullLoader)
+
+        registry_username = creds['registry']['username']
+        registry_password = creds['registry']['password']
+        access_key = creds['sandbox']['access_key']
+        access_secret = creds['sandbox']['secret_key']
+
+        with open(conf_loc) as f:
+            conf = yaml.load(f, Loader=yaml.FullLoader)
+
+        registry_base_url = conf['registry_base_url']
+        onestop_base_url = conf['onestop_base_url']
+
+        config_dict = {
+            "registry_username": registry_username,
+            "registry_password": registry_password,
+            "access_key": access_key,
+            "access_secret": access_secret,
+            "registry_base_url": registry_base_url,
+            "onestop_base_url": onestop_base_url
+        }
+
+        self.wp = WebPublisher(config_dict)
 
     def tearDown(self):
         print("Tear it down!")

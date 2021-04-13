@@ -1,6 +1,4 @@
-import logging
 import requests
-import urllib3
 import yaml
 from onestop.util.ClientLogger import ClientLogger
 
@@ -27,11 +25,11 @@ class WebPublisher:
     """
     conf = None
 
-    def __init__(self, registry_base_url=None, username=None, password=None, onestop_base_url=None, log_level='INFO'):
-        self.registry_base_url = registry_base_url
-        self.username = username
-        self.password = password
-        self.onestop_base_url = onestop_base_url
+    def __init__(self, config_dict, log_level="INFO"):
+        self.registry_base_url = config_dict.get("registry_base_url")
+        self.username = config_dict.get("registry_username")
+        self.password = config_dict.get("registry_password")
+        self.onestop_base_url = config_dict.get("onestop_base_url")
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
