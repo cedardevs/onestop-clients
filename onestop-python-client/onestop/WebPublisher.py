@@ -7,29 +7,29 @@ class WebPublisher:
 
     Attributes
     ----------
-    registry_base_url: str
-        URL for registry endpoint
-    registry_username: str
-        Registry username where credentials needed
-    registry_password: str
-        Registry password where credentials needed
-    onestop_base_url: str
-        URL for OneStop endpoint
-    logger.info: str
-        logging level
+        registry_base_url: str
+            URL for registry endpoint
+        registry_username: str
+            Registry username where credentials needed
+        registry_password: str
+            Registry password where credentials needed
+        onestop_base_url: str
+            URL for OneStop endpoint
+        logger.info: str
+            logging level
 
     Methods
     -------
-    publish_registry(metadata_type, uuid, payload, method)
-        Publish an item to registry with either POST, PUT, OR PATCH methods
-    delete_registry(metadata_type, uuid)
-        Delete an item from registry
-    search_registry(metadata_type, uuid)
-        Search for an item in registry given its metadata type and uuid
-    search_onestop(metadata_type, payload)
-        Search for an item in OneStop given its metadata type and payload search criteria
-    get_granules_onestop(self, uuid)
-        Search for a granule in OneStop given its uuid
+        publish_registry(metadata_type, uuid, payload, method)
+            Publish an item to registry with either POST, PUT, OR PATCH methods
+        delete_registry(metadata_type, uuid)
+            Delete an item from registry
+        search_registry(metadata_type, uuid)
+            Search for an item in registry given its metadata type and uuid
+        search_onestop(metadata_type, payload)
+            Search for an item in OneStop given its metadata type and payload search criteria
+        get_granules_onestop(self, uuid)
+            Search for a granule in OneStop given its uuid
     """
     conf = None
 
