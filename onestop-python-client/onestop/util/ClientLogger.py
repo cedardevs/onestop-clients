@@ -11,7 +11,6 @@ class ClientLogger:
         creates a logger for debugging and info purposes
 
     """
-    @staticmethod
     def get_logger(log_name, log_level, create_file=False):
         """
 
