@@ -1,5 +1,4 @@
 import requests
-import yaml
 from onestop.util.ClientLogger import ClientLogger
 
 class WebPublisher:
@@ -22,8 +21,15 @@ class WebPublisher:
     Methods
     -------
     publish_registry(metadata_type, uuid, payload, method)
-        publish to registry with either POST,PUT, OR PATCH methods
-
+        Publish to registry with either POST,PUT, OR PATCH methods
+    delete_registry(metadata_type, uuid)
+        Deletes item from registry
+    search_registry(metadata_type, uuid)
+        Searches for an item in registry given its metadata type and uuid
+    search_onestop(metadata_type, payload)
+        Acquires the item, collection or granule, from OneStop
+    get_granules_onestop(self, uuid)
+        Acquires granules from OneStop given the uuid
     """
     conf = None
 
@@ -32,8 +38,12 @@ class WebPublisher:
         self.registry_username = registry_username
         self.registry_password = registry_password
         self.onestop_base_url = onestop_base_url
+
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
+
+        if kwargs:
+            self.logger.info("There were extra constructor arguments: " + str(kwargs))
 
     def publish_registry(self, metadata_type, uuid, payload, method):
         """
@@ -53,7 +63,7 @@ class WebPublisher:
         """
         headers = {'Content-Type': 'application/json'}
         registry_url = self.registry_base_url + "/metadata/" + metadata_type + "/" + uuid
-        self.logger.info("Sending WP a " + method + " for " + metadata_type + " with ID " + uuid + " to " + registry_url)
+        self.logger.info("Sending a " + method + " for " + metadata_type + " with ID " + uuid + " to " + registry_url)
         self.logger.info("Payload:" + payload)
         if method == "POST":
             response = requests.post(url=registry_url, headers=headers, auth=(self.registry_username,
@@ -69,6 +79,7 @@ class WebPublisher:
             response = requests.put(url=registry_url, headers=headers, auth=(self.registry_username,
                                                                        self.registry_password),
                               data=payload, verify=False)
+        self.logger.info("Response: "+str(response))
         return response
 
     def delete_registry(self, metadata_type, uuid):
@@ -89,62 +100,64 @@ class WebPublisher:
         self.logger.info("Sending DELETE by ID to: " + registry_url)
         response = requests.delete(url=registry_url, headers=headers, auth=(self.registry_username,
                                                                             self.registry_password), verify=False)
-        self.logger.info(response)
+        self.logger.info("Response: "+str(response))
         return response
 
-    def consume_registry(self, metadata_type, uuid):
+    def search_registry(self, metadata_type, uuid):
         """
-        Acquires information of an item in registry given its metadata type and uuid
+        Searches for an item in registry given its metadata type and uuid
 
         :param metadata_type: str
             metadata type (GRANULE/COLLECTION)
         :param uuid: str
-            uuid you want to publish with
+            uuid you want search for
 
         :return: str
             contents of the item in registry if the response was successful
         """
         headers = {'Content-Type': 'application/json'}
 
-        registry_url = self.conf['registry_base_url'] + "/metadata/" + metadata_type + "/" + uuid
-        print("Get: " + registry_url)
-        response = requests.get(url=registry_url, headers=headers, auth=(self.cred['registry']['username'],
-                                                                         self.cred['registry']['password']), verify=False)
+        registry_url = self.registry_base_url + "/metadata/" + metadata_type + "/" + uuid
+        self.logger.info("Sending GET(consume) by ID to: " + registry_url)
+        response = requests.get(url=registry_url, headers=headers, auth=(self.registry_username,
+                                                                         self.registry_password), verify=False)
+        self.logger.info("Response: "+str(response))
         return response
 
     def search_onestop(self, metadata_type, payload):
         """
-        Checks to see if the item is in onestop
+        Searches for an item in OneStop given its metadata type and payload search criteria.
 
         :param metadata_type: str
             metadata type (GRANULE/COLLECTION)
         :param payload: dict
-            contents of the item
+            json search query to send OneStop
 
         :return: str
-            response message indicating if request was successful
+            response message of search result
         """
         headers = {'Content-Type': 'application/json'}
         onestop_url = self.onestop_base_url + "/" + metadata_type
 
-        print("Search: " + onestop_url)
+        self.logger.info("Searching Onestop via GET by ID to: " + onestop_url)
+        self.logger.info("Payload:" + payload)
         response = requests.get(url=onestop_url, headers=headers, data=payload, verify=False)
+        self.logger.info("Response: "+str(response))
         return response
 
     def get_granules_onestop(self, uuid):
         """
-        Acquires granules from onestop given metadata type and uuid
+        Searches for a granule in OneStop given its uuid
 
-        :param metadata_type: str
-            metadata type (GRANULE/COLLECTION)
         :param uuid: str
-            uuid you want to publish with
+            uuid you want search for
 
         :return: str
-            response message indicating if request was successful
+            response message of search result
         """
         payload = '{"queries":[],"filters":[{"type":"collection","values":["' + uuid +  '"]}],"facets":true,"page":{"max":50,"offset":0}}'
+        self.logger.info("Getting granules for id=" + uuid)
 
         response = self.search_onestop("granule", payload)
-        self.logger.info( response )
+        self.logger.info("Response: "+str(response))
         return response
