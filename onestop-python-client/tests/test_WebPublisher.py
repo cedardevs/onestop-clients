@@ -1,12 +1,13 @@
 import yaml
 import json
 import unittest
+import time
 
 from onestop.WebPublisher import WebPublisher
 
 class WebPublisherTest(unittest.TestCase):
     wp = None
-    object_uuid = "9f0a5ff2-fcc0-5bcb-a225-024b669c9bba"
+    object_uuid = "7f0a5ff2-fcc0-5bcb-a225-024b669c9bba"
     collection_uuid = "fdb56230-87f4-49f2-ab83-104cfd073177"
 
     granule_payloadDict = {
@@ -20,7 +21,7 @@ class WebPublisherTest(unittest.TestCase):
         },
         "relationships": [
             {"type": "COLLECTION",
-             "id": "fdb56230-87f4-49f2-ab83-104cfd073177"
+             "id": collection_uuid
             }
         ],
         "fileLocations": {
@@ -34,7 +35,7 @@ class WebPublisherTest(unittest.TestCase):
         },
         "discovery": {
             "title": "file2.csv",
-            "parentIdentifier": "fdb56230-87f4-49f2-ab83-104cfd073177",
+            "parentIdentifier": collection_uuid,
             "fileIdentifier": "gov.noaa.ncei.csb:file2"
         }
     }
@@ -78,7 +79,8 @@ class WebPublisherTest(unittest.TestCase):
             "access_key": access_key,
             "access_secret": access_secret,
             "registry_base_url": registry_base_url,
-            "onestop_base_url": onestop_base_url
+            "onestop_base_url": onestop_base_url,
+            "log_level":"DEBUG"
         }
 
         cls.wp = WebPublisher(**config_dict)
@@ -86,35 +88,59 @@ class WebPublisherTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         print("Tear it down!")
+        cls.wp.delete_registry("granule", cls.object_uuid)
 
-    def test_publish_granule(self):
+    def test_publish_get_delete_granule_registry_onestop(self):
+        print("test_publish_get_delete_granule")
+
+        print("Cleanup from prior test runs: Waiting for granule to be deleted in Registry and OneStop")
+        self.wp.delete_registry("granule", self.object_uuid)
+        secondsWait = 150
+        self.assertTrue(self.wait_until(lambda: (self.get_onestop_granule_count(self.collection_uuid) == 0), secondsWait, 10),
+                        "Waited "+str(secondsWait)+" seconds for OneStop to delete granule(s) with collection id="+self.collection_uuid)
+
+        # Publish to Registry
         payload = json.dumps(self.granule_payloadDict)
         response = self.wp.publish_registry("granule", self.object_uuid, payload, "POST")
-        print (response.json())
+        self.assertTrue(response, "Failed to publish granule to registry")
+        response = self.wp.search_registry("granule", self.object_uuid)
+        self.assertTrue(response, "Failed to search for granule in Registry")
 
-    def test_get_granules(self):
-        response = self.wp.get_granules_onestop(self.collection_uuid)
-        print(response.json())
+        print("Waiting for granules to be searchable in OneStop")
+        secondsWait = 150
+        self.assertTrue(self.wait_until(lambda: (self.get_onestop_granule_count(self.collection_uuid) > 0), secondsWait, 10),
+                        "Waited "+str(secondsWait)+" seconds for OneStop to have the granule with collection id="+self.collection_uuid)
 
-    def test_delete_granule(self):
         response = self.wp.delete_registry("granule", self.object_uuid)
-        print(response.json())
+        self.assertTrue(response, "Failed to delete granule from registry")
 
-    def test_delete_granules(self):
-        response = self.wp.get_granules_onestop(self.collection_uuid)
-        print(response.json())
-        response_dict = json.loads(response.text)
-        # items = response.json().items()
-        data_list = response_dict['data']
-        # print (str(data_list))
-        for item in data_list:
-            uuid = item['id']
-            self.wp.delete_registry( "granule", uuid)
+        print("Waiting for granule to be deleted in OneStop")
+        secondsWait = 150
+        self.assertTrue(self.wait_until(lambda: (self.get_onestop_granule_count(self.collection_uuid) == 0), secondsWait, 10),
+                        "Waited "+str(secondsWait)+" seconds for OneStop to delete granule(s) with collection id="+self.collection_uuid)
 
     def test_add_glacier_location(self):
         payload = json.dumps(self.addlocDict)
         response = self.wp.publish_registry("granule", self.object_uuid, payload, "PATCH")
         self.assertTrue(response)
+
+    def wait_until(self, somepredicate, timeout, period=0.25, *args, **kwargs):
+        mustend = time.time() + timeout
+        while time.time() < mustend:
+            if somepredicate(*args, **kwargs):
+                return True
+
+            print("Waiting "+str(period)+" seconds for condition to be true.")
+            time.sleep(period)
+        return False
+
+    def get_onestop_granule_count(self, collection_uuid):
+        response = self.wp.get_granules_onestop(collection_uuid)
+        response_dict = json.loads(response.text)
+        data_list = response_dict['data']
+        print("OneStop granule count for collection_uuid "+collection_uuid+" is "+str(data_list.__len__()))
+
+        return data_list.__len__()
 
 if __name__ == '__main__':
     unittest.main()
