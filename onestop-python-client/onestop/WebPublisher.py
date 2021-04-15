@@ -1,7 +1,4 @@
-import logging
 import requests
-import urllib3
-import yaml
 from onestop.util.ClientLogger import ClientLogger
 
 class WebPublisher:
@@ -10,30 +7,43 @@ class WebPublisher:
 
     Attributes
     ----------
-    conf_loc: yaml file
-        web-publisher-config-dev.yml
-    cred_loc: yaml file
-        credentials.yml
-    logger: ClientLogger object
-            utilizes python logger library and creates logging for our specific needs
-    logger.info: ClientLogger object
-        logging statement that occurs when the class is instantiated
+    registry_base_url: str
+        url for registry endpoint
+    registry_username: str
+        username for posting metadata to registry
+    registry_password: str
+        password for posting metadata to registry
+    onestop_base_url: str
+        url for onestop endpoint
+    logger.info: str
+        logging level
 
     Methods
     -------
     publish_registry(metadata_type, uuid, payload, method)
-        publish to registry with either POST,PUT, OR PATCH methods
-
+        Publish to registry with either POST,PUT, OR PATCH methods
+    delete_registry(metadata_type, uuid)
+        Deletes item from registry
+    search_registry(metadata_type, uuid)
+        Searches for an item in registry given its metadata type and uuid
+    search_onestop(metadata_type, payload)
+        Acquires the item, collection or granule, from OneStop
+    get_granules_onestop(self, uuid)
+        Acquires granules from OneStop given the uuid
     """
     conf = None
 
-    def __init__(self, registry_base_url=None, username=None, password=None, onestop_base_url=None, log_level='INFO'):
+    def __init__(self, registry_base_url, registry_username, registry_password, onestop_base_url, log_level="INFO", **kwargs):
         self.registry_base_url = registry_base_url
-        self.username = username
-        self.password = password
+        self.registry_username = registry_username
+        self.registry_password = registry_password
         self.onestop_base_url = onestop_base_url
+
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
+
+        if kwargs:
+            self.logger.info("There were extra constructor arguments: " + str(kwargs))
 
     def publish_registry(self, metadata_type, uuid, payload, method):
         """
@@ -53,22 +63,23 @@ class WebPublisher:
         """
         headers = {'Content-Type': 'application/json'}
         registry_url = self.registry_base_url + "/metadata/" + metadata_type + "/" + uuid
-        self.logger.info("Sending WP a " + method + " for " + metadata_type + " with ID " + uuid + " to " + registry_url)
+        self.logger.info("Sending a " + method + " for " + metadata_type + " with ID " + uuid + " to " + registry_url)
         self.logger.info("Payload:" + payload)
         if method == "POST":
-            response = requests.post(url=registry_url, headers=headers, auth=(self.username,
-                                                                       self.password),
+            response = requests.post(url=registry_url, headers=headers, auth=(self.registry_username,
+                                                                       self.registry_password),
                               data=payload, verify=False)
 
         if method == "PATCH":
-            response = requests.patch(url=registry_url, headers=headers, auth=(self.username,
-                                                                       self.password),
+            response = requests.patch(url=registry_url, headers=headers, auth=(self.registry_username,
+                                                                       self.registry_password),
                               data=payload, verify=False)
 
         if method == "PUT":
-            response = requests.put(url=registry_url, headers=headers, auth=(self.username,
-                                                                       self.password),
+            response = requests.put(url=registry_url, headers=headers, auth=(self.registry_username,
+                                                                       self.registry_password),
                               data=payload, verify=False)
+        self.logger.info("Response: "+str(response))
         return response
 
     def delete_registry(self, metadata_type, uuid):
@@ -87,62 +98,66 @@ class WebPublisher:
         headers = {'Content-Type': 'application/json'}
         registry_url = self.registry_base_url + "/metadata/" + metadata_type + "/" + uuid
         self.logger.info("Sending DELETE by ID to: " + registry_url)
-        response = requests.delete(url=registry_url, headers=headers, auth=(self.username,
-                                                                            self.password), verify=False)
-        self.logger.info(response)
+        response = requests.delete(url=registry_url, headers=headers, auth=(self.registry_username,
+                                                                            self.registry_password), verify=False)
+        self.logger.info("Response: "+str(response))
         return response
 
-    def consume_registry(self, metadata_type, uuid):
+    def search_registry(self, metadata_type, uuid):
         """
-        Acquires information of an item in registry given its metadata type and uuid
+        Searches for an item in registry given its metadata type and uuid
 
         :param metadata_type: str
             metadata type (GRANULE/COLLECTION)
         :param uuid: str
-            uuid you want to publish with
+            uuid you want search for
 
         :return: str
             contents of the item in registry if the response was successful
         """
         headers = {'Content-Type': 'application/json'}
 
-        registry_url = self.conf['registry_base_url'] + "/metadata/" + metadata_type + "/" + uuid
-        print("Get: " + registry_url)
-        response = requests.get(url=registry_url, headers=headers, auth=(self.cred['registry']['username'],
-                                                                         self.cred['registry']['password']), verify=False)
+        registry_url = self.registry_base_url + "/metadata/" + metadata_type + "/" + uuid
+        self.logger.info("Sending GET(consume) by ID to: " + registry_url)
+        response = requests.get(url=registry_url, headers=headers, auth=(self.registry_username,
+                                                                         self.registry_password), verify=False)
+        self.logger.info("Response: "+str(response))
         return response
 
     def search_onestop(self, metadata_type, payload):
         """
-        Checks to see if the item is in onestop
+        Searches for an item in OneStop given its metadata type and payload search criteria.
 
         :param metadata_type: str
             metadata type (GRANULE/COLLECTION)
         :param payload: dict
-            contents of the item
+            json search query to send OneStop
 
         :return: str
-            response message indicating if request was successful
+            response message of search result
         """
         headers = {'Content-Type': 'application/json'}
-        onestop_url = self.conf['onestop_base_url'] + "/" + metadata_type
+        onestop_url = self.onestop_base_url + "/" + metadata_type
 
-        print("Get: " + onestop_url)
+        self.logger.info("Searching Onestop via GET by ID to: " + onestop_url)
+        self.logger.info("Payload:" + payload)
         response = requests.get(url=onestop_url, headers=headers, data=payload, verify=False)
+        self.logger.info("Response: "+str(response))
         return response
 
-    def get_granules_onestop(self, metadata_type, uuid):
+    def get_granules_onestop(self, uuid):
         """
-        Acquires granules from onestop given metadata type and uuid
+        Searches for a granule in OneStop given its uuid
 
-        :param metadata_type: str
-            metadata type (GRANULE/COLLECTION)
         :param uuid: str
-            uuid you want to publish with
+            uuid you want search for
 
         :return: str
-            response message indicating if request was successful
+            response message of search result
         """
         payload = '{"queries":[],"filters":[{"type":"collection","values":["' + uuid +  '"]}],"facets":true,"page":{"max":50,"offset":0}}'
+        self.logger.info("Getting granules for id=" + uuid)
 
-        self.search_onestop(metadata_type, payload)
+        response = self.search_onestop("granule", payload)
+        self.logger.info("Response: "+str(response))
+        return response
