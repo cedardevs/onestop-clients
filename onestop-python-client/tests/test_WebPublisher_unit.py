@@ -84,7 +84,7 @@ class WebPublisherTest(unittest.TestCase):
         return MockResponse({"key1":"value1"}, 200)
 
     @mock_s3
-    @mock.patch('requests.post', side_effect=mocked_requests_patch)
+    @mock.patch('requests.post', side_effect=mocked_requests_patch, autospec=True)
     def test_publish(self, mock_get):
         payload = json.dumps(self.payloadDict)
         self.wp.publish_registry("granule", self.uuid, payload, "POST")
@@ -96,7 +96,7 @@ class WebPublisherTest(unittest.TestCase):
         mock_get.assert_called_with(url = ANY, auth = ANY, data = ANY, verify = ANY, headers = {'Content-Type': 'application/json'})
 
     @mock_s3
-    @mock.patch('requests.put', side_effect=mocked_requests_patch)
+    @mock.patch('requests.put', side_effect=mocked_requests_patch, autospec=True)
     def test_publish(self, mock_get):
         payload = json.dumps(self.payloadDict)
         self.wp.publish_registry("granule", self.uuid, payload, "PUT")
@@ -108,7 +108,7 @@ class WebPublisherTest(unittest.TestCase):
         mock_get.assert_called_with(url = ANY, auth = ANY, data = ANY, verify = ANY, headers = {'Content-Type': 'application/json'})
 
     @mock_s3
-    @mock.patch('requests.patch', side_effect=mocked_requests_patch)
+    @mock.patch('requests.patch', side_effect=mocked_requests_patch, autospec=True)
     def test_add_glacier_location(self, mock_get):
         payload = json.dumps(self.addlocDict)
         self.wp.publish_registry("granule", self.uuid, payload, "PATCH")
@@ -120,7 +120,7 @@ class WebPublisherTest(unittest.TestCase):
         mock_get.assert_called_with(url = ANY, auth = ANY, data = ANY, verify = ANY, headers = {'Content-Type': 'application/json'})
 
     @mock_s3
-    @mock.patch('requests.delete', side_effect=mocked_requests_patch)
+    @mock.patch('requests.delete', side_effect=mocked_requests_patch, autospec=True)
     def test_delete_registry_granule(self, mock_get):
         self.wp.delete_registry("granule", self.uuid)
 
@@ -131,7 +131,7 @@ class WebPublisherTest(unittest.TestCase):
         mock_get.assert_called_with(url = ANY, auth = ANY, verify = ANY, headers = {'Content-Type': 'application/json'})
 
     @mock_s3
-    @mock.patch('requests.delete', side_effect=mocked_requests_patch)
+    @mock.patch('requests.delete', side_effect=mocked_requests_patch, autospec=True)
     def test_delete_registry_collection(self, mock_get):
         self.wp.delete_registry("collection", self.uuid)
 
