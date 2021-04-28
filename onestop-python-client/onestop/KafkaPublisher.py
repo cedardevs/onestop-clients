@@ -1,13 +1,11 @@
-import logging
-from uuid import UUID
 import json
-import yaml
 
+from uuid import UUID
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.error import KafkaError
 from confluent_kafka import SerializingProducer
 from confluent_kafka.schema_registry.avro import AvroSerializer
-
+from onestop.util.ClientLogger import ClientLogger
 
 class KafkaPublisher:
     """
@@ -15,114 +13,98 @@ class KafkaPublisher:
 
     Attributes
     ----------
-    conf: yaml file
-        config/kafka-publisher-config-dev.yml
-    logger: Logger object
-            utilizes python logger library and creates logging for our specific needs
-    logger.info: Logger object
-        logging statement that occurs when the class is instantiated
-    metadata_type: str
-        type of metadata (COLLECTION or GRANULE)
-    brokers: str
-        brokers (kubernetes service)
-    schema_registry: str
-        schema registry (kubernetes service)
-    security: boolean
-        defines if security is in place
-    collection_topic: str
-        collection topic you want to consume
-    granule_topic: str
-        granule topic you want to consume
+        metadata_type: str
+            type of metadata (COLLECTION or GRANULE)
+        brokers: str
+            brokers (kubernetes service)
+        schema_registry: str
+            schema registry (kubernetes service)
+        security_enabled: boolean
+            defines if security is in place
+        security_caLoc: str
+            Kafka schema registry certification authority (CA) file location.
+        security_keyLoc: str
+            Kafka schema registry client's private key file location.
+        security_certLoc: str
+            Kafka schema registry client's public key file location.
+        collection_topic: str
+            collection topic you want to produce to
+        granule_topic: str
+            granule topic you want to produce to
+        logger: Logger object
+                utilizes python logger library and creates logging for our specific needs
 
     Methods
     -------
-    get_logger(log_name, create_file)
-        creates logger file
+        register_client()
+            registers to schema registry client based on configs
 
-    register_client()
-        registers to schema registry client based on configs
+        create_producer(registry_client)
+            creates a SerializingProducer object to produce to kafka topic
 
-    create_producer(registry_client)
-        creates a SerializingProducer object to produce to kafka topic
+        connect()
+            utilizes register_client() and create_producer(registry_client) to connect to schema registry and allow for producing to kafka topics
 
-    connect()
-        utilizes register_client() and create_producer(registry_client) to connect to schema registry and allow for producing to kafka topics
+        publish_collection(collection_producer, collection_uuid, content_dict, method)
+            Publish collection to collection topic
 
-    publish_collection(collection_producer, collection_uuid, content_dict, method)
-        Publish collection to collection topic
-
-    publish_granule(granule_producer, record_uuid, collection_uuid, content_dict)
-        Publish granule to granule topic
+        publish_granule(granule_producer, record_uuid, collection_uuid, content_dict)
+            Publish granule to granule topic
     """
-    conf = None
 
-    def __init__(self, conf_loc):
+    def __init__(self, metadata_type, brokers, schema_registry, security, collection_topic_publish, granule_topic_publish, log_level='INFO', **wildargs):
+        """
+        Attributes
+        ----------
+            metadata_type: str
+                type of metadata (COLLECTION or GRANULE)
+            brokers: str
+                brokers (kubernetes service)
+            group_id: str
+                Client group id string. All clients sharing the same group.id belong to the same group
+            auto_offset_reset: str
+                Action to take when there is no initial offset in offset store or the desired offset is out of range (smallest, earliest, beginning, largest, latest, end, error)
+            schema_registry: str
+                schema registry (kubernetes service) URL
+            security: dict
+                enabled boolean: Whether to use security for kafka schema registry client.
+                caLoc str: Kafka schema registry certification authority (CA) file location.
+                keyLoc str: Kafka schema registry client's private key file location.
+                certLoc str: Kafka schema registry client's public key file location.
 
-        with open(conf_loc) as f:
-            self.conf = yaml.load(f, Loader=yaml.FullLoader)
+            collection_topic: str
+                collection topic you want to produce to
+            granule_topic: str
+                granule topic you want to produce to
+        """
+        self.metadata_type = metadata_type
+        self.brokers = brokers
+        self.schema_registry = schema_registry
+        self.security_enabled = security['enabled']
 
-        self.logger = self.get_logger(self.__class__.__name__, False)
-        self.logger.info("Initializing " + self.__class__.__name__)
-        self.metadata_type = self.conf['metadata_type']
-        self.brokers = self.conf['brokers']
-        self.schema_registry = self.conf['schema_registry']
-        self.security = self.conf['security']['enabled']
+        if self.security_enabled:
+            self.security_caLoc = security['caLoc']
+            self.security_keyLoc = security['keyLoc']
+            self.security_certLoc = security['certLoc']
 
-        self.collection_topic = self.conf['collection_topic_produce']
-        self.granule_topic = self.conf['granule_topic_produce']
+        self.collection_topic = collection_topic_publish
+        self.granule_topic = granule_topic_publish
 
         if self.metadata_type not in ['COLLECTION', 'GRANULE']:
             raise ValueError("metadata_type must be 'COLLECTION' or 'GRANULE'")
 
-    def get_logger(self, log_name, create_file):
-        """
-        Utilizes python logger library and creates logging
+        self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
+        self.logger.info("Initializing " + self.__class__.__name__)
 
-        :param log_name: str
-            name of log to be created
-        :param create_file: boolean
-            defines whether of not you want a logger file to be created
-
-        :return: Logger object
-        """
-
-        # create logger
-        log = logging.getLogger()
-
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-        if self.conf['log_level'] == "DEBUG":
-            log.setLevel(level=logging.DEBUG)
-        else:
-            if self.conf['log_level'] == "INFO":
-                log.setLevel(level=logging.INFO)
-            else:
-                log.setLevel(level=logging.ERROR)
-
-        fh = None
-        if create_file:
-            # create file handler for logger.
-            fh = logging.FileHandler(log_name)
-            fh.setFormatter(formatter)
-
-        # create console handler for logger.
-        ch = logging.StreamHandler()
-        ch.setFormatter(formatter)
-
-        # add handlers to logger.
-        if create_file:
-            log.addHandler(fh)
-
-        log.addHandler(ch)
-        return log
+        if wildargs:
+            self.logger.warning("There were extra constructor arguments: " + str(wildargs))
 
     def connect(self):
         """
         Utilizes register_client() and create_producer(registry_client) to connect to schema registry and allow for producing to kafka topics
 
         :return: SerializingProducer Object
-            based on config values
+            based on initial constructor values
         """
         registry_client = self.register_client()
         metadata_producer = self.create_producer(registry_client)
@@ -137,10 +119,10 @@ class KafkaPublisher:
 
         reg_conf = {'url': self.schema_registry}
 
-        if self.security:
-            reg_conf['ssl.ca.location'] = self.conf['security']['caLoc']
-            reg_conf['ssl.key.location'] = self.conf['security']['keyLoc']
-            reg_conf['ssl.certificate.location'] = self.conf['security']['certLoc']
+        if self.security_enabled:
+            reg_conf['ssl.ca.location'] = self.security_caLoc
+            reg_conf['ssl.key.location'] = self.security_keyLoc
+            reg_conf['ssl.certificate.location'] = self.security_certLoc
 
         registry_client = SchemaRegistryClient(reg_conf)
         return registry_client
@@ -153,7 +135,7 @@ class KafkaPublisher:
             get this from register_client()
 
         :return: SerializingProducer Object
-            based on config values
+            based on initial constructor values
         """
         metadata_schema = None
 
@@ -166,11 +148,11 @@ class KafkaPublisher:
         metadata_serializer = AvroSerializer(metadata_schema, registry_client)
         producer_conf = {'bootstrap.servers': self.brokers}
 
-        if self.security:
+        if self.security_enabled:
             producer_conf['security.protocol'] = 'SSL'
-            producer_conf['ssl.ca.location'] = self.conf['security']['caLoc']
-            producer_conf['ssl.key.location'] = self.conf['security']['keyLoc']
-            producer_conf['ssl.certificate.location'] = self.conf['security']['certLoc']
+            producer_conf['ssl.ca.location'] = self.security_caLoc
+            producer_conf['ssl.key.location'] = self.security_keyLoc
+            producer_conf['ssl.certificate.location'] = self.security_certLoc
 
         meta_producer_conf = producer_conf
         meta_producer_conf['value.serializer'] = metadata_serializer
@@ -180,7 +162,7 @@ class KafkaPublisher:
 
     def delivery_report(self, err, msg):
         """
-        Called once for each message produced to indicate delivery result. Triggered by poll() or flush().
+        Called once for each message produced to indicate delivery of message. Triggered by poll() or flush().
 
         :param err: str
             err produced after publishing, if there is one
