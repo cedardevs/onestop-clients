@@ -154,18 +154,19 @@ class KafkaConsumer:
         metadata_schema = latest_schema.schema.schema_str
         self.logger.debug("metadata_schema: "+metadata_schema)
         metadata_deserializer = AvroDeserializer(metadata_schema, registry_client)
-        conf = {'bootstrap.servers': self.brokers}
+        conf = {
+            'bootstrap.servers': self.brokers,
+            'key.deserializer': StringDeserializer('utf-8'),
+            'value.deserializer': metadata_deserializer,
+            'group.id': self.group_id,
+            'auto.offset.reset': self.auto_offset_reset
+        }
 
         if self.security_enabled:
             conf['security.protocol'] = 'SSL'
             conf['ssl.ca.location'] = self.security_caLoc
             conf['ssl.key.location'] = self.security_keyLoc
             conf['ssl.certificate.location'] = self.security_certLoc
-
-        conf['key.deserializer'] = StringDeserializer('utf-8')
-        conf['value.deserializer'] = metadata_deserializer
-        conf['group.id'] = self.group_id
-        conf['auto.offset.reset'] = self.auto_offset_reset
 
         self.logger.debug("conf: "+str(conf))
         metadata_consumer = DeserializingConsumer(conf)
