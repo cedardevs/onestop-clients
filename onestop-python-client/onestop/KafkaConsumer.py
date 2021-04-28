@@ -91,8 +91,8 @@ class KafkaConsumer:
             self.security_keyLoc = security['keyLoc']
             self.security_certLoc = security['certLoc']
 
-        self.collection_topic_consume = collection_topic_consume
-        self.granule_topic_consume = granule_topic_consume
+        self.collection_topic = collection_topic_consume
+        self.granule_topic = granule_topic_consume
 
         if self.metadata_type not in ['COLLECTION', 'GRANULE']:
             raise ValueError("metadata_type must be 'COLLECTION' or 'GRANULE'")
@@ -109,15 +109,15 @@ class KafkaConsumer:
 
         :return: SchemaRegistryClient (confluent kafka library)
        """
-        reg_conf = {'url': self.schema_registry}
+        conf = {'url': self.schema_registry}
 
         if self.security_enabled:
-            reg_conf['ssl.ca.location'] = self.security_caLoc
-            reg_conf['ssl.key.location'] = self.security_keyLoc
-            reg_conf['ssl.certificate.location'] = self.security_certLoc
+            conf['ssl.ca.location'] = self.security_caLoc
+            conf['ssl.key.location'] = self.security_keyLoc
+            conf['ssl.certificate.location'] = self.security_certLoc
 
-        self.logger.info("Creating SchemaRegistryClient with configuration:"+str(reg_conf))
-        registry_client = SchemaRegistryClient(reg_conf)
+        self.logger.info("Creating SchemaRegistryClient with configuration:"+str(conf))
+        registry_client = SchemaRegistryClient(conf)
         return registry_client
 
     def connect(self):
@@ -141,10 +141,10 @@ class KafkaConsumer:
         """
         topic = None
         if self.metadata_type == "COLLECTION":
-            topic = self.collection_topic_consume
+            topic = self.collection_topic
 
         if self.metadata_type == "GRANULE":
-            topic = self.granule_topic_consume
+            topic = self.granule_topic
 
         self.logger.debug("topic: "+str(topic))
 
@@ -154,21 +154,21 @@ class KafkaConsumer:
         metadata_schema = latest_schema.schema.schema_str
         self.logger.debug("metadata_schema: "+metadata_schema)
         metadata_deserializer = AvroDeserializer(metadata_schema, registry_client)
-        consumer_conf = {'bootstrap.servers': self.brokers}
+        conf = {'bootstrap.servers': self.brokers}
 
         if self.security_enabled:
-            consumer_conf['security.protocol'] = 'SSL'
-            consumer_conf['ssl.ca.location'] = self.security_caLoc
-            consumer_conf['ssl.key.location'] = self.security_keyLoc
-            consumer_conf['ssl.certificate.location'] = self.security_certLoc
+            conf['security.protocol'] = 'SSL'
+            conf['ssl.ca.location'] = self.security_caLoc
+            conf['ssl.key.location'] = self.security_keyLoc
+            conf['ssl.certificate.location'] = self.security_certLoc
 
-        consumer_conf['key.deserializer'] = StringDeserializer('utf-8')
-        consumer_conf['value.deserializer'] = metadata_deserializer
-        consumer_conf['group.id'] = self.group_id
-        consumer_conf['auto.offset.reset'] = self.auto_offset_reset
+        conf['key.deserializer'] = StringDeserializer('utf-8')
+        conf['value.deserializer'] = metadata_deserializer
+        conf['group.id'] = self.group_id
+        conf['auto.offset.reset'] = self.auto_offset_reset
 
-        self.logger.debug("meta_consumer_conf: "+str(consumer_conf))
-        metadata_consumer = DeserializingConsumer(consumer_conf)
+        self.logger.debug("conf: "+str(conf))
+        metadata_consumer = DeserializingConsumer(conf)
         self.logger.debug("topic: "+str(topic))
         metadata_consumer.subscribe([topic])
         return metadata_consumer
