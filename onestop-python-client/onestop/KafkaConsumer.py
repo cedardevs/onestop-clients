@@ -108,7 +108,7 @@ class KafkaConsumer:
         Registers to schema registry client based on configs
 
         :return: SchemaRegistryClient (confluent kafka library)
-        """
+       """
         reg_conf = {'url': self.schema_registry}
 
         if self.security_enabled:
@@ -116,6 +116,7 @@ class KafkaConsumer:
             reg_conf['ssl.key.location'] = self.security_keyLoc
             reg_conf['ssl.certificate.location'] = self.security_certLoc
 
+        self.logger.info("Creating SchemaRegistryClient with configuration:"+str(reg_conf))
         registry_client = SchemaRegistryClient(reg_conf)
         return registry_client
 
@@ -138,18 +139,21 @@ class KafkaConsumer:
 
         :return: DeserializingConsumer object
         """
-        metadata_schema = None
         topic = None
         if self.metadata_type == "COLLECTION":
-            metadata_schema = registry_client.get_latest_version(self.collection_topic + '-value').schema.schema_str
-            topic = self.collection_topic
+            topic = self.collection_topic_consume
 
         if self.metadata_type == "GRANULE":
-            metadata_schema = registry_client.get_latest_version(self.granule_topic + '-value').schema.schema_str
-            topic = self.granule_topic
+            topic = self.granule_topic_consume
 
+        self.logger.debug("topic: "+str(topic))
+
+        # This topic naming scheme is how OneStop creates the topics.
+        latest_schema = registry_client.get_latest_version(topic + '-value')
+
+        metadata_schema = latest_schema.schema.schema_str
+        self.logger.debug("metadata_schema: "+metadata_schema)
         metadata_deserializer = AvroDeserializer(metadata_schema, registry_client)
-
         consumer_conf = {'bootstrap.servers': self.brokers}
 
         if self.security_enabled:
@@ -158,13 +162,14 @@ class KafkaConsumer:
             consumer_conf['ssl.key.location'] = self.security_keyLoc
             consumer_conf['ssl.certificate.location'] = self.security_certLoc
 
-        meta_consumer_conf = consumer_conf
-        meta_consumer_conf['key.deserializer'] = StringDeserializer('utf-8')
-        meta_consumer_conf['value.deserializer'] = metadata_deserializer
-        meta_consumer_conf['group.id'] = self.group_id
-        meta_consumer_conf['auto.offset.reset'] = self.auto_offset_reset
+        consumer_conf['key.deserializer'] = StringDeserializer('utf-8')
+        consumer_conf['value.deserializer'] = metadata_deserializer
+        consumer_conf['group.id'] = self.group_id
+        consumer_conf['auto.offset.reset'] = self.auto_offset_reset
 
-        metadata_consumer = DeserializingConsumer(meta_consumer_conf)
+        self.logger.debug("meta_consumer_conf: "+str(consumer_conf))
+        metadata_consumer = DeserializingConsumer(consumer_conf)
+        self.logger.debug("topic: "+str(topic))
         metadata_consumer.subscribe([topic])
         return metadata_consumer
 
@@ -183,14 +188,15 @@ class KafkaConsumer:
         while True:
             try:
                 msg = metadata_consumer.poll(10)
+                self.logger.debug("Message received: "+str(msg))
 
                 if msg is None:
-                    print('No Messages')
+                    self.logger.info('No Messages')
                     continue
 
+                self.logger.debug("Message key="+str(msg.key())+" value="+str(msg.value()))
                 key = msg.key()
                 value = msg.value()
-
 
             except KafkaError:
                 raise
@@ -199,4 +205,5 @@ class KafkaConsumer:
             except Exception as e:
                 self.logger.error("Message handler failed: {}".format(e))
                 break
+        self.logger.debug("Closing metadata_consumer")
         metadata_consumer.close()
