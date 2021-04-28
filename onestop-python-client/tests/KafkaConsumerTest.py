@@ -48,8 +48,8 @@ class KafkaConsumerTest(unittest.TestCase):
         self.assertEqual(consumer.auto_offset_reset, self.conf_w_security['auto_offset_reset'])
         self.assertEqual(consumer.schema_registry, self.conf_w_security['schema_registry'])
         self.assertEqual(consumer.security_enabled, self.conf_w_security['security']['enabled'])
-        self.assertEqual(consumer.collection_topic_consume, self.conf_w_security['collection_topic_consume'])
-        self.assertEqual(consumer.granule_topic_consume, self.conf_w_security['granule_topic_consume'])
+        self.assertEqual(consumer.collection_topic, self.conf_w_security['collection_topic_consume'])
+        self.assertEqual(consumer.granule_topic, self.conf_w_security['granule_topic_consume'])
 
     def test_init_security_enabled(self):
         consumer = KafkaConsumer(**self.conf_w_security)
