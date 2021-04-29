@@ -76,9 +76,14 @@ class KafkaConsumerTest(unittest.TestCase):
 
         self.assertRaises(ValueError, KafkaConsumer, **wrong_metadata_type_config)
 
+    def test_init_extra_params(self):
+        conf = dict(self.conf_wo_security)
+        conf['junk_key'] = 'junk_value'
+        KafkaConsumer(**conf)
+
     @patch.object(SchemaRegistryClient, '__init__', autospec=True)
     def test_register_client_w_security(self, mock_client):
-        schema_conf = {
+        exp_security_conf = {
             'url':self.conf_w_security['schema_registry'],
             'ssl.ca.location': self.conf_w_security['security']['caLoc'],
             'ssl.key.location': self.conf_w_security['security']['keyLoc'],
@@ -90,19 +95,25 @@ class KafkaConsumerTest(unittest.TestCase):
         consumer.register_client()
 
         mock_client.assert_called()
-        mock_client.assert_called_with(ANY, schema_conf)
+        mock_client.assert_called_with(ANY, exp_security_conf)
 
     @patch.object(SchemaRegistryClient, '__init__', autospec=True)
     def test_register_client_wo_security(self, mock_client):
-        schema_conf = {
-            'url' : self.conf_wo_security['schema_registry']
+        exp_security_conf = {
+            'url':self.conf_w_security['schema_registry'],
+            'ssl.ca.location': self.conf_w_security['security']['caLoc'],
+            'ssl.key.location': self.conf_w_security['security']['keyLoc'],
+            'ssl.certificate.location': self.conf_w_security['security']['certLoc']
         }
         mock_client.return_value = None
 
         consumer = KafkaConsumer(**self.conf_wo_security)
         consumer.register_client()
-
-        mock_client.assert_called_with(ANY, schema_conf)
+        try:
+            mock_client.assert_called_with(ANY, exp_security_conf)
+        except:
+            return
+        raise AssertionError('Expected register_client() to not have been called with security arguments.')
 
     @patch('onestop.KafkaConsumer.AvroDeserializer')
     @patch('onestop.KafkaConsumer.DeserializingConsumer')
@@ -199,7 +210,7 @@ class KafkaConsumerTest(unittest.TestCase):
     @patch('onestop.KafkaConsumer.DeserializingConsumer')
     def test_create_consumer_granule_wo_security(self, mock_deserializing_consumer, mock_avro_deserializer):
         conf_wo_security_granule = dict(self.conf_wo_security)
-        topic = conf_wo_security_granule['granule_topic_consume']
+        exp_topic = conf_wo_security_granule['granule_topic_consume']
         conf_wo_security_granule['metadata_type'] = 'GRANULE'
 
         # Verify security taken into consideration
@@ -215,13 +226,14 @@ class KafkaConsumerTest(unittest.TestCase):
         consumer.create_consumer(reg_client)
 
         # Verify metadata type was taken into consideration for getting topic information
-        reg_client.get_latest_version.assert_called_with(topic + '-value')
+        reg_client.get_latest_version.assert_called_with(exp_topic + '-value')
 
         # Verify no security passed into DeserializingConsumer called with expected configuration
-        meta_consumer_conf['key.deserializer'] = ANY
-        meta_consumer_conf['value.deserializer'] = ANY
-        mock_deserializing_consumer.assert_called_with(meta_consumer_conf)
-        mock_deserializing_consumer.return_value.subscribe.assert_called_with([topic])
+        exp_arguments = dict(meta_consumer_conf)
+        exp_arguments['key.deserializer'] = ANY
+        exp_arguments['value.deserializer'] = ANY
+        mock_deserializing_consumer.assert_called_with(exp_arguments)
+        mock_deserializing_consumer.return_value.subscribe.assert_called_with([exp_topic])
 
     def test_connect(self):
         mock_client = MagicMock()
@@ -260,5 +272,5 @@ class KafkaConsumerTest(unittest.TestCase):
         mock_handler.assert_called_once()
         mock_handler.assert_called_with(mock_message_key, mock_message_value)
 
-    if __name__ == '__main__':
-        unittest.main()
+if __name__ == '__main__':
+    unittest.main()
