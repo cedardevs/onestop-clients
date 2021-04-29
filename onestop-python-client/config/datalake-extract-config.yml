@@ -1,5 +1,5 @@
 temp_dir: /home/siteadm/test_meta/tmp
-queue_url: https://sqs.us-east-1.amazonaws.com/494959360435/noaa-woc-datalake
+queue_url: https://sqs.us-east-1.amazonaws.com/494959360435/noaa-woc-datalake-dev
 region: us-east-1
 
 sleep: 5
@@ -37,11 +37,11 @@ source_lookup:
   INITCO/:
     type: initco
 targets:
-  bdp:
-    external: True
-    ext_access_key: NOAA_WOC_DL/BdpAccessKey
-    ext_secret_key: NOAA_WOC_DL/BdpSecretKey
-    bucket: bdpbucket
+  #bdp:
+    #external: True
+    #ext_access_key: NOAA_WOC_DL/BdpAccessKey
+    #ext_secret_key: NOAA_WOC_DL/BdpSecretKey
+    #bucket: bdpbucket
   target_datalake:
     bucket: noaa-woc-datalake-dev-target
 tag-lookup:

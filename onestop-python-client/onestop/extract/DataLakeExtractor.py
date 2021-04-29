@@ -65,7 +65,7 @@ class DataLakeExtractor():
         #eventually move to util class
         secret_value = ""
         sm_client = boto3.client(service_name='secretsmanager',
-            region_name=region)
+            region_name=self.region)
         get_secret_value_response = sm_client.get_secret_value(
             SecretId=secret_key)
         secret_value = get_secret_value_response['SecretString']
@@ -120,11 +120,11 @@ class DataLakeExtractor():
         east = meta_dict.get('east', None)
         south = meta_dict.get('south', None)
         north = meta_dict.get('north', None)
-        begin_dt = meta_dict['beginDate']
-        end_dt = meta_dict['endDate']
+        begin_dt = meta_dict.get('beginDate', None)
+        end_dt = meta_dict.get('endDate', None)
         dl_mes.begin_dt = begin_dt
         dl_mes.end_dt = end_dt
-        dl_mes.keywords = meta_dict['keywords']
+        dl_mes.keywords = meta_dict.get('keywords', None)
         if west is not None:
             polyStr = (
                 " [  \n [ \n [ " +
@@ -227,6 +227,7 @@ class DataLakeExtractor():
                         #uncomment first line, comment second line to clear SQS queue
                         #is_success = True 
                         is_success = self.process_msg_records(msg_records)
+                        print(is_success)
                         indx_process = indx_process + 1
                     else:
                         print("no records in body message")
@@ -235,7 +236,8 @@ class DataLakeExtractor():
                 
                 if is_success:
                     print("deleting message:" + messages[indx]["ReceiptHandle"])
-                    sqs_client.delete_message(QueueUrl=self.queue_url,ReceiptHandle=messages[indx]["ReceiptHandle"])
+                    response = sqs_client.delete_message(QueueUrl=self.queue_url,ReceiptHandle=messages[indx]["ReceiptHandle"])
+                    #print(response)
             else:
                 print('no body in outer message')
         return indx_process
@@ -248,7 +250,7 @@ class DataLakeExtractor():
         if len(records) > 0:
             dl_mes_list = self.process_records(records)
             self.publishToOneStop(dl_mes_list)
-            
+            is_success = True
         else:
             print('no records at this time')
             is_success = True
@@ -268,7 +270,7 @@ class DataLakeExtractor():
         filename = localfile.split('/')[-1]
         source_dict = self.detect_source_type(s3Key)
         source_type = source_dict["type"]
-        tag_dict = self.conf["tag-lookup"]
+        tag_dict = self.conf["tag-lookup"][source_type]
         #get initial dictionary from file by regex
         meta_dict = self.extractMetadata(filename)
         if True:
@@ -290,9 +292,10 @@ class DataLakeExtractor():
             dl_mes.s3Url =s3UrlStr
             link = Link("download", "Amazon S3", "HTTPS", s3UrlStr)
             dl_mes.append_link(link)
-            chk_sums = self.get_checksum(localfile)
-            dl_mes.alg = chk_sums['checksum_algorithm']
-            dl_mes.alg_value = chk_sums['checksum_value']
+            #TODO: implement checksum
+            #chk_sums = self.get_checksum(localfile)
+            #dl_mes.alg = chk_sums['checksum_algorithm']
+            #dl_mes.alg_value = chk_sums['checksum_value']
             dl_mes.lastModifiedMillis = lastModified
             dl_mes.optAttrFileLoc =""
             dl_mes.fileIdentifier = str( uuid.uuid4() )
@@ -323,7 +326,7 @@ class DataLakeExtractor():
             self.logger.error("source_lookup missing in config")
         return source_dict
 
-    def copy_object_to_target(self, target_dict, s3_bucket, s3_key):
+    def copy_object_to_target(self, s3_bucket, s3_key, target_dict, tag_dict):
         """
         Copy object to S# Target bucket and update tag
         Use same key
@@ -333,6 +336,7 @@ class DataLakeExtractor():
         """
         
         self.logger.info("copy_object_to_target")
+        print(target_dict)
         target_bucket = target_dict.get("bucket", None)
         is_external = target_dict.get("external", False)
         if is_external:
@@ -340,9 +344,9 @@ class DataLakeExtractor():
             ext_access_key = target_dict.get("ext_access_key", None)
             ext_secret_key = target_dict.get("ext_secret_key", None)
             if ext_access_key is not None:
-                ext_access_key_id = self.get_secret_value(ext_access_key, region)
+                ext_access_key_id = self.get_secret_value(ext_access_key, self.region)
             if ext_secret_key is not None:
-                ext_secret_access_key = self.get_secret_value(ext_secret_key, region)
+                ext_secret_access_key = self.get_secret_value(ext_secret_key, self.region)
             s3_resource = boto3.resource("s3", aws_access_key_id=ext_access_key_id, \
                 aws_secret_access_key=ext_secret_access_key)
         else:
@@ -351,8 +355,13 @@ class DataLakeExtractor():
             'Bucket': s3_bucket,
             'Key': s3_key
              }
+        print(s3_key)
+        print(target_bucket)
+        print(s3_bucket)
         bucket = s3_resource.Bucket(target_bucket)
-        bucket.copy(copy_source, s3_key)
+        response = bucket.copy(copy_source, s3_key)
+        print("response:")
+        print(response)
         #TODO: copy metadata
         #TODO: check sha256
         self.updateObjectTagsWithMetadata(target_dict, s3_key, tag_dict)
@@ -384,7 +393,7 @@ class DataLakeExtractor():
             #download object
             #duplicate directory structure of bucket/key?
             #one object can have multiple files
-            if 'tar' in localFile:
+            if 'tar' in filename:
                 size_limit = 5 * 10^5 #leaving this here in case I want to use more RAM
                 if s3Filesize is not None and s3Filesize < size_limit:
                     objectbytes = s3_object['Body'].read()
@@ -396,7 +405,7 @@ class DataLakeExtractor():
                     print("untarred members")
                     print(members)
                     print(len(members))
-                    if len(members) > 0:
+                    if len(members) > 0 and False:
                         for filename in members:
                             #need to rewrite this to make members a recursively untarred files
                             #memberFile = os.path.join(self.conf['temp_dir'], member.name)
@@ -407,12 +416,12 @@ class DataLakeExtractor():
                             if dl_mes is not None:
                                 dl_mes_list.append(dl_mes)
                 else:
-                    dl_mes = self.process_file(localfile, s3Key, s3Bucket, endpoint_url, lastModified)
+                    dl_mes = self.process_file(filename, s3Key, s3Bucket, endpoint_url, lastModified)
                     if dl_mes is not None:
                         dl_mes_list.append(dl_mes)
 
             else:
-                dl_mes = self.process_file(localFile, s3Key, s3Bucket, endpoint_url, lastModified, s3Filesize)
+                dl_mes = self.process_file(filename, s3Key, s3Bucket, endpoint_url, lastModified, s3Filesize)
                 if dl_mes is not None:
                     dl_mes_list.append(dl_mes)
             
@@ -497,9 +506,10 @@ class DataLakeExtractor():
         
         
         tag_list = [{'Key': str(k), 'Value': str(v)} for k, v in tag_dict.items()]
+        print(tag_list)
         response = s3_client.put_object_tagging(
             Bucket=target_bucket,
-            Key=s3Key,
+            Key=s3_key,
             Tagging={
                 'TagSet': tag_list
                 }
@@ -545,7 +555,7 @@ def run():
     print(boto3.resource.__code__.co_code)
     print(boto3.resource.__code__.co_consts)
     config_path = "/home/siteadm/onestop-clients/onestop-python-client/config/"
-    config_path = "C:\\Users\\jeanne.lane\\Documents\\Projects\\onestop-clients\\onestop-python-client\\config\\"
+    #config_path = "C:\\Users\\jeanne.lane\\Documents\\Projects\\onestop-clients\\onestop-python-client\\config\\"
     dl_ext_config = config_path + "datalake-extract-config.yml"
     wp_config = config_path + "web-publisher-config-dev.yml"
     cred_config = config_path + "credentials-template.yml"
