@@ -1,0 +1,89 @@
+temp_dir: /home/siteadm/test_meta/tmp
+queue_url: https://sqs.us-east-1.amazonaws.com/494959360435/noaa-woc-datalake
+region: us-east-1
+
+sleep: 5
+source_lookup:
+  PDA/METOPA_AMSU/:
+    type: metop:amsu
+  PDA/METOPB_AMSU/:
+    type: metop:amsu
+  PDA/JPSS1_CrIS_C0431/:
+    type: jpss:cris
+  PDA/JPSS1_CrIS_C2211/:
+    type: jpss:cris
+  PDA/METOPC_AMSU_AMAH/:
+    type: metop:amsu
+  PDA/METOPC_AMSU_AMAX/:
+    type: metop:amsu
+  PDA/SNPP_CrIS_C0431/:
+    type: jpss:cris
+  PDA/SNPP_CrIS_C2211/:
+    type: jpss:cris
+  PDA/SNPP_CrIS_FSSDR/:
+    type: jpss:cris
+  PDA/JPSS1_CrIS_FSSDR/:
+    type: jpss:cris
+  GEFSv12/:
+    type: gefs:reforecast
+  OAR/:
+    type: gefs:reforecast
+  GTS/:
+    type: in-situ
+  GDAS/:
+    type: in-situ
+  IGRA/:
+    type: in-situ
+  INITCO/:
+    type: initco
+targets:
+  bdp:
+    external: True
+    ext_access_key: NOAA_WOC_DL/BdpAccessKey
+    ext_secret_key: NOAA_WOC_DL/BdpSecretKey
+    bucket: bdpbucket
+  target_datalake:
+    bucket: noaa-woc-datalake-dev-target
+tag-lookup:
+  gefs:reforecast:
+    noaa:programoffice: esrl
+    noaa:environment: dev
+    noaa:lineoffice: oar
+    noaa:fismaid: noaa3000
+    noaa:projectid: gefs:reforecast
+    noaa:poc: jeffrey.s.whitaker@noaa.gov
+    format: grib2
+  jpss:cris:
+    noaa:programoffice: jpss
+    noaa:environment: dev
+    noaa:lineoffice: nesdis
+    noaa:fismaid: noaa5006
+    noaa:projectid: jpss:cris
+    noaa:poc: qiang.zhao@noaa.gov
+    format: bufr
+  metop:amsu:
+    noaa:programoffice: 
+    noaa:environment: dev
+    noaa:lineoffice: nesdis
+    noaa:fismaid: noaa5006
+    noaa:projectid: metop:amsu
+    noaa:poc: qiang.zhao@noaa.gov
+    format: bufr
+  in-situ:
+    noaa:programoffice: nws
+    noaa:environment: dev
+    noaa:lineoffice: nws
+    noaa:fismaid: NOAA8860
+    noaa:projectid: in-situ
+    noaa:poc: daryl.kleist@noaa.gov
+    format: prepbufr
+  initco:
+    noaa:programoffice: ncep
+    noaa:environment: dev
+    noaa:lineoffice: nws
+    noaa:fismaid: NOAA8860
+    noaa:projectid: initco
+    noaa:poc: daryl.kleist@noaa.gov
+    format: netcdf
+
+       
