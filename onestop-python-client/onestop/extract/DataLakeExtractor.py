@@ -319,7 +319,7 @@ class DataLakeExtractor():
             target_dict = dl_target_dict[key]
             self.copy_object_to_target(s3Bucket, s3Key, target_dict, tag_dict)
             if dl_mes.alg_value is not None:
-                is_ok = self.verify_checksum(dl_mes.s3Bucket, S3Key, dl_mes.alg_value)
+                is_ok = self.verify_checksum(dl_mes.s3Bucket, s3Key, dl_mes.alg_value)
                 if not is_ok:
                     self.logger.error(dl_mes.uri + " sha256 error")
             
@@ -443,7 +443,7 @@ class DataLakeExtractor():
             
         return dl_mes_list
 
-    def get_checksum(self, s3Bucket, dest_path):
+    def verify_checksum(self, s3Bucket, dest_path, sha256):
         """
         from NCCF base class, SHA1 algorithm
         :param s3Bucket: string for target S3 bucket name of file
@@ -453,7 +453,8 @@ class DataLakeExtractor():
         """
         #TODO: convert to SHA256?
         #TODO: retrieve value in place in bucket
-        fileobj = self.s3_client.get_object(
+        s3_client = boto3.client('s3', region_name='us-east-1')
+        fileobj = s3_client.get_object(
             Bucket=s3Bucket,
             Key=dest_path
             )
@@ -569,8 +570,8 @@ def run():
     """
     print(boto3.resource.__code__.co_code)
     print(boto3.resource.__code__.co_consts)
-    #config_path = "/home/siteadm/onestop-clients/onestop-python-client/config/"
-    config_path = "C:\\Users\\jeanne.lane\\Documents\\Projects\\onestop-clients\\onestop-python-client\\config\\"
+    config_path = "/home/siteadm/onestop-clients/onestop-python-client/config/"
+    #config_path = "C:\\Users\\jeanne.lane\\Documents\\Projects\\onestop-clients\\onestop-python-client\\config\\"
     dl_ext_config = config_path + "datalake-extract-config.yml"
     wp_config = config_path + "web-publisher-config-dev.yml"
     cred_config = config_path + "credentials-template.yml"
