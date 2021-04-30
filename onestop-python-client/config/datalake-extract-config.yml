@@ -4,25 +4,25 @@ region: us-east-1
 
 sleep: 5
 source_lookup:
-  PDA/METOPA_AMSU/:
+  METOPA_AMSU/:
     type: metop:amsu
-  PDA/METOPB_AMSU/:
+  METOPB_AMSU/:
     type: metop:amsu
-  PDA/JPSS1_CrIS_C0431/:
+  JPSS1_CrIS_C0431/:
     type: jpss:cris
-  PDA/JPSS1_CrIS_C2211/:
+  JPSS1_CrIS_C2211/:
     type: jpss:cris
-  PDA/METOPC_AMSU_AMAH/:
+  METOPC_AMSU_AMAH/:
     type: metop:amsu
-  PDA/METOPC_AMSU_AMAX/:
+  METOPC_AMSU_AMAX/:
     type: metop:amsu
-  PDA/SNPP_CrIS_C0431/:
+  SNPP_CrIS_C0431/:
     type: jpss:cris
-  PDA/SNPP_CrIS_C2211/:
+  SNPP_CrIS_C2211/:
     type: jpss:cris
-  PDA/SNPP_CrIS_FSSDR/:
+  SNPP_CrIS_FSSDR/:
     type: jpss:cris
-  PDA/JPSS1_CrIS_FSSDR/:
+  JPSS1_CrIS_FSSDR/:
     type: jpss:cris
   GEFSv12/:
     type: gefs:reforecast

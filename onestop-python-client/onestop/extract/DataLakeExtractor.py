@@ -100,7 +100,8 @@ class DataLakeExtractor():
         :param meta_dict: dictionary containing metadata that has been extracted from file
         :return: enriched DataLakeMessage object
         """
-        #TODO parent id for source :Erin
+        #TODO fix metadata for target
+        #TODO parent id for source 
         dl_mes = DataLakeMessage()
         #file information
         dl_mes.file_format = "grib2"
@@ -256,7 +257,7 @@ class DataLakeExtractor():
             is_success = True
         return is_success
 
-    def process_file(self, localfile, s3Key, s3Bucket, endpoint_url, lastModified, file_size=None):
+    def process_file(self, localfile, s3Key, s3Bucket, endpoint_url, lastModified, file_size=None, sha256=None):
         """
         Perform metadata extraction for file, type information or AWS metadata
         :param localfile: string for path to source file
@@ -265,12 +266,19 @@ class DataLakeExtractor():
         :param endpoint_url: string representing endpoint for source AWS S3 bucket
         :param lastModified: timestamp for time source s3Key file was last modified
         :param file_size: file size in byte of source S3Key file
+        :param sha256: string of sha256 ash from source S3Key file metadata
         :return: DataLakeMessage populated or None
         """
         filename = localfile.split('/')[-1]
         source_dict = self.detect_source_type(s3Key)
-        source_type = source_dict["type"]
-        tag_dict = self.conf["tag-lookup"][source_type]
+        if source_dict is not None:
+            source_type = source_dict.get("type", None)
+            if source_type is not None:
+                tag_dict = self.conf["tag-lookup"][source_type]
+            else:
+                tag_dict = {}
+        else:
+            tag_dict = {}
         #get initial dictionary from file by regex
         meta_dict = self.extractMetadata(filename)
         if True:
@@ -283,7 +291,8 @@ class DataLakeExtractor():
             
             dl_mes.file_name = filename
             dl_mes.file_size = file_size
-            dl_mes.s3Bucket = s3Bucket
+            # "target_datalake" is hard-coded
+            dl_mes.s3Bucket = self.conf["targets"]["target_datalake"]["bucket"]   
             dl_mes.s3Key = s3Key
             dl_mes.s3Dir = 's3://' + s3Bucket + '/' + s3Key.rsplit('/',1)[0] + '/'
             dl_mes.s3Path = dl_mes.s3Dir + filename
@@ -292,10 +301,12 @@ class DataLakeExtractor():
             dl_mes.s3Url =s3UrlStr
             link = Link("download", "Amazon S3", "HTTPS", s3UrlStr)
             dl_mes.append_link(link)
-            #TODO: implement checksum
-            #chk_sums = self.get_checksum(localfile)
-            #dl_mes.alg = chk_sums['checksum_algorithm']
-            #dl_mes.alg_value = chk_sums['checksum_value']
+            chk_sums = {}
+            chk_sums['checksum_algorithm'] = "SHA256"
+            chk_sums['checksum_value'] = sha256
+            
+            dl_mes.alg = chk_sums['checksum_algorithm']
+            dl_mes.alg_value = chk_sums['checksum_value']
             dl_mes.lastModifiedMillis = lastModified
             dl_mes.optAttrFileLoc =""
             dl_mes.fileIdentifier = str( uuid.uuid4() )
@@ -307,8 +318,12 @@ class DataLakeExtractor():
         for key in dl_target_dict:
             target_dict = dl_target_dict[key]
             self.copy_object_to_target(s3Bucket, s3Key, target_dict, tag_dict)
-        #TODO: put SHA256 in metadata in source and target bucket(s)
-        #update dl_mes
+            if dl_mes.alg_value is not None:
+                is_ok = self.verify_checksum(dl_mes.s3Bucket, S3Key, dl_mes.alg_value)
+                if not is_ok:
+                    self.logger.error(dl_mes.uri + " sha256 error")
+            
+       
         return dl_mes
 
     def detect_source_type(self, s3key):
@@ -385,15 +400,16 @@ class DataLakeExtractor():
             s3Filesize = record.get('s3').get('object').get('size')
             s3CatalogHead = s3_client.head_object(Bucket = s3Bucket, Key = s3Key)
             lastModified = int(s3CatalogHead['LastModified'].timestamp()*1000)
-            print(s3Key)
-            print(s3Bucket)
-            print(s3Filesize)
+            print(s3CatalogHead)
+            sha256 = s3CatalogHead["Metadata"].get("sha256", None)
+            if sha256 is None:
+                self.logger.error("sha256 not found for " + s3Bucket + "/" + s3Key)
             filename = s3Key.split('/')[-1]
             endpoint_url = s3_client.meta.endpoint_url
             #download object
             #duplicate directory structure of bucket/key?
             #one object can have multiple files
-            if 'tar' in filename:
+            if 'tar' in filename and False:
                 size_limit = 5 * 10^5 #leaving this here in case I want to use more RAM
                 if s3Filesize is not None and s3Filesize < size_limit:
                     objectbytes = s3_object['Body'].read()
@@ -405,7 +421,7 @@ class DataLakeExtractor():
                     print("untarred members")
                     print(members)
                     print(len(members))
-                    if len(members) > 0 and False:
+                    if len(members) > 0:
                         for filename in members:
                             #need to rewrite this to make members a recursively untarred files
                             #memberFile = os.path.join(self.conf['temp_dir'], member.name)
@@ -421,34 +437,33 @@ class DataLakeExtractor():
                         dl_mes_list.append(dl_mes)
 
             else:
-                dl_mes = self.process_file(filename, s3Key, s3Bucket, endpoint_url, lastModified, s3Filesize)
+                dl_mes = self.process_file(filename, s3Key, s3Bucket, endpoint_url, lastModified, s3Filesize, sha256)
                 if dl_mes is not None:
                     dl_mes_list.append(dl_mes)
             
         return dl_mes_list
 
-    def get_checksum(self, localFile):
+    def get_checksum(self, s3Bucket, dest_path):
         """
         from NCCF base class, SHA1 algorithm
-        :param localFile: string for path to local file
+        :param s3Bucket: string for target S3 bucket name of file
+        :param dest_path: string for target S3 key of file
+        :param sha256: string for sha256 hash for file
         :return: dictionary of checksum information
         """
         #TODO: convert to SHA256?
         #TODO: retrieve value in place in bucket
-        checksum_dict = {}
-        self.logger.info("Doing checksum")
-        sha1 = hashlib.sha1()
-        BUF_SIZE = 262144  # for hashing, 256KB chunks!
-
-        with open(localFile, 'rb') as f:
-            tempData = f.read(BUF_SIZE)
-            while len(tempData) > 0:
-                sha1.update(tempData)
-                tempData = f.read(BUF_SIZE)
-        sha1Val = sha1.hexdigest()
-        checksum_dict['checksum_algorithm'] = "SHA1"
-        checksum_dict['checksum_value'] = sha1Val
-        return checksum_dict
+        fileobj = self.s3_client.get_object(
+            Bucket=s3Bucket,
+            Key=dest_path
+            )
+        # open the file object and read it into the variable filedata.
+        filedata = fileobj['Body'].read()
+        s3_sha = hashlib.sha256(filedata).hexdigest()
+        result = s3_sha == sha256
+        return result
+        
+      
 
     def publishToOneStop(self, dl_message_list):
         """
@@ -554,8 +569,8 @@ def run():
     """
     print(boto3.resource.__code__.co_code)
     print(boto3.resource.__code__.co_consts)
-    config_path = "/home/siteadm/onestop-clients/onestop-python-client/config/"
-    #config_path = "C:\\Users\\jeanne.lane\\Documents\\Projects\\onestop-clients\\onestop-python-client\\config\\"
+    #config_path = "/home/siteadm/onestop-clients/onestop-python-client/config/"
+    config_path = "C:\\Users\\jeanne.lane\\Documents\\Projects\\onestop-clients\\onestop-python-client\\config\\"
     dl_ext_config = config_path + "datalake-extract-config.yml"
     wp_config = config_path + "web-publisher-config-dev.yml"
     cred_config = config_path + "credentials-template.yml"
