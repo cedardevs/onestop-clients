@@ -109,7 +109,8 @@ class S3Utils:
         if client_type == "glacier":
             boto = boto3.client(
                 "glacier",
-                region_name=region,aws_access_key_id=self.access_key,
+                region_name=region,
+                aws_access_key_id=self.access_key,
                 aws_secret_access_key=self.secret_key)
 
         if client_type == "session":
