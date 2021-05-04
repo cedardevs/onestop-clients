@@ -48,7 +48,7 @@ class KafkaPublisher:
         publish_collection(collection_producer, collection_uuid, content_dict, method)
             Publish collection to collection topic
 
-        publish_granule(granule_producer, record_uuid, collection_uuid, content_dict)
+        publish_granule(granule_producer, collection_uuid, content_dict)
             Publish granule to granule topic
     """
 
@@ -137,27 +137,27 @@ class KafkaPublisher:
         :return: SerializingProducer Object
             based on initial constructor values
         """
-        metadata_schema = None
+        topic = None
 
         if self.metadata_type == "COLLECTION":
-            metadata_schema = registry_client.get_latest_version(self.collection_topic + '-value').schema.schema_str
+            topic = self.collection_topic
 
         if self.metadata_type == "GRANULE":
-            metadata_schema = registry_client.get_latest_version(self.granule_topic + '-value').schema.schema_str
+            topic = self.granule_topic
 
+        metadata_schema = registry_client.get_latest_version(topic + '-value').schema.schema_str
         metadata_serializer = AvroSerializer(metadata_schema, registry_client)
-        producer_conf = {'bootstrap.servers': self.brokers}
+        conf = {'bootstrap.servers': self.brokers}
 
         if self.security_enabled:
-            producer_conf['security.protocol'] = 'SSL'
-            producer_conf['ssl.ca.location'] = self.security_caLoc
-            producer_conf['ssl.key.location'] = self.security_keyLoc
-            producer_conf['ssl.certificate.location'] = self.security_certLoc
+            conf['security.protocol'] = 'SSL'
+            conf['ssl.ca.location'] = self.security_caLoc
+            conf['ssl.key.location'] = self.security_keyLoc
+            conf['ssl.certificate.location'] = self.security_certLoc
 
-        meta_producer_conf = producer_conf
-        meta_producer_conf['value.serializer'] = metadata_serializer
+        conf['value.serializer'] = metadata_serializer
 
-        metadata_producer = SerializingProducer(meta_producer_conf)
+        metadata_producer = SerializingProducer(conf)
         return metadata_producer
 
     def delivery_report(self, err, msg):
@@ -174,14 +174,27 @@ class KafkaPublisher:
         else:
             self.logger.error('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
 
+    @staticmethod
+    def get_collection_key_from_uuid(collection_uuid):
+        """
+        Create a key to use in a kafka message from the given string representation of the collection UUID.
+        :param collection_uuid: str
+            collection string to turn into a key.
+        :return:
+        """
+        if type(collection_uuid) == bytes:
+            return str(UUID(bytes=collection_uuid))
+        else:
+            return str(UUID(hex=collection_uuid))
+
     def publish_collection(self, collection_producer, collection_uuid, content_dict, method):
         """
-        Publish collection to collection topic
+        Publish a collection to the collection topic
 
         :param collection_producer: SerializingProducer
             use connect()
         :param collection_uuid: str
-            collection uuid that you want colelction to have
+            collection uuid that you want the collection to have
         :param content_dict: dict
             dictionary containing information you want to publish
         :param method: str
@@ -190,11 +203,9 @@ class KafkaPublisher:
         :return: str
             returns msg if publish is successful, kafka error if it wasn't successful
         """
-        self.logger.info('Publish collection')
-        if type(collection_uuid) == bytes:
-            key = str(UUID(bytes=collection_uuid))
-        else:
-            key = str(UUID(hex=collection_uuid))
+        self.logger.info('Publishing collection')
+
+        key = self.get_collection_key_from_uuid(collection_uuid)
 
         value_dict = {
             'type': 'collection',
@@ -204,20 +215,22 @@ class KafkaPublisher:
             'source': 'unknown',
         }
         try:
-            collection_producer.produce(topic=self.collection_topic, value=value_dict, key=key,
-                                        on_delivery=self.delivery_report)
+            self.logger.debug('Publishing collection with topic='+self.collection_topic+' key='+key+' value='+str(value_dict))
+            collection_producer.produce(
+                topic=self.collection_topic,
+                value=value_dict,
+                key=key,
+                on_delivery=self.delivery_report)
         except KafkaError:
             raise
         collection_producer.poll()
 
-    def publish_granule(self, granule_producer, record_uuid, collection_uuid, content_dict):
+    def publish_granule(self, granule_producer, collection_uuid, content_dict):
         """
-        Publishes granule to granule topic
+        Publish a granule to the granule topic
 
         :param granule_producer: SerializingProducer
             use connect()
-        :param record_uuid: str
-            record uuid associated with the granule
         :param collection_uuid: str
             collection uuid associated with the granule
         :param content_dict: dict
@@ -228,10 +241,8 @@ class KafkaPublisher:
         """
         self.logger.info('Publish granule')
 
-        if type(record_uuid) == bytes:
-            key = str(UUID(bytes=collection_uuid))
-        else:
-            key = str(UUID(hex=collection_uuid))
+        key = self.get_collection_key_from_uuid(collection_uuid)
+
         """
         if type(collection_uuid) == bytes:
             content_dict['relationships'] = [{"type": "COLLECTION", "id": collection_uuid.hex()}]
@@ -264,8 +275,12 @@ class KafkaPublisher:
         }
 
         try:
-            granule_producer.produce(topic=self.granule_topic, value=value_dict, key=key,
-                                     on_delivery=self.delivery_report)
+            self.logger.debug('Publishing granule with topic='+self.granule_topic+' key='+key+' value='+str(value_dict))
+            granule_producer.produce(
+                topic=self.granule_topic,
+                value=value_dict,
+                key=key,
+                on_delivery=self.delivery_report)
         except KafkaError:
             raise
         granule_producer.poll()
