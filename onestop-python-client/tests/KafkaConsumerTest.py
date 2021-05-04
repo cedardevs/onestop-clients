@@ -3,7 +3,6 @@ import unittest
 from unittest.mock import ANY, patch, MagicMock, call
 from onestop.KafkaConsumer import KafkaConsumer
 from confluent_kafka.schema_registry import SchemaRegistryClient
-from confluent_kafka.serialization import StringDeserializer
 
 class KafkaConsumerTest(unittest.TestCase):
     kp = None
@@ -124,10 +123,12 @@ class KafkaConsumerTest(unittest.TestCase):
         consumer = KafkaConsumer(**conf_w_security_collection)
         reg_client = consumer.register_client()
         reg_client.get_latest_version = MagicMock()
-        consumer.create_consumer(reg_client)
+        deser_consumer = consumer.create_consumer(reg_client)
 
         # Verify AvroDeserializer called with expected registry client
         mock_avro_deserializer.assert_called_with(ANY, reg_client)
+
+        self.assertIsNotNone(deser_consumer)
 
     @patch('onestop.KafkaConsumer.AvroDeserializer')
     @patch('onestop.KafkaConsumer.DeserializingConsumer')
@@ -138,23 +139,27 @@ class KafkaConsumerTest(unittest.TestCase):
 
         consumer = KafkaConsumer(**conf_w_security_collection)
         reg_client = MagicMock()
-        consumer.create_consumer(reg_client)
+        deser_consumer = consumer.create_consumer(reg_client)
 
         # Verify metadata type was taken into consideration for getting topic information
         reg_client.get_latest_version.assert_called_with(topic + '-value')
 
         # Verify security passed into DeserializingConsumer
-        mock_deserializing_consumer.assert_called_with({'bootstrap.servers': conf_w_security_collection['brokers'],
-                                                        'security.protocol': 'SSL',
-                                                        'ssl.ca.location': conf_w_security_collection['security']['caLoc'],
-                                                        'ssl.key.location': conf_w_security_collection['security']['keyLoc'],
-                                                        'ssl.certificate.location': conf_w_security_collection['security']['certLoc'],
-                                                        'key.deserializer': ANY,
-                                                        'value.deserializer': ANY,
-                                                        'group.id': conf_w_security_collection['group_id'],
-                                                        'auto.offset.reset': conf_w_security_collection['auto_offset_reset']
-                                                        })
+        mock_deserializing_consumer.assert_called_with(
+            {
+                'bootstrap.servers': conf_w_security_collection['brokers'],
+                'security.protocol': 'SSL',
+                'ssl.ca.location': conf_w_security_collection['security']['caLoc'],
+                'ssl.key.location': conf_w_security_collection['security']['keyLoc'],
+                'ssl.certificate.location': conf_w_security_collection['security']['certLoc'],
+                'key.deserializer': ANY,
+                'value.deserializer': ANY,
+                'group.id': conf_w_security_collection['group_id'],
+                'auto.offset.reset': conf_w_security_collection['auto_offset_reset']
+            })
         mock_deserializing_consumer.return_value.subscribe.assert_called_with([topic])
+
+        self.assertIsNotNone(deser_consumer)
 
     @patch('onestop.KafkaConsumer.AvroDeserializer')
     @patch('onestop.KafkaConsumer.DeserializingConsumer')
@@ -165,19 +170,23 @@ class KafkaConsumerTest(unittest.TestCase):
 
         consumer = KafkaConsumer(**conf_wo_security_collection)
         reg_client = MagicMock()
-        consumer.create_consumer(reg_client)
+        deser_consumer = consumer.create_consumer(reg_client)
 
         # Verify metadata type was taken into consideration for getting topic information
         reg_client.get_latest_version.assert_called_with(topic + '-value')
 
         # Verify no security passed into DeserializingConsumer
-        mock_deserializing_consumer.assert_called_with({'bootstrap.servers': conf_wo_security_collection['brokers'],
-                                                        'key.deserializer': ANY,
-                                                        'value.deserializer': ANY,
-                                                        'group.id': conf_wo_security_collection['group_id'],
-                                                        'auto.offset.reset': conf_wo_security_collection['auto_offset_reset']
-                                                        })
+        mock_deserializing_consumer.assert_called_with(
+            {
+                'bootstrap.servers': conf_wo_security_collection['brokers'],
+                'key.deserializer': ANY,
+                'value.deserializer': ANY,
+                'group.id': conf_wo_security_collection['group_id'],
+                'auto.offset.reset': conf_wo_security_collection['auto_offset_reset']
+            })
         mock_deserializing_consumer.return_value.subscribe.assert_called_with([topic])
+
+        self.assertIsNotNone(deser_consumer)
 
     @patch('onestop.KafkaConsumer.AvroDeserializer')
     @patch('onestop.KafkaConsumer.DeserializingConsumer')
@@ -188,23 +197,27 @@ class KafkaConsumerTest(unittest.TestCase):
 
         consumer = KafkaConsumer(**conf_w_security_granule)
         reg_client = MagicMock()
-        consumer.create_consumer(reg_client)
+        deser_consumer = consumer.create_consumer(reg_client)
 
         # Verify metadata type was taken into consideration for getting topic information
         reg_client.get_latest_version.assert_called_with(topic + '-value')
 
         # Verify security passed into DeserializingConsumer
-        mock_deserializing_consumer.assert_called_with({'bootstrap.servers': conf_w_security_granule['brokers'],
-                                                        'security.protocol': 'SSL',
-                                                        'ssl.ca.location': conf_w_security_granule['security']['caLoc'],
-                                                        'ssl.key.location': conf_w_security_granule['security']['keyLoc'],
-                                                        'ssl.certificate.location': conf_w_security_granule['security']['certLoc'],
-                                                        'key.deserializer': ANY,
-                                                        'value.deserializer': ANY,
-                                                        'group.id': conf_w_security_granule['group_id'],
-                                                        'auto.offset.reset': conf_w_security_granule['auto_offset_reset']
-                                                        })
+        mock_deserializing_consumer.assert_called_with(
+            {
+                'bootstrap.servers': conf_w_security_granule['brokers'],
+                'security.protocol': 'SSL',
+                'ssl.ca.location': conf_w_security_granule['security']['caLoc'],
+                'ssl.key.location': conf_w_security_granule['security']['keyLoc'],
+                'ssl.certificate.location': conf_w_security_granule['security']['certLoc'],
+                'key.deserializer': ANY,
+                'value.deserializer': ANY,
+                'group.id': conf_w_security_granule['group_id'],
+                'auto.offset.reset': conf_w_security_granule['auto_offset_reset']
+            })
         mock_deserializing_consumer.return_value.subscribe.assert_called_with([topic])
+
+        self.assertIsNotNone(deser_consumer)
 
     @patch('onestop.KafkaConsumer.AvroDeserializer')
     @patch('onestop.KafkaConsumer.DeserializingConsumer')
@@ -213,27 +226,25 @@ class KafkaConsumerTest(unittest.TestCase):
         exp_topic = conf_wo_security_granule['granule_topic_consume']
         conf_wo_security_granule['metadata_type'] = 'GRANULE'
 
-        # Verify security taken into consideration
-        meta_consumer_conf = {'bootstrap.servers': conf_wo_security_granule['brokers'],
-                              'key.deserializer': StringDeserializer('utf-8'),
-                              'value.deserializer': mock_avro_deserializer,
-                              'group.id': conf_wo_security_granule['group_id'],
-                              'auto.offset.reset': conf_wo_security_granule['auto_offset_reset']
-                              }
-
         consumer = KafkaConsumer(**conf_wo_security_granule)
         reg_client = MagicMock()
-        consumer.create_consumer(reg_client)
+        deser_consumer = consumer.create_consumer(reg_client)
 
         # Verify metadata type was taken into consideration for getting topic information
         reg_client.get_latest_version.assert_called_with(exp_topic + '-value')
 
         # Verify no security passed into DeserializingConsumer called with expected configuration
-        exp_arguments = dict(meta_consumer_conf)
-        exp_arguments['key.deserializer'] = ANY
-        exp_arguments['value.deserializer'] = ANY
-        mock_deserializing_consumer.assert_called_with(exp_arguments)
+        mock_deserializing_consumer.assert_called_with(
+            {
+                'bootstrap.servers': conf_wo_security_granule['brokers'],
+                'key.deserializer': ANY,
+                'value.deserializer': ANY,
+                'group.id': conf_wo_security_granule['group_id'],
+                'auto.offset.reset': conf_wo_security_granule['auto_offset_reset']
+            })
         mock_deserializing_consumer.return_value.subscribe.assert_called_with([exp_topic])
+
+        self.assertIsNotNone(deser_consumer)
 
     def test_connect(self):
         mock_client = MagicMock()
@@ -265,7 +276,7 @@ class KafkaConsumerTest(unittest.TestCase):
             print("Ignoring exception: {}".format(e))
 
         # Verify kafka consumer poll called expected number of times
-        self.assertTrue(mock_metadata_consumer.poll.call_count == 3)
+        self.assertEqual(mock_metadata_consumer.poll.call_count, 3)
         mock_metadata_consumer.poll.assert_has_calls([call(10), call(10), call(10)])
 
         # Verify callback function was called once with expected message attributes
