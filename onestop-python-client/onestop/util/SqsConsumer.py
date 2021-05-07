@@ -60,11 +60,17 @@ class SqsConsumer:
         self.logger.info("Receive messages")
         self.logger.info("Polling %d time(s) for SQS messages" % sqs_max_polls)
 
-        i = 1
-        while i <= sqs_max_polls:
-            self.logger.info("Polling attempt: " + str(i))
-            i = i + 1
+        if sqs_max_polls < 1:
+            raise ValueError('Max polling value should be greater than 0.')
 
+        for i in range(1, sqs_max_polls+1):
+            self.logger.info("Polling attempt: " + str(i))
+
+            # boto3 SQS.Queue appears to have a subset of SQS.Client methods plus a few management queue ones.
+            # The ones they do share seem to have different return types.
+            # The message method names are different and return types different:
+            #  Client.send_message and Queue.send_message and Queue.send_messages
+            #  Client.receive_message and Queue.receive_messages
             sqs_messages = sqs_queue.receive_messages(
                 MaxNumberOfMessages=10,
                 WaitTimeSeconds=10
@@ -86,9 +92,10 @@ class SqsConsumer:
 
                     if 'Records' in message_content:
                         recs = message_content['Records']
-                        self.logger.debug('Records: ' + str(recs))
+                        self.logger.debug('Message "Records": %s' % recs)
+                        cb(recs)
                     else:
-                        self.logger.info("s3 event without records content received.")
+                        self.logger.info("s3 event message without 'Records' content received.")
 
                     sqs_message.delete()
 
@@ -98,9 +105,8 @@ class SqsConsumer:
                     processing_time = dt_end - dt_start
 
                     self.logger.info("Completed processing message (s):" + str(processing_time.microseconds * 1000))
-                    cb(recs)
 
                 except:
                     self.logger.exception(
                         "An exception was thrown while processing a message, but this program will continue. The "
-                        "message will not be deleted from the SQS queue. The message was: %s" % sqs_message.body)
+                        "message will not be deleted from the SQS queue. The message was: %s" % sqs_message)
