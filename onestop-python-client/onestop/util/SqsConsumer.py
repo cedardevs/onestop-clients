@@ -1,10 +1,7 @@
-import logging
-from datetime import datetime, timezone
-import yaml
-import boto3
 import json
-from onestop.util.ClientLogger import ClientLogger
 
+from datetime import datetime, timezone
+from onestop.util.ClientLogger import ClientLogger
 
 class SqsConsumer:
     """
@@ -12,101 +9,75 @@ class SqsConsumer:
 
     Attributes
     ----------
-    conf: yaml file
-        aws-util-config-dev.yml
-    cred: yaml file
-        credentials.yml
-    logger: ClientLogger object
-            utilizes python logger library and creates logging for our specific needs
-    logger.info: ClientLogger object
-        logging statement that occurs when the class is instantiated
+        logger: ClientLogger object
+                utilizes python logger library and creates logging for our specific needs
 
     Methods
     -------
-    connect()
-        connects a boto sqs instance based on configurations in conf and cred yml files
-
-    receive_messages(queue, sqs_max_polls, cb)
-        polls for messages in the queue
+        receive_messages(sqs_client, sqs_queue_name, sqs_max_polls, cb)
+            polls for messages in the queue
     """
-    conf = None
 
-    def __init__(self, conf_loc, cred_loc):
+    def __init__(self, log_level = 'INFO', **wildargs):
         """
-
-        :param conf_loc: yaml file
-            aws-util-config-dev.yml
-        :param cred_loc: yaml file
-            credentials.yml
-
-        Other Attributes
-        ----------------
-        logger: ClientLogger object
-            utilizes python logger library and creates logging for our specific needs
-        logger.info: ClientLogger object
-            logging statement that occurs when the class is instantiated
-
+        Attributes
+        ----------
+            log_level: str
+                The log level to use for this class (Defaults to 'INFO')
         """
-        with open(conf_loc) as f:
-            self.conf = yaml.load(f, Loader=yaml.FullLoader)
-
-        with open(cred_loc) as f:
-            self.cred = yaml.load(f, Loader=yaml.FullLoader)
-
-        self.logger = ClientLogger.get_logger(self.__class__.__name__, self.conf['log_level'], False)
+        self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
-    def connect(self):
-        """
-        Connects a boto sqs instance based on configurations in conf and cred yml files
+        if wildargs:
+            self.logger.error("There were extra constructor arguments: " + str(wildargs))
 
-        :return: boto sqs
-            returns instance of boto sqs resource
+    def receive_messages(self, sqs_client, sqs_queue_name, sqs_max_polls, cb):
         """
-        boto_session = boto3.Session(aws_access_key_id=self.cred['sandbox']['access_key'],
-                                     aws_secret_access_key=self.cred['sandbox']['secret_key'])
-        # Get the queue. This returns an SQS.Queue instance
-        sqs_session = boto_session.resource('sqs', region_name=self.conf['s3_region'])
-        sqs_queue = sqs_session.Queue(self.conf['sqs_url'])
-        self.logger.info("Connecting to " + self.conf['sqs_url'])
-        return sqs_queue
+        Polls for messages from an sqs queue
 
-    def receive_messages(self, queue, sqs_max_polls, cb):
-        """
-        Polls for messages in the queue
-
-        :param queue: boto sqs resource
-            instance of boto sqs resource given from connect()
+        :param sqs_client: boto SQS.Client
+            instance of boto sqs Client
+        :param sqs_queue_name: str
+            name of the queue to connect to.
         :param sqs_max_polls: int
             number of polls
         :param cb: function
             call back function
 
-        :return: Dependent on the call back function
+        :return: If the Message has a Records key then the call back function gets called on the Message.
 
         """
         self.logger.info("Receive messages")
+        self.logger.info("Polling %d time(s) for SQS messages" % sqs_max_polls)
+
+        sqs_queue = sqs_client.Queue(sqs_queue_name)
 
         i = 1
         while i <= sqs_max_polls:
             self.logger.info("Polling attempt: " + str(i))
             i = i + 1
 
-            sqs_messages = queue.receive_messages(MaxNumberOfMessages=10, WaitTimeSeconds=10)
+            sqs_messages = sqs_queue.receive_messages(
+                MaxNumberOfMessages=10,
+                WaitTimeSeconds=10
+            )
             self.logger.info("Received %d messages." % len(sqs_messages))
+            self.logger.debug("Messages: %s" % sqs_messages)
 
             for sqs_message in sqs_messages:
                 try:
                     # Log start time
                     dt_start = datetime.now(tz=timezone.utc)
-                    self.logger.info("Started processing message")
+                    self.logger.info("Starting processing message")
+                    self.logger.debug("Message: %s" % sqs_message)
+                    self.logger.debug("Message body: %s" % sqs_message.body)
 
                     message_body = json.loads(sqs_message.body)
+                    self.logger.debug("Message body message: %s" % message_body['Message'])
                     message_content = json.loads(message_body['Message'])
 
                     if 'Records' in message_content:
                         recs = message_content['Records']
-                        self.logger.info("Received message")
                         self.logger.debug('Records: ' + str(recs))
                     else:
                         self.logger.info("s3 event without records content received.")
