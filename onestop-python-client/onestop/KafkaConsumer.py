@@ -101,7 +101,7 @@ class KafkaConsumer:
         self.logger.info("Initializing " + self.__class__.__name__)
 
         if wildargs:
-            self.logger.error("There were extra constructor arguments: " + str(wildargs))
+            self.logger.warning("There were extra constructor arguments: " + str(wildargs))
 
     def register_client(self):
         """

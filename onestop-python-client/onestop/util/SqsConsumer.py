@@ -30,7 +30,7 @@ class SqsConsumer:
         self.logger.info("Initializing " + self.__class__.__name__)
 
         if wildargs:
-            self.logger.error("There were extra constructor arguments: " + str(wildargs))
+            self.logger.warning("There were extra constructor arguments: " + str(wildargs))
 
     def connect(self, sqs_resource, sqs_queue_name):
         """
