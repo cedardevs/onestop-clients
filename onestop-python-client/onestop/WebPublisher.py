@@ -31,7 +31,6 @@ class WebPublisher:
         get_granules_onestop(self, uuid)
             Search for a granule in OneStop given its uuid
     """
-    conf = None
 
     def __init__(self, registry_base_url, registry_username, registry_password, onestop_base_url, log_level="INFO", **kwargs):
         self.registry_base_url = registry_base_url
