@@ -2,7 +2,7 @@ import csv
 import unittest
 import uuid
 
-from moto import mock_s3
+from moto import mock_s3, mock_sqs
 from moto import mock_glacier
 from tests.utils import abspath_from_relative
 from onestop.util.S3Utils import S3Utils
@@ -27,6 +27,28 @@ class S3UtilsTest(unittest.TestCase):
         self.region = 'us-east-2'
         self.region2 = 'eu-north-1'
         self.bucket = 'archive-testing-demo'
+
+    @mock_sqs
+    def test_connect_session(self):
+        session = self.s3_utils.connect('Session', None, None)
+
+        # No exception is called for unique method call
+        session.client('sqs')
+        session.resource('s3')
+
+    @mock_sqs
+    def test_connect_client(self):
+        client = self.s3_utils.connect('Client', 'sqs', self.region)
+
+        # No exception is called for unique method call
+        client.list_queues()
+
+    @mock_sqs
+    def test_connect_resource(self):
+        resource = self.s3_utils.connect('Resource', 'sqs', self.region)
+
+        # No exception is called for unique method call
+        resource.Queue(url='test')
 
     @mock_s3
     def test_get_uuid_metadata(self):
