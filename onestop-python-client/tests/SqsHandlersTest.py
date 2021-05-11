@@ -1,8 +1,8 @@
 import json
 import unittest
-import boto3
-import yaml
-from moto import mock_s3
+
+from unittest import mock
+from unittest.mock import patch
 from moto import mock_sqs
 from tests.utils import abspath_from_relative, create_delete_message
 from onestop.WebPublisher import WebPublisher
@@ -13,95 +13,209 @@ from onestop.util.SqsHandlers import create_delete_handler
 
 
 class SqsHandlerTest(unittest.TestCase):
-    wp = None
-    su = None
-    s3ma = None
-    sqs = None
-    wp_config = abspath_from_relative(__file__, "../config/web-publisher-config-local.yml")
-    aws_config = abspath_from_relative(__file__, "../config/aws-util-config-dev.yml")
-    cred_config = abspath_from_relative(__file__, "../config/credentials-template.yml")
-    csb_config = abspath_from_relative(__file__, "../config/csb-data-stream-config.yml")
-
-    collection_uuid = '5b58de08-afef-49fb-99a1-9c5d5c003bde'
-    payloadDict = {
-        "fileInformation": {
-            "name": "OR_ABI-L1b-RadF-M6C13_G16_s20192981730367_e20192981740087_c20192981740157.nc",
-            "size": 30551050,
-            "checksums": [{
-                "algorithm": "SHA1",
-                "value": "bf4c5b58f8d5f9445f7b277f988e5861184f775a"
-            }],
-            "format": "NetCDF"
-        },
-        "relationships": [{
-            "type": "COLLECTION",
-            "id": collection_uuid
-        }],
-        "fileLocations": {
-            "s3://noaa-goes16/ABI-L1b-RadF/2019/298/17/OR_ABI-L1b-RadF-M6C13_G16_s20192981730367_e20192981740087_c20192981740157.nc": {
-                "uri": "s3://noaa-goes16/ABI-L1b-RadF/2019/298/17/OR_ABI-L1b-RadF-M6C13_G16_s20192981730367_e20192981740087_c20192981740157.nc",
-                "type": "ACCESS",
-                "deleted": "false",
-                "restricted": "false",
-                "asynchronous": "false",
-                "locality": "us-east-2",
-                "lastModified": 1572025823000,
-                "serviceType": "Amazon:AWS:S3",
-                "optionalAttributes": {}
-            }
-        }
-    }
 
     def setUp(self):
         print("Set it up!")
 
-        with open(abspath_from_relative(__file__, "../config/csb-data-stream-config-template.yml")) as f:
-            self.stream_conf = yaml.load(f, Loader=yaml.FullLoader)
-        with open(abspath_from_relative(__file__, "../config/aws-util-config-dev.yml")) as f:
-            self.cloud_conf = yaml.load(f, Loader=yaml.FullLoader)
-        with open(abspath_from_relative(__file__, "../config/credentials-template.yml")) as f:
-            self.cred = yaml.load(f, Loader=yaml.FullLoader)
+        self.config_dict = {
+            'access_key': 'test_access_key',
+            'secret_key': 'test_secret_key',
+            'access_bucket': 'https://archive-testing-demo.s3-us-east-2.amazonaws.com',
+            'type': 'COLLECTION',
+            'file_id_prefix': 'gov.noaa.ncei.csb:',
+            'collection_id': 'fdb56230-87f4-49f2-ab83-104cfd073177',
+            'registry_base_url': 'http://localhost/onestop/api/registry',
+            'registry_username': 'admin',
+            'registry_password': 'whoknows',
+            'onestop_base_url': 'http://localhost/onestop/api/search/search',
+            'log_level': 'DEBUG'
+        }
 
-        self.wp = WebPublisher(self.wp_config, self.cred_config)
-        self.su = S3Utils(self.cred['sandbox']['access_key'],
-                          self.cred['sandbox']['secret_key'],
-                          "DEBUG")
-        self.s3ma = S3MessageAdapter(self.stream_conf['access_bucket'],
-                                     self.stream_conf['type'],
-                                     self.stream_conf['file_identifier_prefix'],
-                                     self.stream_conf['collection_id'])
+        self.wp = WebPublisher(**self.config_dict)
+        self.s3_utils = S3Utils(**self.config_dict)
+        self.s3ma = S3MessageAdapter(**self.config_dict)
+        self.sqs_consumer = SqsConsumer(**self.config_dict)
+
+        self.sqs_max_polls = 3
+        self.region = 'us-east-2'
+        self.bucket = 'archive-testing-demo'
+        self.key = 'ABI-L1b-RadF/2019/298/15/OR_ABI-L1b-RadF-M6C15_G16_s20192981500369_e20192981510082_c20192981510166.nc'
 
     def tearDown(self):
         print("Tear it down!")
 
-    @mock_s3
-    @mock_sqs
-    def init_s3(self):
-        bucket = self.cloud_conf['s3_bucket']
-        key = self.cloud_conf['s3_key']
-        boto_client = self.su.connect("s3", None)
-        boto_client.create_bucket(Bucket=bucket)
-        boto_client.put_object(Bucket=bucket, Key=key, Body="foobar")
+    def mocked_search_response_data(*args, **kwargs):
+        class MockResponse:
+            def __init__(self, json_data, status_code):
+                self.json_data = json_data
+                self.status_code = status_code
 
-        sqs_client = boto3.client('sqs', region_name=self.cloud_conf['s3_region'])
-        sqs_queue = sqs_client.create_queue(QueueName=self.cloud_conf['sqs_name'])
-        self.sqs = SqsConsumer(self.aws_config, self.cred_config)
-        message = create_delete_message(self.cloud_conf['s3_region'], bucket, key)
-        sqs_client.send_message(QueueUrl=sqs_queue['QueueUrl'], MessageBody=json.dumps(message))
-        sqs_queue['QueueUrl']
+            def json(self):
+                return self.json_data
 
-    @mock_s3
-    @mock_sqs
-    def delete_handler_wrapper(self, recs):
-        handler = create_delete_handler(self.wp)
-        result = handler(recs)
-        self.assertTrue(result)
+        print ("args: "+str(args)+" kwargs: "+str(kwargs))
+        onestop_search_response = {
+            "data":[
+                {
+                    "attributes":{
+                        "serviceLinks":[
+
+                        ],
+                        "citeAsStatements":[
+
+                        ],
+                        "links":[
+                            {
+                                "linkFunction":"download",
+                                "linkUrl":"s3://archive-testing-demo-backup/public/NESDIS/CSB/csv/2019/12/01/20191201_08d5538c6f8dbefd7d82929623a34385_pointData.csv",
+                                "linkName":"Amazon S3",
+                                "linkProtocol":"Amazon:AWS:S3"
+                            },
+                            {
+                                "linkFunction":"download",
+                                "linkUrl":"https://archive-testing-demo.s3-us-east-2.amazonaws.com/public/NESDIS/CSB/csv/2019/12/01/20191201_08d5538c6f8dbefd7d82929623a34385_pointData.csv",
+                                "linkName":"Amazon S3",
+                                "linkProtocol":"HTTPS"
+                            }
+                        ],
+                        "internalParentIdentifier":"fdb56230-87f4-49f2-ab83-104cfd073177",
+                        "filesize":63751,
+                        "title":"20191201_08d5538c6f8dbefd7d82929623a34385_pointData.csv"
+                    },
+                    "id":"77b11a1e-1b75-46e1-b7d6-99b5022ed113",
+                    "type":"granule"
+                }
+            ],
+            "meta":{
+                "took":1,
+                "total":6,
+                "exactCount":True
+            }
+        }
+        return MockResponse(onestop_search_response, 200)
+
+
+    def mocked_search_response_data_empty(*args, **kwargs):
+        class MockResponse:
+            def __init__(self, json_data, status_code):
+                self.json_data = json_data
+                self.status_code = status_code
+
+            def json(self):
+                return self.json_data
+
+        print ("args: "+str(args)+" kwargs: "+str(kwargs))
+        onestop_search_response = {
+            "data":[],
+            "meta":{
+                "took":1,
+                "total":6,
+                "exactCount":True
+            }
+        }
+        return MockResponse(onestop_search_response, 200)
 
     @mock_sqs
-    def test_delete_handler(self):
-        mock_queue_url = self.init_s3()
-        sqs_queue = boto3.resource('sqs', region_name=self.stream_conf['s3_region']).Queue(mock_queue_url)
-        self.sqs.receive_messages(sqs_queue, self.stream_conf['sqs_max_polls'], self.delete_handler_wrapper)
+    @mock.patch('requests.get', side_effect=mocked_search_response_data, autospec=True)
+    @patch('onestop.WebPublisher')
+    def test_delete_handler_happy(self, mock_wp, mock_response):
+        queue_name = 'test_queue'
+        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.region)
+        sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
+        sqs_queue = sqs_resource.Queue(queue_name)
+
+        # Send a test message
+        sqs_client = self.s3_utils.connect('sqs', self.region)
+        message = create_delete_message(self.region, self.bucket, self.key)
+        sqs_client.send_message(
+            QueueUrl=sqs_queue_url,
+            MessageBody=json.dumps(message)
+        )
+
+        mock_wp.search_onestop.side_effect = mock_response
+        cb = create_delete_handler(mock_wp)
+
+        self.sqs_consumer.receive_messages(sqs_queue, 1, cb)
+
+        # Verify search and delete called once.
+        mock_wp.search_onestop.assert_called_once()
+        mock_wp.delete_registry.assert_called_once()
+
+    @mock_sqs
+    @mock.patch('requests.get', side_effect=mocked_search_response_data_empty, autospec=True)
+    @patch('onestop.WebPublisher')
+    def test_delete_handler_data_empty_ends_cb(self, mock_wp, mock_response):
+        queue_name = 'test_queue'
+        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.region)
+        sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
+        sqs_queue = sqs_resource.Queue(queue_name)
+
+        # Send a test message
+        sqs_client = self.s3_utils.connect('sqs', self.region)
+        message = create_delete_message(self.region, self.bucket, self.key)
+        sqs_client.send_message(
+            QueueUrl=sqs_queue_url,
+            MessageBody=json.dumps(message)
+        )
+
+        mock_wp.search_onestop.side_effect = mock_response
+        cb = create_delete_handler(mock_wp)
+
+        self.sqs_consumer.receive_messages(sqs_queue, 1, cb)
+
+        # Verify search and delete called once.
+        mock_wp.search_onestop.assert_called_once()
+        mock_wp.delete_registry.assert_not_called()
+
+    @mock_sqs
+    @mock.patch('requests.get', side_effect=mocked_search_response_data, autospec=True)
+    @patch('onestop.WebPublisher')
+    def test_delete_handler_no_records_ends_cb(self, mock_wp, mock_response):
+        queue_name = 'test_queue'
+        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.region)
+        sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
+        sqs_queue = sqs_resource.Queue(queue_name)
+
+        # Send a test message
+        sqs_client = self.s3_utils.connect('sqs', self.region)
+        sqs_client.send_message(
+            QueueUrl=sqs_queue_url,
+            MessageBody=json.dumps({"Message":'''{"Records":[]}'''})
+        )
+
+        mock_wp.search_onestop.side_effect = mock_response
+        cb = create_delete_handler(mock_wp)
+
+        self.sqs_consumer.receive_messages(sqs_queue, 1, cb)
+
+        # Verify search and delete called once.
+        mock_wp.search_onestop.assert_not_called()
+        mock_wp.delete_registry.assert_not_called()
+
+    @mock_sqs
+    @mock.patch('requests.get', side_effect=mocked_search_response_data, autospec=True)
+    @patch('onestop.WebPublisher')
+    def test_delete_handler_eventName_not_delete_ends_cb(self, mock_wp, mock_response):
+        queue_name = 'test_queue'
+        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.region)
+        sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
+        sqs_queue = sqs_resource.Queue(queue_name)
+
+        # Send a test message
+        sqs_client = self.s3_utils.connect('sqs', self.region)
+        sqs_client.send_message(
+            QueueUrl=sqs_queue_url,
+            MessageBody=json.dumps({"Message":'''{"Records":[{"eventName":"Unknown"}]}'''})
+        )
+
+        mock_wp.search_onestop.side_effect = mock_response
+        cb = create_delete_handler(mock_wp)
+
+        self.sqs_consumer.receive_messages(sqs_queue, 1, cb)
+
+        # Verify search and delete called once.
+        mock_wp.search_onestop.assert_not_called()
+        mock_wp.delete_registry.assert_not_called()
 
 if __name__ == '__main__':
     unittest.main()
