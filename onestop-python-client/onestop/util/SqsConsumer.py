@@ -25,6 +25,7 @@ class SqsConsumer:
             log_level: str
                 The log level to use for this class (Defaults to 'INFO')
         """
+        self.log_level = log_level
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
@@ -93,7 +94,7 @@ class SqsConsumer:
                     if 'Records' in message_content:
                         recs = message_content['Records']
                         self.logger.debug('Message "Records": %s' % recs)
-                        cb(recs)
+                        cb(recs, self.log_level)
                     else:
                         self.logger.info("s3 event message without 'Records' content received.")
 
