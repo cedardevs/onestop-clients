@@ -11,9 +11,10 @@ class CsbExtractorTest(unittest.TestCase):
         print("Set it up!")
         self.root_proj_path = os.getcwd()
         self.assertIsNotNone(self.root_proj_path)
-        self.key = "tests/data/file4.csv"
-        # Use open instead of our methodfor simplicity and reliability, plus not testing our code here.
-        self.file_obj = open(self.root_proj_path + '/' + self.key)
+        self.data_file_path = os.getcwd() + '/test/data/file4.csv'
+        self.key = "file4.csv"
+        # Use open instead of our method because we aren't testing our code here.
+        self.file_obj = open(self.data_file_path)
 
         config_dict = {
             "access_key": "test_access_key",
@@ -40,7 +41,7 @@ class CsbExtractorTest(unittest.TestCase):
         # Setup bucket and file to read
         s3 = self.s3_utils.connect('client', 's3', self.region)
         s3.create_bucket(Bucket=self.bucket, CreateBucketConfiguration={'LocationConstraint': self.region})
-        self.s3_utils.upload_s3(s3, self.root_proj_path + '/' + self.key, self.bucket, self.key, True)
+        self.s3_utils.upload_s3(s3, self.data_file_path, self.bucket, self.key, True)
         self.assertTrue(self.s3_utils.read_bytes_s3(s3, self.bucket, self.key))
 
         # This is how we would expect an external user to get the file.

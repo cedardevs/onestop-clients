@@ -6,7 +6,7 @@ from unittest import mock
 from moto import mock_s3
 from onestop.WebPublisher import WebPublisher
 
-class WebPublisherTest(unittest.TestCase):
+class test_WebPublisher(unittest.TestCase):
     username="admin"
     password="a_password"
     uuid = "9f0a5ff2-fcc0-5bcb-a225-024b669c9bba"

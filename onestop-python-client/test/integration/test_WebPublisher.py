@@ -56,8 +56,8 @@ class WebPublisherTest(unittest.TestCase):
     def setUpClass(cls):
         print("Set it up!")
 
-        cred_loc = "../config/credentials.yml"
-        conf_loc = "../config/csb-data-stream-config-template.yml"
+        cred_loc = "config/credentials.yml"
+        conf_loc = "config/csb-data-stream-config-template.yml"
 
         with open(cred_loc) as f:
             creds = yaml.load(f, Loader=yaml.FullLoader)

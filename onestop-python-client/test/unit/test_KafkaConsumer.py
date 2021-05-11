@@ -4,7 +4,7 @@ from unittest.mock import ANY, patch, MagicMock, call
 from onestop.KafkaConsumer import KafkaConsumer
 from confluent_kafka.schema_registry import SchemaRegistryClient
 
-class KafkaConsumerTest(unittest.TestCase):
+class test_KafkaConsumer(unittest.TestCase):
     kp = None
     conf_w_security = None
     conf_wo_security = None

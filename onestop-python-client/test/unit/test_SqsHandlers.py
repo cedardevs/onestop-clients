@@ -4,15 +4,14 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 from moto import mock_sqs
-from tests.utils import abspath_from_relative, create_delete_message
+from test.utils import abspath_from_relative, create_delete_message
 from onestop.WebPublisher import WebPublisher
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.SqsHandlers import create_delete_handler
 
-
-class SqsHandlerTest(unittest.TestCase):
+class test_SqsHandler(unittest.TestCase):
 
     def setUp(self):
         print("Set it up!")
@@ -93,7 +92,6 @@ class SqsHandlerTest(unittest.TestCase):
             }
         }
         return MockResponse(onestop_search_response, 200)
-
 
     def mocked_search_response_data_empty(*args, **kwargs):
         class MockResponse:

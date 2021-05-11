@@ -4,7 +4,7 @@ import uuid
 
 from moto import mock_s3, mock_sqs
 from moto import mock_glacier
-from tests.utils import abspath_from_relative
+from test.utils import abspath_from_relative
 from onestop.util.S3Utils import S3Utils
 
 class S3UtilsTest(unittest.TestCase):
@@ -77,7 +77,7 @@ class S3UtilsTest(unittest.TestCase):
     @mock_s3
     def test_add_file_s3(self):
         boto_client = self.s3_utils.connect('client', 's3', None)
-        local_file = abspath_from_relative(__file__, "../data/file4.csv")
+        local_file = abspath_from_relative(__file__, "../../data/file4.csv")
         s3_key = "csv/file4.csv"
         location = {'LocationConstraint': self.region}
         boto_client.create_bucket(Bucket=self.bucket, CreateBucketConfiguration=location)
@@ -119,7 +119,7 @@ class S3UtilsTest(unittest.TestCase):
         overwrite = True
 
         for file in local_files:
-            local_file = abspath_from_relative(__file__, "../data/" + file)
+            local_file = abspath_from_relative(__file__, "../../data/" + file)
             s3_file = "csv/" + file
             self.assertTrue(self.s3_utils.upload_s3(boto_client, local_file, self.bucket, s3_file, overwrite))
 

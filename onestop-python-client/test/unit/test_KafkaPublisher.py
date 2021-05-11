@@ -5,7 +5,7 @@ from onestop.KafkaPublisher import KafkaPublisher
 from unittest.mock import ANY, patch, MagicMock
 from confluent_kafka.schema_registry import SchemaRegistryClient
 
-class KafkaPublisherTest(unittest.TestCase):
+class test_KafkaPublisher(unittest.TestCase):
     kp = None
     conf_w_security = None
     conf_wo_security = None
