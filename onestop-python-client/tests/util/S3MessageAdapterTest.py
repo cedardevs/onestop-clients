@@ -1,8 +1,6 @@
 import unittest
-import yaml
 
 from moto import mock_s3
-from tests.utils import abspath_from_relative
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 
@@ -54,29 +52,23 @@ class S3MessageAdapterTest(unittest.TestCase):
     def setUp(self):
         print("Set it up!")
 
-        with open(abspath_from_relative(__file__, "../../config/csb-data-stream-config-template.yml")) as f:
-            self.stream_conf = yaml.load(f, Loader=yaml.FullLoader)
-        with open(abspath_from_relative(__file__, "../../config/aws-util-config-dev.yml")) as f:
-            self.cloud_conf = yaml.load(f, Loader=yaml.FullLoader)
-        with open(abspath_from_relative(__file__, "../../config/credentials-template.yml")) as f:
-            self.cred = yaml.load(f, Loader=yaml.FullLoader)
+        config_dict = {
+            'access_key': 'test_access_key',
+            'secret_key': 'test_secret_key',
+            'access_bucket': 'https://archive-testing-demo.s3-us-east-2.amazonaws.com',
+            'type': 'COLLECTION',
+            'file_id_prefix': 'gov.noaa.ncei.csb:',
+            'collection_id': 'fdb56230-87f4-49f2-ab83-104cfd073177',
+            'log_level': 'DEBUG'
+        }
 
-        self.s3_utils = S3Utils(self.cred['sandbox']['access_key'],
-                                self.cred['sandbox']['secret_key'],
-                                "DEBUG")
-        self.s3ma = S3MessageAdapter(self.stream_conf['access_bucket'],
-                                     self.stream_conf['type'],
-                                     self.stream_conf['file_identifier_prefix'],
-                                     self.stream_conf['collection_id'])
+        self.s3_utils = S3Utils(**config_dict)
+        self.s3ma = S3MessageAdapter(**config_dict)
 
-        self.region = self.cloud_conf['s3_region']
-        self.bucket = self.cloud_conf['s3_bucket']
+        self.region = 'us-east-2'
 
     def tearDown(self):
         print("Tear it down!")
-
-    def test_parse_config(self):
-        self.assertFalse(self.stream_conf['collection_id'] == None)
 
     @mock_s3
     def test_transform(self):

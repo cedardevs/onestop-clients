@@ -1,7 +1,6 @@
 import csv
 import unittest
 import uuid
-import yaml
 
 from moto import mock_s3
 from moto import mock_glacier
@@ -13,20 +12,21 @@ class S3UtilsTest(unittest.TestCase):
     def setUp(self):
         print("Set it up!")
 
-        with open(abspath_from_relative(__file__, "../../config/csb-data-stream-config-template.yml")) as f:
-            self.stream_conf = yaml.load(f, Loader=yaml.FullLoader)
-        with open(abspath_from_relative(__file__, "../../config/aws-util-config-dev.yml")) as f:
-            self.cloud_conf = yaml.load(f, Loader=yaml.FullLoader)
-        with open(abspath_from_relative(__file__, "../../config/credentials-template.yml")) as f:
-            self.cred = yaml.load(f, Loader=yaml.FullLoader)
+        config_dict = {
+            'access_key': 'test_access_key',
+            'secret_key': 'test_secret_key',
+            'access_bucket': 'https://archive-testing-demo.s3-us-east-2.amazonaws.com',
+            'type': 'COLLECTION',
+            'file_id_prefix': 'gov.noaa.ncei.csb:',
+            'collection_id': 'fdb56230-87f4-49f2-ab83-104cfd073177',
+            'log_level': 'DEBUG'
+        }
 
-        self.s3_utils = S3Utils(self.cred['sandbox']['access_key'],
-                                self.cred['sandbox']['secret_key'],
-                                "DEBUG")
+        self.s3_utils = S3Utils(**config_dict)
 
-        self.region = self.cloud_conf['s3_region']
-        self.region2 = self.region
-        self.bucket = self.cloud_conf['s3_bucket']
+        self.region = 'us-east-2'
+        self.region2 = 'eu-north-1'
+        self.bucket = 'archive-testing-demo'
 
     @mock_s3
     def test_get_uuid_metadata(self):
@@ -54,7 +54,7 @@ class S3UtilsTest(unittest.TestCase):
 
     @mock_s3
     def test_add_file_s3(self):
-        boto_client = self.s3_utils.connect("s3", None)
+        boto_client = self.s3_utils.connect('client', 's3', None)
         local_file = abspath_from_relative(__file__, "../data/file4.csv")
         s3_key = "csv/file4.csv"
         location = {'LocationConstraint': self.region}
@@ -65,8 +65,8 @@ class S3UtilsTest(unittest.TestCase):
 
     @mock_s3
     def test_get_csv_s3(self):
-        boto_session = self.s3_utils.connect("session", None)
-        s3 = self.s3_utils.connect('s3', self.cloud_conf['s3_region'])
+        boto_session = self.s3_utils.connect('session', None, None)
+        s3 = self.s3_utils.connect('client', 's3', self.region)
         location = {'LocationConstraint': self.region}
         s3_key = "csv/file1.csv"
         s3.create_bucket(Bucket=self.bucket, CreateBucketConfiguration=location)
@@ -81,7 +81,7 @@ class S3UtilsTest(unittest.TestCase):
 
     @mock_s3
     def test_read_bytes_s3(self):
-        boto_client = self.s3_utils.connect("s3", None)
+        boto_client = self.s3_utils.connect('client', 's3', None)
         s3_key = "csv/file1.csv"
         boto_client.create_bucket(Bucket=self.bucket, CreateBucketConfiguration={'LocationConstraint': self.region})
         boto_client.put_object(Bucket=self.bucket, Key=s3_key, Body="body")
@@ -90,7 +90,7 @@ class S3UtilsTest(unittest.TestCase):
 
     @mock_s3
     def test_add_files(self):
-        boto_client = self.s3_utils.connect("s3", None)
+        boto_client = self.s3_utils.connect('client', 's3', None)
         local_files = ["file1_s3.csv", "file2.csv", "file3.csv"]
         location = {'LocationConstraint': self.region}
         boto_client.create_bucket(Bucket=self.bucket, CreateBucketConfiguration=location)
@@ -108,7 +108,7 @@ class S3UtilsTest(unittest.TestCase):
         key = "csv/file1.csv"
 
         # makes connection to low level s3 client
-        s3 = self.s3_utils.connect('s3', self.region)
+        s3 = self.s3_utils.connect('client', 's3', self.region)
         location = {'LocationConstraint': self.region}
         s3.create_bucket(Bucket=self.bucket, CreateBucketConfiguration=location)
         s3.put_object(Bucket=self.bucket, Key=key, Body="body")
@@ -117,8 +117,8 @@ class S3UtilsTest(unittest.TestCase):
         file_data = self.s3_utils.read_bytes_s3(s3, self.bucket, key)
 
         # Redirecting upload to vault in second region
-        glacier = self.s3_utils.connect("glacier", self.region2)
-        vault_name = self.cloud_conf['vault_name']
+        glacier = self.s3_utils.connect('client', 'glacier', self.region2)
+        vault_name = 'archive-vault-new'
         glacier.create_vault(vaultName=vault_name)
         print('vault name: ' + str(vault_name))
         print('region name: ' + str(self.region2))
@@ -140,7 +140,7 @@ class S3UtilsTest(unittest.TestCase):
         key = "csv/file1_s3.csv"
 
         # Create boto3 low level api connection
-        s3 = self.s3_utils.connect('s3', self.region)
+        s3 = self.s3_utils.connect('client', 's3', self.region)
         location = {'LocationConstraint': self.region}
         s3.create_bucket(Bucket=self.bucket, CreateBucketConfiguration=location)
         s3.put_object(Bucket=self.bucket, Key=key, Body="body")
@@ -172,13 +172,13 @@ class S3UtilsTest(unittest.TestCase):
     @mock_glacier
     def test_retrieve_inventory(self):
         """
-        Initiates job for archive retrieval. Takes 3-5 hours to complete
+        Initiates job for archive retrieval. Takes 3-5 hours to complete if not mocked.
         """
 
         # Using glacier api initiates job and returns archive results
         # Connect to your glacier vault for retrieval
-        glacier = self.s3_utils.connect("glacier", self.region2)
-        vault_name = self.cloud_conf['vault_name']
+        glacier = self.s3_utils.connect('client', 'glacier', self.region2)
+        vault_name = 'archive-vault-new'
         glacier.create_vault(vaultName=vault_name)
 
 
@@ -193,7 +193,7 @@ class S3UtilsTest(unittest.TestCase):
         """
 
         # Connect to your glacier vault for retrieval
-        glacier = self.su.connect("glacier", self.su.conf['region'])
+        glacier = self.su.connect('client', 'glacier', self.su.conf['region'])
         vault_name = self.su.conf['vault_name']
 
         # Retrieve the job results
