@@ -68,7 +68,6 @@ class S3Utils:
         retrieve_inventory_results(vault_name, boto_client, job_id)
             Retrieve the results of an Amazon Glacier inventory-retrieval job
     """
-    conf = None
 
     def __init__(self, access_key, secret_key, log_level = 'INFO', **wildargs):
         self.access_key = access_key
