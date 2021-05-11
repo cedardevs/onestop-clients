@@ -38,13 +38,13 @@ class CsbExtractorTest(unittest.TestCase):
     @mock_s3
     def test_csb_SME_user_path(self):
         # Setup bucket and file to read
-        s3 = self.s3_utils.connect('s3', self.region)
+        s3 = self.s3_utils.connect('client', 's3', self.region)
         s3.create_bucket(Bucket=self.bucket, CreateBucketConfiguration={'LocationConstraint': self.region})
         self.s3_utils.upload_s3(s3, self.root_proj_path + '/' + self.key, self.bucket, self.key, True)
         self.assertTrue(self.s3_utils.read_bytes_s3(s3, self.bucket, self.key))
 
         # This is how we would expect an external user to get the file.
-        sm_open_file = self.s3_utils.get_csv_s3(self.s3_utils.connect("session", None), self.bucket, self.key)
+        sm_open_file = self.s3_utils.get_csv_s3(self.s3_utils.connect('session', None, None), self.bucket, self.key)
 
         bounds_dict = CsbExtractor.get_spatial_temporal_bounds(sm_open_file, 'LON', 'LAT', 'TIME')
         coords = bounds_dict["geospatial"]

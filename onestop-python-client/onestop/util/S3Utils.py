@@ -30,7 +30,7 @@ class S3Utils:
     Methods
     -------
         connect(client_type, region)
-            connects to a boto3 client
+            connects to a boto3 service
 
         objectkey_exists(bucket, s3_key)
             checks to see if a s3 key path exists in a particular bucket
@@ -78,46 +78,41 @@ class S3Utils:
         if wildargs:
             self.logger.error("There were extra constructor arguments: " + str(wildargs))
 
-    def connect(self, client_type, region):
+    def connect(self, type, service_name, region):
         """
-        Connects to a boto3 client
+        Connects to a boto3 of specified type using the credentials provided in the constructor.
 
-        :param client_type: str
-            boto client type in which you want to access
+        :param type: str
+            boto object type to return, see return type.
+        :param service_name: str
+            (Optional for session type) boto service name in which you want to access
         :param region: str
-            name of aws region you want to access
+            (Optional for session type) name of aws region you want to access
 
-        :return: boto3 client
-            dependent on the client_type parameter
+        :return: boto3 connection object
+            A boto3 connection object; Client, Session, or Resource.
         """
-
-        if client_type == "s3":
-            boto = boto3.client(
-                "s3",
-                aws_access_key_id=self.access_key,
-                aws_secret_access_key=self.secret_key,
-                region_name=region)
-
-        if client_type == "s3_resource":
-            boto = boto3.resource(
-                "s3",
-                region_name=region,
-                aws_access_key_id=self.access_key,
-                aws_secret_access_key=self.secret_key)
-
-        if client_type == "glacier":
-            boto = boto3.client(
-                "glacier",
-                region_name=region,
-                aws_access_key_id=self.access_key,
-                aws_secret_access_key=self.secret_key)
-
-        if client_type == "session":
-            boto = boto3.Session(
+        type = type.lower()
+        if type == 'session':
+            return boto3.Session(
                 aws_access_key_id=self.access_key,
                 aws_secret_access_key=self.secret_key,
             )
-        return boto
+        elif type == 'client':
+            return boto3.client(
+                service_name,
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key,
+                region_name=region)
+        elif type == 'resource':
+            return boto3.resource(
+                service_name,
+                region_name=region,
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key
+            )
+        else:
+            raise Exception('Unknown boto3 type of %s'%type)
 
     def objectkey_exists(self, bucket, s3_key):
         """
@@ -235,11 +230,11 @@ class S3Utils:
                 self.logger.error("File to upload was not found. Path: "+local_file)
                 return False
 
-    def get_csv_s3(self, boto_client, bucket, key):
+    def get_csv_s3(self, boto_session, bucket, key):
         """
         gets a csv file from s3 bucket using smart open library
 
-        :param boto_client: session
+        :param boto_session: session
             utilizes boto session type
         :param bucket: str
             name of bucket
@@ -249,7 +244,7 @@ class S3Utils:
         :return: smart open file
         """
         url = "s3://" + bucket + "/" + key
-        sm_open_file = sm_open(url, 'r', transport_params={'session': boto_client})
+        sm_open_file = sm_open(url, 'r', transport_params={'session': boto_session})
         return sm_open_file
 
     def read_bytes_s3(self, boto_client, bucket, key):

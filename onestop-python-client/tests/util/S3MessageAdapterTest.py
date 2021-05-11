@@ -72,7 +72,7 @@ class S3MessageAdapterTest(unittest.TestCase):
 
     @mock_s3
     def test_transform(self):
-        s3 = self.s3_utils.connect('s3', self.region)
+        s3 = self.s3_utils.connect('client', 's3', self.region)
         location = {'LocationConstraint': self.region}
         bucket = 'nesdis-ncei-csb-dev'
         key = 'csv/file1.csv'

@@ -63,7 +63,7 @@ class SqsConsumerTest(unittest.TestCase):
     @mock_sqs
     def test_connect(self):
         queue_name = 'test'
-        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.config_dict['s3_region'])
+        sqs_resource = self.s3_utils.connect('resource', 'sqs', self.config_dict['s3_region'])
         expQueue = sqs_resource.create_queue(QueueName=queue_name)
         queue = self.sqs_consumer.connect(sqs_resource, queue_name)
 
@@ -76,11 +76,11 @@ class SqsConsumerTest(unittest.TestCase):
 
         # Create the mock queue beforehand and set SqsConsumer's 'sqs_url' to the mock's URL
         queue_name = 'test_queue'
-        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.config_dict['s3_region'])
+        sqs_resource = self.s3_utils.connect('resource', 'sqs', self.config_dict['s3_region'])
         sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
 
         # Send a test message lacking Records field
-        sqs_client = self.s3_utils.connect('sqs', self.config_dict['s3_region'])
+        sqs_client = self.s3_utils.connect('client', 'sqs' , self.config_dict['s3_region'])
         sqs_client.send_message(
             QueueUrl=sqs_queue_url,
             MessageBody= self.message_wo_records
@@ -114,11 +114,11 @@ class SqsConsumerTest(unittest.TestCase):
 
         # Create the mock queue beforehand and set SqsConsumer's 'sqs_url' to the mock's URL
         queue_name = 'test_queue'
-        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.config_dict['s3_region'])
+        sqs_resource = self.s3_utils.connect('resource', 'sqs', self.config_dict['s3_region'])
         sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
 
         # Send a test message
-        sqs_client = self.s3_utils.connect('sqs', self.config_dict['s3_region'])
+        sqs_client = self.s3_utils.connect('client', 'sqs' , self.config_dict['s3_region'])
         sqs_client.send_message(
             QueueUrl=sqs_queue_url,
             MessageBody= self.message
@@ -136,11 +136,11 @@ class SqsConsumerTest(unittest.TestCase):
 
         # Create the mock queue beforehand and set SqsConsumer's 'sqs_url' to the mock's URL
         queue_name = 'test_queue'
-        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.config_dict['s3_region'])
+        sqs_resource = self.s3_utils.connect('resource', 'sqs', self.config_dict['s3_region'])
         queue = self.sqs_consumer.connect(sqs_resource, queue_name) #sqs_resource.create_queue(QueueName=queue_name)
 
         # Send a test message
-        sqs_client = self.s3_utils.connect('sqs', self.config_dict['s3_region'])
+        sqs_client = self.s3_utils.connect('client', 'sqs' , self.config_dict['s3_region'])
         sqs_client.send_message(
             QueueUrl=queue.url,
             MessageBody= self.message
@@ -156,8 +156,8 @@ class SqsConsumerTest(unittest.TestCase):
     @mock_sqs
     def test_write_message_valid(self):
         "Test the write_message method with a valid message"
-        sqs_client = self.s3_utils.connect('sqs', self.config_dict['s3_region'])
-        sqs = self.s3_utils.connect_to_resource('sqs', self.config_dict['s3_region'])
+        sqs_client = self.s3_utils.connect('client', 'sqs' , self.config_dict['s3_region'])
+        sqs = self.s3_utils.connect('resource', 'sqs', self.config_dict['s3_region'])
         queue = sqs.create_queue(QueueName='test-skype-sender')
         self.sqs_consumer.sqs_url = queue.url
         skype_message = 'Testing with a valid message'

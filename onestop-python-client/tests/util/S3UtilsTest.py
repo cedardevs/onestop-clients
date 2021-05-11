@@ -30,7 +30,7 @@ class S3UtilsTest(unittest.TestCase):
 
     @mock_s3
     def test_get_uuid_metadata(self):
-        boto_client = self.s3_utils.connect("s3_resource", None)
+        boto_client = self.s3_utils.connect('resource', 's3', None)
         s3_key = "csv/file1.csv"
 
         location = {'LocationConstraint': self.region}
@@ -42,7 +42,7 @@ class S3UtilsTest(unittest.TestCase):
 
     @mock_s3
     def test_add_uuid_metadata(self):
-        boto_client = self.s3_utils.connect("s3_resource", self.region)
+        boto_client = self.s3_utils.connect('resource', 's3', self.region)
 
         s3_key = "csv/file1.csv"
 
@@ -162,7 +162,7 @@ class S3UtilsTest(unittest.TestCase):
         days = 3
 
         # use high level api
-        s3 = self.s3_utils.connect('s3_resource', self.region2)
+        s3 = self.s3_utils.connect('resource', 's3' , self.region2)
         location = {'LocationConstraint': self.region2}
         s3.create_bucket(Bucket=self.bucket, CreateBucketConfiguration=location)
         s3.Object(self.bucket, key).put(Bucket=self.bucket, Key=key, Body="body")

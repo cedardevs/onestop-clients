@@ -120,12 +120,12 @@ class SqsHandlerTest(unittest.TestCase):
     @patch('onestop.WebPublisher')
     def test_delete_handler_happy(self, mock_wp, mock_response):
         queue_name = 'test_queue'
-        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.region)
+        sqs_resource = self.s3_utils.connect('resource', 'sqs', self.region)
         sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
         sqs_queue = sqs_resource.Queue(queue_name)
 
         # Send a test message
-        sqs_client = self.s3_utils.connect('sqs', self.region)
+        sqs_client = self.s3_utils.connect('client', 'sqs' , self.region)
         message = create_delete_message(self.region, self.bucket, self.key)
         sqs_client.send_message(
             QueueUrl=sqs_queue_url,
@@ -146,12 +146,12 @@ class SqsHandlerTest(unittest.TestCase):
     @patch('onestop.WebPublisher')
     def test_delete_handler_data_empty_ends_cb(self, mock_wp, mock_response):
         queue_name = 'test_queue'
-        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.region)
+        sqs_resource = self.s3_utils.connect('resource', 'sqs', self.region)
         sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
         sqs_queue = sqs_resource.Queue(queue_name)
 
         # Send a test message
-        sqs_client = self.s3_utils.connect('sqs', self.region)
+        sqs_client = self.s3_utils.connect('client', 'sqs' , self.region)
         message = create_delete_message(self.region, self.bucket, self.key)
         sqs_client.send_message(
             QueueUrl=sqs_queue_url,
@@ -172,12 +172,12 @@ class SqsHandlerTest(unittest.TestCase):
     @patch('onestop.WebPublisher')
     def test_delete_handler_no_records_ends_cb(self, mock_wp, mock_response):
         queue_name = 'test_queue'
-        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.region)
+        sqs_resource = self.s3_utils.connect('resource', 'sqs', self.region)
         sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
         sqs_queue = sqs_resource.Queue(queue_name)
 
         # Send a test message
-        sqs_client = self.s3_utils.connect('sqs', self.region)
+        sqs_client = self.s3_utils.connect('client', 'sqs' , self.region)
         sqs_client.send_message(
             QueueUrl=sqs_queue_url,
             MessageBody=json.dumps({"Message":'''{"Records":[]}'''})
@@ -197,12 +197,12 @@ class SqsHandlerTest(unittest.TestCase):
     @patch('onestop.WebPublisher')
     def test_delete_handler_eventName_not_delete_ends_cb(self, mock_wp, mock_response):
         queue_name = 'test_queue'
-        sqs_resource = self.s3_utils.connect_to_resource('sqs', self.region)
+        sqs_resource = self.s3_utils.connect('resource', 'sqs', self.region)
         sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
         sqs_queue = sqs_resource.Queue(queue_name)
 
         # Send a test message
-        sqs_client = self.s3_utils.connect('sqs', self.region)
+        sqs_client = self.s3_utils.connect('client', 'sqs' , self.region)
         sqs_client.send_message(
             QueueUrl=sqs_queue_url,
             MessageBody=json.dumps({"Message":'''{"Records":[{"eventName":"Unknown"}]}'''})
