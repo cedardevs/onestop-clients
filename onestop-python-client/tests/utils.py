@@ -15,7 +15,8 @@ def create_delete_message(region, bucket, key):
         "Message": '''{
                 "Records": [{
                     "eventVersion": "2.1", "eventSource": "aws:s3", "awsRegion": "''' + region + '''",
-                    "eventTime": "2020-12-14T20:56:08.725Z", "eventName": "ObjectRemoved:Delete",
+                    "eventTime": "2020-12-14T20:56:08.725Z", 
+                    "eventName": "ObjectRemoved:Delete",
                     "userIdentity": {"principalId": "AX8TWPQYA8JEM"},
                     "requestParameters": {"sourceIPAddress": "65.113.158.185"},
                     "responseElements": {"x-amz-request-id": "D8059E6A1D53597A",
