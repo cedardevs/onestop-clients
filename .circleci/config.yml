@@ -111,11 +111,12 @@ jobs:
           command: >
             cd onestop-python-client/;
             python -m unittest discover -s test/unit
-      - run:
-          name: "Run integration tests"
-          command: >
-            cd onestop-python-client/;
-            python -m unittest discover -s test/integration
+#          This is commented out only because the OneStop we have running on cedardevs doesn't have its registry exposed. You can only reach it via sshing to another machine.
+#      - run:
+#          name: "Run integration tests"
+#          command: >
+#            cd onestop-python-client/;
+#            python -m unittest discover -s test/integration
 
 orbs:
   slack: circleci/slack@3.4.2
