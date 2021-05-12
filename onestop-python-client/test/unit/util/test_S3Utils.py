@@ -1,11 +1,16 @@
 import csv
 import unittest
 import uuid
+import json
 
+from unittest import mock
 from moto import mock_s3, mock_sqs
 from moto import mock_glacier
 from test.utils import abspath_from_relative
 from onestop.util.S3Utils import S3Utils
+from boto.glacier.layer1 import Layer1
+from botocore.response import StreamingBody
+from io import StringIO
 
 class S3UtilsTest(unittest.TestCase):
 
@@ -203,26 +208,39 @@ class S3UtilsTest(unittest.TestCase):
         vault_name = 'archive-vault-new'
         glacier.create_vault(vaultName=vault_name)
 
-
         response = self.s3_utils.retrieve_inventory(glacier, vault_name)
-        self.assertTrue(response['jobId']!= None)
+        print('jobid %s'%response['jobId'])
+        self.assertTrue(response['jobId'] != None)
 
-    '''
-    Excluding for now because it's an asynchronous test
-    def test_retrieve_inventory_results(self, jobid):
+    @mock_glacier
+    @mock_s3
+    def test_retrieve_inventory_results(self):
         """
         Once the job has been completed, use the job id to retrieve archive results
         """
 
         # Connect to your glacier vault for retrieval
-        glacier = self.su.connect('client', 'glacier', self.su.conf['region'])
-        vault_name = self.su.conf['vault_name']
+        glacier = mock.Mock(spec=Layer1)#self.s3_utils.connect('client', 'glacier', self.region)
+        vault_name = 'archive-vault-new'
+        glacier.create_vault(vaultName=vault_name)
 
-        # Retrieve the job results
-        inventory = self.su.retrieve_inventory_results(vault_name, glacier, jobid)
+        body_json = {'Body': [{'test':'value'}]}
+        body_encoded = json.dumps(body_json)#.encode("utf-16")
 
-        self.assertTrue(inventory != None)
-    '''
+        body = StreamingBody(
+            StringIO(str(body_encoded)),
+            len(str(body_encoded))
+        )
+
+        mocked_response = {
+            'body': body
+        }
+        glacier.get_job_output.return_value = mocked_response
+        with mock.patch('boto.glacier.job.tree_hash_from_str') as t:
+            t.return_value = 'tree_hash'
+            inventory = self.s3_utils.retrieve_inventory_results(vault_name, glacier, 'ASDF78')
+
+        self.assertEqual(body_json, inventory)
 
     @mock_s3
     def test_extra_parameters_constructor(self):

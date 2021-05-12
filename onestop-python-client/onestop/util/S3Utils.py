@@ -390,7 +390,6 @@ class S3Utils:
         # returns status of object retrieval
         return obj.restore
 
-
     def retrieve_inventory(self, boto_client, vault_name):
         """
         Initiate an Amazon Glacier inventory-retrieval job
