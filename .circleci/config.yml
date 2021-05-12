@@ -106,12 +106,16 @@ jobs:
       - python/install-packages:
           app-dir: ./onestop-python-client
           pkg-manager: pip
+      # This is to update boto
+      - run: pip -V
+      - run: pip list boto3
+      - run: pip install --upgrade --user boto3
+      - run: pip3 install boto
       - run:
           name: "Run unit tests"
           command: >
             cd onestop-python-client/;
             python -m unittest discover -s test/unit
-
       - run:
           name: "Run integration tests"
           command: >
