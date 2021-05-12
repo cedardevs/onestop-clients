@@ -97,13 +97,15 @@ class S3Utils:
             return boto3.Session(
                 aws_access_key_id=self.access_key,
                 aws_secret_access_key=self.secret_key,
+                region_name=region
             )
         elif type == 'client':
             return boto3.client(
                 service_name,
                 aws_access_key_id=self.access_key,
                 aws_secret_access_key=self.secret_key,
-                region_name=region)
+                region_name=region
+            )
         elif type == 'resource':
             return boto3.resource(
                 service_name,

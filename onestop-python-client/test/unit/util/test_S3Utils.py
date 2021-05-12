@@ -35,7 +35,7 @@ class S3UtilsTest(unittest.TestCase):
 
     @mock_sqs
     def test_connect_session(self):
-        session = self.s3_utils.connect('Session', None, None)
+        session = self.s3_utils.connect('Session', None, self.region)
 
         # No exception is called for unique method call
         session.client('sqs')
@@ -92,7 +92,7 @@ class S3UtilsTest(unittest.TestCase):
 
     @mock_s3
     def test_get_csv_s3(self):
-        boto_session = self.s3_utils.connect('session', None, None)
+        boto_session = self.s3_utils.connect('session', None, self.region)
         s3 = self.s3_utils.connect('client', 's3', self.region)
         location = {'LocationConstraint': self.region}
         s3_key = "csv/file1.csv"

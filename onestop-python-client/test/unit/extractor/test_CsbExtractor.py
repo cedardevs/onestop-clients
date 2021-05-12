@@ -45,7 +45,7 @@ class CsbExtractorTest(unittest.TestCase):
         self.assertTrue(self.s3_utils.read_bytes_s3(s3, self.bucket, self.key))
 
         # This is how we would expect an external user to get the file.
-        sm_open_file = self.s3_utils.get_csv_s3(self.s3_utils.connect('session', None, None), self.bucket, self.key)
+        sm_open_file = self.s3_utils.get_csv_s3(self.s3_utils.connect('session', None, self.region), self.bucket, self.key)
 
         bounds_dict = CsbExtractor.get_spatial_temporal_bounds(sm_open_file, 'LON', 'LAT', 'TIME')
         coords = bounds_dict["geospatial"]
