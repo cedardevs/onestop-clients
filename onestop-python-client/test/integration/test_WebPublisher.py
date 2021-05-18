@@ -76,7 +76,8 @@ class WebPublisherTest(unittest.TestCase):
             access_key = os.environ.get("ACCESS_KEY")
             access_secret = os.environ.get("SECRET_KEY")
             if registry_username == None:
-                raise Exception("REGISTRY_USERNAME not defined as env variable. Credentials file at '%s' doesn't exist." % cred_loc)
+                msg = "REGISTRY_USERNAME not defined as env variable. Credentials file at '" + cred_loc + "' doesn't exist."
+                raise Exception(msg)
 
         with open(conf_loc) as f:
             conf = yaml.load(f, Loader=yaml.FullLoader)
