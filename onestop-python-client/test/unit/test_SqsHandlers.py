@@ -10,6 +10,7 @@ from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.SqsHandlers import create_delete_handler
+from onestop.util.SqsHandlers import create_upload_handler
 
 class test_SqsHandler(unittest.TestCase):
 
@@ -32,7 +33,7 @@ class test_SqsHandler(unittest.TestCase):
 
         self.wp = WebPublisher(**self.config_dict)
         self.s3_utils = S3Utils(**self.config_dict)
-        self.s3ma = S3MessageAdapter(**self.config_dict)
+        self.s3_message_adapter = S3MessageAdapter(**self.config_dict)
         self.sqs_consumer = SqsConsumer(**self.config_dict)
 
         self.sqs_max_polls = 3
@@ -214,6 +215,114 @@ class test_SqsHandler(unittest.TestCase):
         # Verify search and delete called once.
         mock_wp.search_onestop.assert_not_called()
         mock_wp.delete_registry.assert_not_called()
+
+    @mock_sqs
+    @patch('onestop.WebPublisher')
+    @patch('onestop.util.S3Utils')
+    @patch('onestop.util.S3MessageAdapter')
+    def test_upload_handler_happy(self, mock_s3_utils, mock_s3_msg_adapter, mock_wp):
+        bucket = self.bucket
+        key = self.key
+        queue_name = 'test_queue'
+        sqs_resource = self.s3_utils.connect('resource', 'sqs', self.region)
+        sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
+        sqs_queue = sqs_resource.Queue(queue_name)
+
+        # Send a test message
+        sqs_client = self.s3_utils.connect('client', 'sqs' , self.region)
+        message = create_delete_message(self.region, bucket, key)
+        sqs_client.send_message(
+            QueueUrl=sqs_queue_url,
+            MessageBody=json.dumps(message)
+        )
+
+        records = json.loads(message['Message'])['Records']
+        records_transformed = mock_s3_msg_adapter.transform(records)
+        cb = create_upload_handler(mock_wp, mock_s3_utils, mock_s3_msg_adapter)
+        self.sqs_consumer.receive_messages(sqs_queue, 1, cb)
+
+        # Verify get uuid called
+        mock_s3_utils.get_uuid_metadata.assert_called_with(
+            mock_s3_utils.connect('s3_resource', None),
+            bucket,
+            key)
+        # Verify uuid not added
+        mock_s3_utils.add_uuid_metadata.assert_not_called()
+        # Verify transform called
+        mock_s3_msg_adapter.transform.assert_called_with(records)
+        # Verify publish called
+        mock_wp.publish_registry.assert_called_with(
+            'granule',
+            mock_s3_utils.get_uuid_metadata(mock_s3_utils.connect('s3_resource', None), bucket, key),
+            records_transformed.serialize(),
+            'POST'
+        )
+
+    @mock_sqs
+    @patch('onestop.WebPublisher')
+    @patch('onestop.util.S3Utils')
+    @patch('onestop.util.S3MessageAdapter')
+    def test_upload_handler_adds_uuid(self, mock_s3_utils, mock_s3_msg_adapter, mock_wp):
+        bucket = self.bucket
+        key = self.key
+        queue_name = 'test_queue'
+        sqs_resource = self.s3_utils.connect('resource', 'sqs', self.region)
+        sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
+        sqs_queue = sqs_resource.Queue(queue_name)
+
+        # Send a test message
+        sqs_client = self.s3_utils.connect('client', 'sqs' , self.region)
+        message = create_delete_message(self.region, bucket, key)
+        sqs_client.send_message(
+            QueueUrl=sqs_queue_url,
+            MessageBody=json.dumps(message)
+        )
+
+        mock_s3_utils.get_uuid_metadata.return_value = None
+        cb = create_upload_handler(mock_wp, mock_s3_utils, mock_s3_msg_adapter)
+
+        self.sqs_consumer.receive_messages(sqs_queue, 1, cb)
+
+        # Verify add uuid called
+        mock_s3_utils.add_uuid_metadata.assert_called_with(
+            mock_s3_utils.connect('s3_resource', None),
+            bucket,
+            key)
+
+    @mock_sqs
+    @patch('onestop.WebPublisher')
+    @patch('onestop.util.S3Utils')
+    @patch('onestop.util.S3MessageAdapter')
+    def test_upload_handler_bucket_as_backup_PATCH(self, mock_s3_utils, mock_s3_msg_adapter, mock_wp):
+        bucket = "testing_backup_bucket"
+        key = self.key
+        queue_name = 'test_queue'
+        sqs_resource = self.s3_utils.connect('resource', 'sqs', self.region)
+        sqs_queue_url = sqs_resource.create_queue(QueueName=queue_name).url
+        sqs_queue = sqs_resource.Queue(queue_name)
+
+        # Send a test message
+        sqs_client = self.s3_utils.connect('client', 'sqs' , self.region)
+        message = create_delete_message(self.region, bucket, key)
+        sqs_client.send_message(
+            QueueUrl=sqs_queue_url,
+            MessageBody=json.dumps(message)
+        )
+
+        mock_s3_utils.get_uuid_metadata.return_value = None
+        records = json.loads(message['Message'])['Records']
+        records_transformed = mock_s3_msg_adapter.transform(records)
+        cb = create_upload_handler(mock_wp, mock_s3_utils, mock_s3_msg_adapter)
+
+        self.sqs_consumer.receive_messages(sqs_queue, 1, cb)
+
+        # Verify publish called
+        mock_wp.publish_registry.assert_called_with(
+            'granule',
+            mock_s3_utils.get_uuid_metadata(mock_s3_utils.connect('s3_resource', None), bucket, key),
+            records_transformed.serialize(),
+            'PATCH'
+        )
 
 if __name__ == '__main__':
     unittest.main()
