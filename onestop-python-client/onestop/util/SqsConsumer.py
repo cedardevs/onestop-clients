@@ -98,15 +98,12 @@ class SqsConsumer:
                     else:
                         self.logger.info("s3 event message without 'Records' content received.")
 
-                    sqs_message.delete()
-
-                    self.logger.info("The SQS message has been deleted.")
-
                     dt_end = datetime.now(tz=timezone.utc)
                     processing_time = dt_end - dt_start
+                    self.logger.info("Completed processing the message in %s seconds."%(processing_time.microseconds / 1000000))
 
-                    self.logger.info("Completed processing message (s):" + str(processing_time.microseconds * 1000))
-
+                    sqs_message.delete()
+                    self.logger.info("The SQS message has been deleted.")
                 except:
                     self.logger.exception(
                         "An exception was thrown while processing a message, but this program will continue. The "
