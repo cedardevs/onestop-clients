@@ -55,6 +55,11 @@ class S3UtilsTest(unittest.TestCase):
         # No exception is called for unique method call
         resource.Queue(url='test')
 
+    @mock_sqs
+    def test_connect_exception_for_invalid_connection_type(self):
+        with self.assertRaises(Exception):
+            self.s3_utils.connect('junk', 'sqs', self.region)
+
     @mock_s3
     def test_get_uuid_metadata(self):
         boto_client = self.s3_utils.connect('resource', 's3', None)

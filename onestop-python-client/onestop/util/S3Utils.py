@@ -114,7 +114,7 @@ class S3Utils:
                 aws_secret_access_key=self.secret_key
             )
         else:
-            raise Exception('Unknown boto3 type of %s'%type)
+            raise Exception('Unknown boto3 type of "%s"'%(type))
 
     def objectkey_exists(self, bucket, s3_key):
         """
