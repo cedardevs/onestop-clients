@@ -1,6 +1,8 @@
 import argparse
 import json
 import os
+import yaml
+
 from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
@@ -55,8 +57,8 @@ def handler(recs):
 
     # Upload to archive
     file_data = s3_utils.read_bytes_s3(s3_client, bucket, s3_key)
-    glacier = s3_utils.connect("glacier", s3_utils.conf['s3_region'])
-    vault_name = s3_utils.conf['vault_name']
+    glacier = s3_utils.connect("glacier", cloud_conf['s3_region'])
+    vault_name = cloud_conf['vault_name']
 
 
     resp_dict = s3_utils.upload_archive(glacier, vault_name, file_data)
@@ -106,9 +108,9 @@ if __name__ == '__main__':
 
     # High-level api
     s3_resource = s3_utils.connect("s3_resource", None)
-    bucket = s3_utils.conf['s3_bucket']
+    bucket = cloud_conf['s3_bucket']
     overwrite = True
-    sqs_max_polls = s3_utils.conf['sqs_max_polls']
+    sqs_max_polls = cloud_conf['sqs_max_polls']
     # Add 3 files to bucket
     local_files = ["file1.csv", "file4.csv"]
     s3_file = None
@@ -141,18 +143,35 @@ if __name__ == '__main__':
     # Get configuration file path locations
     conf_loc = args.pop('conf')
     cred_loc = args.pop('cred')
+    stream_conf_loc = args.pop('cred')
 
-    # Upload a test file to s3 bucket
-    s3_utils = S3Utils(conf_loc, cred_loc)
+    with open(os.path.abspath(os.path.join(os.path.dirname(__file__), cred_loc))) as f:
+        cred = yaml.load(f, Loader=yaml.FullLoader)
+    with open(os.path.abspath(os.path.join(os.path.dirname(__file__), conf_loc))) as f:
+        cloud_conf = yaml.load(f, Loader=yaml.FullLoader)
+    with open(os.path.abspath(os.path.join(os.path.dirname(__file__), stream_conf_loc))) as f:
+        stream_conf = yaml.load(f, Loader=yaml.FullLoader)
+
+    s3_utils = S3Utils(cred['sandbox']['access_key'],
+                       cred['sandbox']['secret_key'],
+                       "DEBUG")
+
+    bucket = cloud_conf['s3_bucket']
+    sqs_max_polls = cloud_conf['sqs_max_polls']
+
+    #Source
+    access_bucket = stream_conf['access_bucket']
+
+    #Onestop related
+    file_id_prefix = stream_conf['file_identifier_prefix']
+    file_format = stream_conf['format']
+    headers = stream_conf['headers']
+    type = stream_conf['type']
 
     # Low-level api ? Can we just use high level revisit me!
     s3_client = s3_utils.connect("s3", None)
 
-    bucket = s3_utils.conf['s3_bucket']
-
-    sqs_max_polls = s3_utils.conf['sqs_max_polls']
-
-    # Add 3 files to bucket
+    # Upload test files to s3 bucket
     local_files = ["file1.csv", "file4.csv"]
     s3_file = None
     for file in local_files:
@@ -162,9 +181,11 @@ if __name__ == '__main__':
         if not s3_utils.upload_s3(s3_client, local_file, bucket, s3_file, True):
             exit("Error setting up for e2e: The test files were not uploaded to the s3 bucket therefore the tests cannot continue.")
 
+
+
     # Receive s3 message and MVM from SQS queue
     sqs_consumer = SqsConsumer(conf_loc, cred_loc)
-    s3ma = S3MessageAdapter("config/csb-data-stream-config.yml", s3_utils)
+    s3ma = S3MessageAdapter(access_bucket, headers, type, file_id_prefix, "DEBUG")
     wp = WebPublisher("config/web-publisher-config-dev.yml", cred_loc)
 
     queue = sqs_consumer.connect()

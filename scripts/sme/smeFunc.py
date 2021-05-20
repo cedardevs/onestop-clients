@@ -27,7 +27,7 @@ def handler(key,value):
 if __name__ == '__main__':
 
     kafka_consumer = KafkaConsumer("scripts/config/kafka-publisher-config-dev.yml")
-    kafka_consumer.granule_topic = 'psi-granule-parsed'
+    kafka_consumer.granule_topic_consume = 'psi-granule-parsed'
     metadata_consumer = kafka_consumer.connect()
     kafka_consumer.consume(metadata_consumer, lambda k, v: handler(k, v))
     """

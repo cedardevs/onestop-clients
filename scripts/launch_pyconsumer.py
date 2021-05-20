@@ -1,4 +1,6 @@
 import os
+import yaml
+
 from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
@@ -49,6 +51,10 @@ def handler(recs):
 if __name__ == '__main__':
     conf_loc = "/etc/config/config.yml"
     cred_loc = "creds.yml"
+    with open(os.path.abspath(os.path.join(os.path.dirname(__file__), "creds.yml"))) as f:
+        cred = yaml.load(f, Loader=yaml.FullLoader)
+    with open(os.path.abspath(os.path.join(os.path.dirname(__file__), "/etc/config/config.yml"))) as f:
+        conf = yaml.load(f, Loader=yaml.FullLoader)
 
     registry_user = os.environ.get("REGISTRY_USERNAME")
     registry_pwd = os.environ.get("REGISTRY_PASSWORD")
@@ -71,8 +77,10 @@ registry:
     r = open(cred_loc, "r")
 
     # # Receive s3 message and MVM from SQS queue
-    s3_utils = S3Utils(conf_loc, cred_loc)
-    sqs_max_polls = s3_utils.conf['sqs_max_polls']
+    s3_utils = S3Utils(cred['sandbox']['access_key'],
+                       cred['sandbox']['secret_key'],
+                       "DEBUG")
+    sqs_max_polls = conf['sqs_max_polls']
     sqs_consumer = SqsConsumer(conf_loc, cred_loc)
     queue = sqs_consumer.connect()
 
