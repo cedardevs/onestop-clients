@@ -15,6 +15,7 @@ config: |-
 
   # AWS config values
   sqs_url: https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs
+  sqs_name: 'test-queue'
   sqs_max_polls: 100
   s3_region: us-east-2
   s3_bucket: archive-testing-demo
