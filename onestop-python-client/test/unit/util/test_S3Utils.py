@@ -85,15 +85,24 @@ class S3UtilsTest(unittest.TestCase):
         self.assertTrue(self.s3_utils.add_uuid_metadata(boto_client, self.bucket, s3_key))
 
     @mock_s3
-    def test_add_file_s3(self):
+    def test_add_file_s3_overwrite(self):
         boto_client = self.s3_utils.connect('client', 's3', None)
         local_file = abspath_from_relative(__file__, "../../data/file4.csv")
         s3_key = "csv/file4.csv"
         location = {'LocationConstraint': self.region}
         boto_client.create_bucket(Bucket=self.bucket, CreateBucketConfiguration=location)
-        overwrite = True
 
-        self.assertTrue(self.s3_utils.upload_s3(boto_client, local_file, self.bucket, s3_key, overwrite))
+        self.assertTrue(self.s3_utils.upload_s3(boto_client, local_file, self.bucket, s3_key, True))
+
+    @mock_s3
+    def test_add_file_s3_nooverwrite(self):
+        boto_client = self.s3_utils.connect('client', 's3', None)
+        local_file = abspath_from_relative(__file__, "../../data/file4.csv")
+        s3_key = "csv/file4.csv"
+        location = {'LocationConstraint': self.region}
+        boto_client.create_bucket(Bucket=self.bucket, CreateBucketConfiguration=location)
+
+        self.assertTrue(self.s3_utils.upload_s3(boto_client, local_file, self.bucket, s3_key, False))
 
     @mock_s3
     def test_get_csv_s3(self):
@@ -126,12 +135,11 @@ class S3UtilsTest(unittest.TestCase):
         local_files = ["file1_s3.csv", "file2.csv", "file3.csv"]
         location = {'LocationConstraint': self.region}
         boto_client.create_bucket(Bucket=self.bucket, CreateBucketConfiguration=location)
-        overwrite = True
 
         for file in local_files:
             local_file = abspath_from_relative(__file__, "../../data/" + file)
             s3_file = "csv/" + file
-            self.assertTrue(self.s3_utils.upload_s3(boto_client, local_file, self.bucket, s3_file, overwrite))
+            self.assertTrue(self.s3_utils.upload_s3(boto_client, local_file, self.bucket, s3_file, True))
 
     @mock_s3
     @mock_glacier
