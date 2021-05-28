@@ -122,7 +122,7 @@ jobs:
       - slack/status:
           fail_only: false
 
-  python-client-test: &python-client-test
+  onestop-python-client-test: &python-client-test
     executor: python/default
     steps: &steps
       - checkout
@@ -153,6 +153,8 @@ workflows:
     jobs:
 #      - cli-test
 #      - cli-build
-       - python-client-build
-       - python-client-test
+       - onestop-sme-build
+       - onestop-s3-handler-build
+       - onestop-python-client-build
+       - onestop-python-client-test
 
