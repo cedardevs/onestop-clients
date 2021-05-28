@@ -55,7 +55,6 @@ jobs:
 #      - slack/status:
 #          fail_only: false
 
-# cli build
   cli-build:
     executor: docker/docker
     steps:
@@ -75,8 +74,7 @@ jobs:
       - slack/status:
           fail_only: false
 
-# clients build
-  client-build:
+  python-client-build:
     executor: docker/docker
     steps:
       - setup_remote_docker
@@ -89,14 +87,11 @@ jobs:
       - run:
           name: "What branch am I on now?"
           command: echo $CIRCLE_BRANCH
-#no need to push this image yet
       - docker/push:
           image: cedardevs/onestop-python-client
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
       - slack/status:
           fail_only: false
-  # Base test configuration for Go library tests Each distinct version should
-  # inherit this base, and override (at least) the container image used.
 
   python-client-test: &python-client-test
     executor: python/default
@@ -127,9 +122,8 @@ version: 2.1
 workflows:
   main:
     jobs:
-#      - "latest"
 #      - cli-test
 #      - cli-build
-#      - client-build
+       - python-client-build
        - python-client-test
 
