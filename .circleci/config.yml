@@ -74,7 +74,39 @@ jobs:
       - slack/status:
           fail_only: false
 
-  python-client-build:
+  onestop-s3-handler-build:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/check
+      - docker/build:
+          path: scripts/sqs-to-registry
+          image: cedardevs/onestop-s3-handler
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+      - docker/push:
+          image: cedardevs/onestop-s3-handler
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+      - slack/status:
+          fail_only: false
+
+  onestop-sme-build:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/check
+      - docker/build:
+          path: onestop-python-client
+          image: cedardevs/onestop-sme
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+      - docker/push:
+          image: cedardevs/onestop-sme
+          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+      - slack/status:
+          fail_only: false
+
+  onestop-python-client-build:
     executor: docker/docker
     steps:
       - setup_remote_docker
@@ -84,9 +116,6 @@ jobs:
           path: onestop-python-client
           image: cedardevs/onestop-python-client
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
-      - run:
-          name: "What branch am I on now?"
-          command: echo $CIRCLE_BRANCH
       - docker/push:
           image: cedardevs/onestop-python-client
           tag: ${CIRCLE_BRANCH}-SNAPSHOT
