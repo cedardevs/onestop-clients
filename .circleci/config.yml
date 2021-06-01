@@ -83,10 +83,10 @@ jobs:
       - docker/build:
           path: scripts/sqs-to-registry
           image: cedardevs/onestop-s3-handler
-          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+          tag: latest
       - docker/push:
           image: cedardevs/onestop-s3-handler
-          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+          tag: latest
       - slack/status:
           fail_only: false
 
@@ -99,10 +99,10 @@ jobs:
       - docker/build:
           path: onestop-python-client
           image: cedardevs/onestop-sme
-          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+          tag: latest
       - docker/push:
           image: cedardevs/onestop-sme
-          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+          tag: latest
       - slack/status:
           fail_only: false
 
@@ -115,10 +115,10 @@ jobs:
       - docker/build:
           path: onestop-python-client
           image: cedardevs/onestop-python-client
-          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+          tag: latest
       - docker/push:
           image: cedardevs/onestop-python-client
-          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+          tag: latest
       - slack/status:
           fail_only: false
 
