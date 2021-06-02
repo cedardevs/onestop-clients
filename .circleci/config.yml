@@ -97,7 +97,7 @@ jobs:
       - checkout
       - docker/check
       - docker/build:
-          path: onestop-python-client
+          path: scripts/sme/
           image: cedardevs/onestop-sme
           tag: latest
       - docker/push:
