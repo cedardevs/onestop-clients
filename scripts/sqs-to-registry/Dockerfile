@@ -1,3 +1,4 @@
+# Expect this to copy the scripts directory over and install onestop-python-client.
 FROM cedardevs/onestop-python-client:latest
 
 #required by the sme script, not our library
