@@ -113,7 +113,7 @@ jobs:
       - checkout
       - docker/check
       - docker/build:
-          path: onestop-python-client
+          path: ./
           image: cedardevs/onestop-python-client
           tag: latest
       - docker/push:
