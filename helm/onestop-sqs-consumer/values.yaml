@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: cedardevs/onestop-sme
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 imagePullSecrets: []
 nameOverride: ""

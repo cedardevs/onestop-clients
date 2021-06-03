@@ -1,7 +1,7 @@
 image:
   repository: cedardevs/onestop-e2e-demo
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 secret:
   registry_username: <value>
