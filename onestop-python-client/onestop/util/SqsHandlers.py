@@ -24,6 +24,8 @@ def create_delete_handler(web_publisher):
             logger.info("Ending handler, eventName=%s"%record['eventName'])
             return
 
+        logger.info('Attempting to delete record %s'%record)
+
         bucket = record['s3']['bucket']['name']
         s3_key = record['s3']['object']['key']
         s3_url = "s3://" + bucket + "/" + s3_key
