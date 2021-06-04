@@ -79,7 +79,7 @@ class KafkaConsumer:
                     What log level to use for this class
         """
 
-        self.metadata_type = metadata_type
+        self.metadata_type = metadata_type.upper()
         self.brokers = brokers
         self.group_id = group_id
         self.auto_offset_reset = auto_offset_reset
@@ -95,7 +95,7 @@ class KafkaConsumer:
         self.granule_topic = granule_topic_consume
 
         if self.metadata_type not in ['COLLECTION', 'GRANULE']:
-            raise ValueError("metadata_type must be 'COLLECTION' or 'GRANULE'")
+            raise ValueError("metadata_type of '%s' must be 'COLLECTION' or 'GRANULE'"%(self.metadata_type))
 
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
@@ -153,7 +153,8 @@ class KafkaConsumer:
 
         metadata_schema = latest_schema.schema.schema_str
         self.logger.debug("metadata_schema: "+metadata_schema)
-        metadata_deserializer = AvroDeserializer(metadata_schema, registry_client)
+
+        metadata_deserializer = AvroDeserializer(schema_str=metadata_schema, schema_registry_client=registry_client)
         conf = {
             'bootstrap.servers': self.brokers,
             'key.deserializer': StringDeserializer('utf-8'),
@@ -199,12 +200,7 @@ class KafkaConsumer:
                 key = msg.key()
                 value = msg.value()
 
-            except KafkaError:
-                raise
-            try:
                 handler(key, value)
-            except Exception as e:
-                self.logger.error("Message handler failed: {}".format(e))
-                break
-        self.logger.debug("Closing metadata_consumer")
-        metadata_consumer.close()
+            finally:
+                self.logger.debug("Closing metadata_consumer")
+                metadata_consumer.close()
