@@ -274,13 +274,11 @@ class KafkaPublisher:
             'discovery': content_dict['discovery']
         }
 
-        try:
-            self.logger.debug('Publishing granule with topic='+self.granule_topic+' key='+key+' value='+str(value_dict))
-            granule_producer.produce(
-                topic=self.granule_topic,
-                value=value_dict,
-                key=key,
-                on_delivery=self.delivery_report)
-        except KafkaError:
-            raise
+        self.logger.debug('Publishing granule with topic='+self.granule_topic+' key='+key+' value='+str(value_dict))
+        granule_producer.produce(
+            topic=self.granule_topic,
+            value=value_dict,
+            key=key,
+            on_delivery=self.delivery_report)
+
         granule_producer.poll()
