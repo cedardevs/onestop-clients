@@ -14,16 +14,15 @@ config: |-
   log_level: INFO
 
   # AWS config values
-  sqs_url: https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs
-  sqs_name: 'test-queue'
-  sqs_max_polls: 100
+  sqs_name: cloud-archive-client-sqs
   s3_region: us-east-2
   s3_bucket: archive-testing-demo
+  sqs_max_polls: 100
 
   #AWS config values for 2nd vault in different region
   vault_name: archive-vault-new
   s3_region2: us-east-2
-  s3_bucket2: noaa-nccf-dev-archive
+  s3_bucket2: archive-testing-testing-test
 
   #CSB stream config
   format: csv
@@ -35,9 +34,29 @@ config: |-
   file_identifier_prefix: "gov.noaa.ncei.csb:"
 
   # COLLECTION or GRANULE
-  metadata_type: granule
+  metadata_type: GRANULE
   registry_base_url: http://onestop-registry:80
   onestop_base_url: http://onestop-search:8080
 
+  prefixMap:
+    NESDIS/CSB: 'fdb56230-87f4-49f2-ab83-104cfd073177'
+    NESDIS/H8: '0fad03df-0805-434a-86a6-7dc42d68480e'
+    NESDIS/GOES: '11111111-1111-1111-1111-111111111111'
+    NESDIS/SAB: '98e03b47-069a-4f2c-8071-649e8c4254d6'
+
+  # Kafka config values
+  brokers: onestop-dev-cp-kafka:9092
+  schema_registry: http://onestop-dev-cp-schema-registry:8081
+  collection_topic_publish: psi-granules-by-collection
+  granule_topic_publish: psi-granule-parsed
+  collection_topic_consume: psi-collection-input-unknown
+  granule_topic_consume: psi-granule-input-unknown
+  group_id: sme-test
+  auto_offset_reset: earliest
   security:
-    enabled: True
+    # True/False
+    enabled: False
+    # If security is enabled then need these:
+    caLoc: /etc/pki/tls/cert.pem
+    keyLoc: /etc/pki/tls/private/kafka-user.key
+    certLoc: /etc/pki/tls/certs/kafka-user.crt
