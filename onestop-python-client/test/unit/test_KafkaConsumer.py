@@ -126,7 +126,7 @@ class test_KafkaConsumer(unittest.TestCase):
         deser_consumer = consumer.create_consumer(reg_client)
 
         # Verify AvroDeserializer called with expected registry client
-        mock_avro_deserializer.assert_called_with(ANY, reg_client)
+        mock_avro_deserializer.assert_called_with(schema_str=ANY, schema_registry_client=reg_client)
 
         self.assertIsNotNone(deser_consumer)
 
