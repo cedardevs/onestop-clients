@@ -77,7 +77,7 @@ class KafkaPublisher:
             granule_topic: str
                 granule topic you want to produce to
         """
-        self.metadata_type = metadata_type
+        self.metadata_type = metadata_type.upper()
         self.brokers = brokers
         self.schema_registry = schema_registry
         self.security_enabled = security['enabled']
@@ -91,7 +91,7 @@ class KafkaPublisher:
         self.granule_topic = granule_topic_publish
 
         if self.metadata_type not in ['COLLECTION', 'GRANULE']:
-            raise ValueError("metadata_type must be 'COLLECTION' or 'GRANULE'")
+            raise ValueError("metadata_type of '%s' must be 'COLLECTION' or 'GRANULE'"%(self.metadata_type))
 
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
