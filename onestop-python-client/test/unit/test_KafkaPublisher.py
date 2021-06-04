@@ -123,7 +123,7 @@ class test_KafkaPublisher(unittest.TestCase):
         publisher.create_producer(reg_client)
 
         # Verify AvroSerializer called with expected registry client
-        mock_avro_serializer.assert_called_with(ANY, reg_client)
+        mock_avro_serializer.assert_called_with(schema_str=ANY, schema_registry_client=reg_client)
 
     @patch('onestop.KafkaPublisher.AvroSerializer')
     @patch('onestop.KafkaPublisher.SerializingProducer')
