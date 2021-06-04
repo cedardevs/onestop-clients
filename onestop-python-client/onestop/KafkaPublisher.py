@@ -146,7 +146,7 @@ class KafkaPublisher:
             topic = self.granule_topic
 
         metadata_schema = registry_client.get_latest_version(topic + '-value').schema.schema_str
-        metadata_serializer = AvroSerializer(metadata_schema, registry_client)
+        metadata_serializer = AvroSerializer(schema_str=metadata_schema, schema_registry_client=registry_client)
         conf = {'bootstrap.servers': self.brokers}
 
         if self.security_enabled:
