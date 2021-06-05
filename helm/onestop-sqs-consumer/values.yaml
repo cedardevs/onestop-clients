@@ -88,8 +88,8 @@ config: |-
     NESDIS/SAB: '98e03b47-069a-4f2c-8071-649e8c4254d6'
 
   # Kafka config values
-  brokers: onestop-dev-cp-kafka:9092
-  schema_registry: http://onestop-dev-cp-schema-registry:8081
+  brokers: cp-cp-kafka:9092
+  schema_registry: http://cp-cp-schema-registry:8081
   collection_topic_publish: psi-granules-by-collection
   granule_topic_publish: psi-granule-parsed
   collection_topic_consume: psi-collection-input-unknown
