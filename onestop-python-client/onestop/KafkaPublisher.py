@@ -214,15 +214,12 @@ class KafkaPublisher:
             'method': method,
             'source': 'unknown',
         }
-        try:
-            self.logger.debug('Publishing collection with topic='+self.collection_topic+' key='+key+' value='+str(value_dict))
-            collection_producer.produce(
-                topic=self.collection_topic,
-                value=value_dict,
-                key=key,
-                on_delivery=self.delivery_report)
-        except KafkaError:
-            raise
+        self.logger.debug('Publishing collection with topic='+self.collection_topic+' key='+key+' value='+str(value_dict))
+        collection_producer.produce(
+            topic=self.collection_topic,
+            value=value_dict,
+            key=key,
+            on_delivery=self.delivery_report)
         collection_producer.poll()
 
     def publish_granule(self, granule_producer, collection_uuid, content_dict):
