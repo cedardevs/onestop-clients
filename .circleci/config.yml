@@ -154,12 +154,12 @@ workflows:
 #      - cli-test
 #      - cli-build
        - onestop-python-client-test
-       - onestop-python-client-build
+       - onestop-python-client-build:
            requires:
              - onestop-python-client-test
-       - onestop-sme-build
+       - onestop-sme-build:
            requires:
              - onestop-python-client-build
-       - onestop-s3-handler-build
+       - onestop-s3-handler-build:
            requires:
              - onestop-python-client-build
