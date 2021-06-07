@@ -153,8 +153,8 @@ workflows:
     jobs:
 #      - cli-test
 #      - cli-build
-       - onestop-sme-build
-       - onestop-s3-handler-build
        - onestop-python-client-build
        - onestop-python-client-test
+       - onestop-sme-build
+       - onestop-s3-handler-build
 
