@@ -242,8 +242,9 @@ class test_SqsHandler(unittest.TestCase):
         self.sqs_consumer.receive_messages(sqs_queue, 1, cb)
 
         # Verify get uuid called
+        mock_s3_utils.connect.assert_called_with('resource', 's3', None)
         mock_s3_utils.get_uuid_metadata.assert_called_with(
-            mock_s3_utils.connect('s3_resource', None),
+            mock_s3_utils.connect(),
             bucket,
             key)
         # Verify uuid not added
@@ -285,7 +286,7 @@ class test_SqsHandler(unittest.TestCase):
 
         # Verify add uuid called
         mock_s3_utils.add_uuid_metadata.assert_called_with(
-            mock_s3_utils.connect('s3_resource', None),
+            mock_s3_utils.connect(),
             bucket,
             key)
 
@@ -319,7 +320,7 @@ class test_SqsHandler(unittest.TestCase):
         # Verify publish called
         mock_wp.publish_registry.assert_called_with(
             'granule',
-            mock_s3_utils.get_uuid_metadata(mock_s3_utils.connect('s3_resource', None), bucket, key),
+            mock_s3_utils.get_uuid_metadata(),
             records_transformed.serialize(),
             'PATCH'
         )

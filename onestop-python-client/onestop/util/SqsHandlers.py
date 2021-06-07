@@ -67,9 +67,9 @@ def create_upload_handler(web_publisher, s3_utils, s3_message_adapter):
         logger.info("Event type: " + rec['eventName'])
         bucket = rec['s3']['bucket']['name']
         logger.info("BUCKET: %s"%bucket)
-        s3_resource = s3_utils.connect("s3_resource", None)
 
         # Fetch the object to get the uuid
+        s3_resource = s3_utils.connect('resource', 's3', None)
         object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
         if object_uuid is not None:
             logger.info("Retrieved object-uuid: %s"%object_uuid)
