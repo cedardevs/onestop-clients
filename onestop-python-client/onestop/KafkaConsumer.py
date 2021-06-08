@@ -97,6 +97,7 @@ class KafkaConsumer:
         if self.metadata_type not in ['COLLECTION', 'GRANULE']:
             raise ValueError("metadata_type of '%s' must be 'COLLECTION' or 'GRANULE'"%(self.metadata_type))
 
+        self.log_level = log_level
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
@@ -196,11 +197,12 @@ class KafkaConsumer:
                     self.logger.info('No Messages')
                     continue
 
-                self.logger.debug("Message key="+str(msg.key())+" value="+str(msg.value()))
                 key = msg.key()
                 value = msg.value()
+                self.logger.debug('Message key=%s'%key)
+                self.logger.debug('Message value=%s'%value)
 
-                handler(key, value)
+                handler(key, value, self.log_level)
             finally:
                 self.logger.debug("Closing metadata_consumer")
                 metadata_consumer.close()
