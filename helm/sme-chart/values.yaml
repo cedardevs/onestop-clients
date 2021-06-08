@@ -35,8 +35,8 @@ config: |-
 
   # COLLECTION or GRANULE
   metadata_type: GRANULE
-  registry_base_url: http://onestop-registry:80
-  onestop_base_url: http://onestop-search:8080
+  registry_base_url: http://os-registry:80
+  onestop_base_url: http://os-search:8080
 
   prefixMap:
     NESDIS/CSB: 'fdb56230-87f4-49f2-ab83-104cfd073177'
