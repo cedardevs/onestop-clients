@@ -1,4 +1,7 @@
+import json
+
 from onestop.util.ClientLogger import ClientLogger
+from onestop.schemas.util.jsonEncoder import EnumEncoder
 
 def create_delete_handler(web_publisher):
     """
@@ -56,7 +59,7 @@ def create_upload_handler(web_publisher, s3_utils, s3_message_adapter):
     :param: s3ma: S3MessageAdapter object
 
     """
-    def upload(records, log_level='INFO'):
+    def upload(records, log_level='DEBUG'):
         logger = ClientLogger.get_logger('SqsHandlers.create_upload_handler.upload', log_level, False)
         logger.info("In create_upload_handler.upload() handler")
         logger.debug("Records: %s"%records)
@@ -80,17 +83,17 @@ def create_upload_handler(web_publisher, s3_utils, s3_message_adapter):
                 object_uuid = s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
         # Convert s3 message to IM message
-        json_payload = s3_message_adapter.transform(records)
+        im_message = s3_message_adapter.transform(records)
+        json_payload = json.dumps(im_message.to_dict(), cls=EnumEncoder)
         logger.debug('transformed message, json_payload: %s'%json_payload)
 
         # Send the message to registry
-        payload = json_payload.serialize()
         method = 'PATCH' # Backup location should be patched if not backup within bucket name
         if "backup" not in bucket:
             method = 'POST'
 
-        logger.debug('web_publisher.publish_registry method using "%s" with payload %s'%(method,payload))
-        registry_response = web_publisher.publish_registry("granule", object_uuid, payload, method)
+        logger.debug('web_publisher.publish_registry method using "%s" with payload %s'%(method,json_payload))
+        registry_response = web_publisher.publish_registry("granule", object_uuid, json_payload, method)
         logger.debug('web_publisher.publish_registry response=%s'%registry_response)
         logger.debug('web_publisher.publish_registry response json=%s'%registry_response.json())
 
