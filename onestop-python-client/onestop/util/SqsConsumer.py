@@ -80,31 +80,31 @@ class SqsConsumer:
             self.logger.debug("Messages: %s" % sqs_messages)
 
             for sqs_message in sqs_messages:
-                try:
-                    # Log start time
-                    dt_start = datetime.now(tz=timezone.utc)
-                    self.logger.info("Starting processing message")
-                    self.logger.debug("Message: %s" % sqs_message)
-                    self.logger.debug("Message body: %s" % sqs_message.body)
+                # Log start time
+                dt_start = datetime.now(tz=timezone.utc)
+                self.logger.info("Starting message processing")
+                self.logger.debug("Message: %s" % sqs_message)
+                self.logger.debug("Message body: %s" % sqs_message.body)
 
+                try:
                     message_body = json.loads(sqs_message.body)
                     self.logger.debug("Message body message: %s" % message_body['Message'])
                     message_content = json.loads(message_body['Message'])
-
-                    if 'Records' in message_content:
-                        recs = message_content['Records']
-                        self.logger.debug('Message "Records": %s' % recs)
-                        cb(recs, self.log_level)
-                    else:
-                        self.logger.info("s3 event message without 'Records' content received.")
-
-                    dt_end = datetime.now(tz=timezone.utc)
-                    processing_time = dt_end - dt_start
-                    self.logger.info("Completed processing the message in %s seconds."%(processing_time.microseconds / 1000000))
-
-                    sqs_message.delete()
-                    self.logger.info("The SQS message has been deleted.")
                 except:
                     self.logger.exception(
                         "An exception was thrown while processing a message, but this program will continue. The "
                         "message will not be deleted from the SQS queue. The message was: %s" % sqs_message)
+
+                if 'Records' in message_content:
+                    recs = message_content['Records']
+                    self.logger.debug('Message "Records": %s' % recs)
+                    cb(recs, self.log_level)
+                else:
+                    self.logger.info("s3 event message without 'Records' content received.")
+
+                dt_end = datetime.now(tz=timezone.utc)
+                processing_time = dt_end - dt_start
+                self.logger.info("Completed processing the message in %s seconds."%(processing_time.microseconds / 1000000))
+
+                sqs_message.delete()
+                self.logger.info("The SQS message has been deleted.")
