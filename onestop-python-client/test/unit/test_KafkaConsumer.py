@@ -281,7 +281,7 @@ class test_KafkaConsumer(unittest.TestCase):
 
         # Verify callback function was called once with expected message attributes
         mock_handler.assert_called_once()
-        mock_handler.assert_called_with(mock_message_key, mock_message_value)
+        mock_handler.assert_called_with(mock_message_key, mock_message_value, self.conf_w_security['log_level'])
 
 if __name__ == '__main__':
     unittest.main()
