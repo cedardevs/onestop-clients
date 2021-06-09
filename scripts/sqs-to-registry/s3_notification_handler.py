@@ -1,55 +1,87 @@
 import os
 import yaml
+import json
+
 from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.WebPublisher import WebPublisher
 from onestop.util.SqsHandlers import create_delete_handler
 from onestop.util.SqsHandlers import create_upload_handler
+from onestop.util.ClientLogger import ClientLogger
 
-from datetime import date
 import argparse
 
+config_dict = {}
 
-def handler(recs):
-    print("Handling message...")
+test_message = {
+    "Type": "Notification",
+    "MessageId": "e12f0129-0236-529c-aeed-5978d181e92a",
+    "TopicArn": "arn:aws:sns:" + config_dict['s3_region'] + ":798276211865:cloud-archive-client-sns",
+    "Subject": "Amazon S3 Notification",
+    "Message": '''{
+                "Records": [{
+                    "eventVersion": "2.1", "eventSource": "aws:s3", "awsRegion": "''' + config_dict['s3_region'] + '''",
+                    "eventTime": "2020-12-14T20:56:08.725Z", 
+                    "eventName": "ObjectRemoved:Delete",
+                    "userIdentity": {"principalId": "AX8TWPQYA8JEM"},
+                    "requestParameters": {"sourceIPAddress": "65.113.158.185"},
+                    "responseElements": {"x-amz-request-id": "D8059E6A1D53597A",
+                                         "x-amz-id-2": "7DZF7MAaHztZqVMKlsK45Ogrto0945RzXSkMnmArxNCZ+4/jmXeUn9JM1NWOMeKK093vW8g5Cj5KMutID+4R3W1Rx3XDZOio"},
+                    "s3": {
+                        "s3SchemaVersion": "1.0", "configurationId": "archive-testing-demo-event",
+                        "bucket": {"name": "''' + config_dict['s3_bucket'] + '''",
+                                   "ownerIdentity": {"principalId": "AX8TWPQYA8JEM"},
+                                   "arn": "arn:aws:s3:::''' + config_dict['s3_bucket'] + '''"},
+                        "object": {"key": "123", 
+                                   "sequencer": "005FD7D1765F04D8BE",
+                                   "eTag": "44d2452e8bc2c8013e9c673086fbab7a",
+                                   "size": 1385,
+                                   "versionId": "q6ls_7mhqUbfMsoYiQSiADnHBZQ3Fbzf"}
+                    }
+                }]
+            }''',
+    "Timestamp": "2020-12-14T20:56:23.786Z",
+    "SignatureVersion": "1",
+    "Signature": "MB5P0H5R5q3zOFoo05lpL4YuZ5TJy+f2c026wBWBsQ7mbNQiVxAy4VbbK0U1N3YQwOslq5ImVjMpf26t1+zY1hoHoALfvHY9wPtc8RNlYqmupCaZgtwEl3MYQz2pHIXbcma4rt2oh+vp/n+viARCToupyysEWTvw9a9k9AZRuHhTt8NKe4gpphG0s3/C1FdvrpQUvxoSGVizkaX93clU+hAFsB7V+yTlbKP+SNAqP/PaLtai6aPY9Lb8reO2ZjucOl7EgF5IhBVT43HhjBBj4JqYBNbMPcId5vMfBX8qI8ANIVlGGCIjGo1fpU0ROxSHsltuRjkmErpxUEe3YJJM3Q==",
+    "SigningCertURL": "https://sns.us-east-2.amazonaws.com/SimpleNotificationService-010a507c1833636cd94bdb98bd93083a.pem",
+    "UnsubscribeURL": "https://sns.us-east-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-2:798276211865:cloud-archive-client-sns:461222e7-0abf-40c6-acf7-4825cef65cce"
+}
 
-    # Now get boto client for object-uuid retrieval
-    object_uuid = None
+def handler(recs, log_level):
+    logger = ClientLogger.get_logger('s3_notification_handler.handler', log_level, False)
+    logger.info('In Handler')
 
     if recs is None:
-        print("No records retrieved" + date.today())
-    else:
-        rec = recs[0]
-        print(rec)
-        if 'ObjectRemoved' in rec['eventName']:
-            print("SME - calling delete handler")
-            print(rec['eventName'])
-            delete_handler(recs)
-        else:
-            print("SME - calling upload handler")
-            upload_handler(recs)
-            #copy_handler(recs)
+        logger.info('No records retrieved, doing nothing.')
+        return
 
+    rec = recs[0]
+    logger.info('Record:%s'%rec)
+
+    if 'ObjectRemoved' in rec['eventName']:
+        delete_handler(recs)
+    else:
+        upload_handler(recs)
 
 if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser(description="Launch SQS to Registry consumer")
-    parser.add_argument('-conf', dest="conf", required=False,
-                        help="Config filepath")
-
-    parser.add_argument('-cred', dest="cred", required=False,
+    # Example command: python3 archive_client_integration.py -conf /Users/whoever/repo/onestop-clients/scripts/config/combined_template.yml -cred /Users/whoever/repo/onestop-clients/scripts/config/credentials.yml
+    #    python3 archive_client_integration.py -cred /Users/whoever/repo/onestop-clients/scripts/config/credentials.yml
+    parser = argparse.ArgumentParser(description="Launches archive client integration")
+    # Set default config location to the Helm mounted pod configuration location
+    parser.add_argument('-conf', dest="conf", required=False, default='/etc/config/config.yml',
+                        help="AWS config filepath")
+    parser.add_argument('-cred', dest="cred", required=True,
                         help="Credentials filepath")
-
     args = vars(parser.parse_args())
+
+    # Generate configuration dictionary
+    conf_loc = args.pop('conf')
+    with open(conf_loc) as f:
+        config_dict.update(yaml.load(f, Loader=yaml.FullLoader))
+
+    # Get credentials from passed in fully qualified path or ENV.
     cred_loc = args.pop('cred')
-
-    #credentials from either file or env
-    registry_username = None
-    registry_password = None
-    access_key = None
-    access_secret = None
-
     if cred_loc is not None:
         with open(cred_loc) as f:
             creds = yaml.load(f, Loader=yaml.FullLoader)
@@ -64,60 +96,34 @@ if __name__ == '__main__':
         access_key = os.environ.get("ACCESS_KEY")
         access_secret = os.environ.get("SECRET_KEY")
 
-    # default config location mounted in pod
-    if args.pop('conf') is None:
-        conf_loc = "/etc/config/config.yml"
-    else:
-        conf_loc = args.pop('conf')
+    config_dict.update({
+        'registry_username' : registry_username,
+        'registry_password' : registry_password,
+        'access_key' : access_key,
+        'secret_key' : access_secret
+    })
+    sqs_consumer = SqsConsumer(**config_dict)
 
-    conf = None
-    with open(conf_loc) as f:
-        conf = yaml.load(f, Loader=yaml.FullLoader)
+    wp = WebPublisher(**config_dict)
 
-    #TODO organize the config
-    #System
-    log_level = conf['log_level']
-    sqs_max_polls = conf['sqs_max_polls']
+    s3_utils = S3Utils(**config_dict)
 
-    #Destination
-    registry_base_url = conf['registry_base_url']
-    onestop_base_url = conf['onestop_base_url']
-
-    #Source
-    access_bucket = conf['access_bucket']
-    sqs_url = conf['sqs_url']
-    s3_region = conf['s3_region']
-    s3_bucket2 = conf['s3_bucket2']
-    s3_region2 = conf['s3_region2']
-
-
-    #Onestop related
-    prefix_map = conf['prefixMap']
-    file_id_prefix = conf['file_identifier_prefix']
-    file_format = conf['format']
-    headers = conf['headers']
-    type = conf['type']
-
-    sqs_consumer = SqsConsumer(access_key, access_secret, s3_region, sqs_url, log_level)
-
-    wp = WebPublisher(registry_base_url=registry_base_url, username=registry_username, password=registry_password,
-                      onestop_base_url=onestop_base_url, log_level=log_level)
-
-    s3_utils = S3Utils(access_key, access_secret, log_level)
-    s3ma = S3MessageAdapter(access_bucket, prefix_map, format, headers, type, file_id_prefix, log_level)
+    s3ma = S3MessageAdapter(**config_dict)
 
     delete_handler = create_delete_handler(wp)
     upload_handler = create_upload_handler(wp, s3_utils, s3ma)
 
-    queue = sqs_consumer.connect()
+    s3_resource = s3_utils.connect('resource', 'sqs',  config_dict['s3_region'])
+    queue = sqs_consumer.connect(s3_resource, config_dict['sqs_name'])
 
-    try:
-        debug = False
-        # # Pass in the handler method
-        #Hack to make this stay up forever
-        #TODO add feature to client library for polling indefinitely
-        while True:
-            sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
+    # Send a test message
+#    sqs_client = s3_utils.connect('client', 'sqs' , config_dict['s3_region'])
+#    sqs_client.send_message(
+#        QueueUrl='https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs',
+#        MessageBody=json.dumps(test_message)
+#    )
 
-    except Exception as e:
-        print("Message queue consumption failed: {}".format(e))
+    #Hack to make this stay up forever
+    #TODO add feature to client library for polling indefinitely
+    while True:
+        sqs_consumer.receive_messages(queue, config_dict['sqs_max_polls'], handler)
