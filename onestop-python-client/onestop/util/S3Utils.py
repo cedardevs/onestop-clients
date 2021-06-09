@@ -76,7 +76,7 @@ class S3Utils:
         self.logger.info("Initializing " + self.__class__.__name__)
 
         if wildargs:
-            self.logger.warning("There were extra constructor arguments: " + str(wildargs))
+            self.logger.debug("Superfluous parameters in constructor call: " + str(wildargs))
 
     def connect(self, type, service_name, region):
         """
