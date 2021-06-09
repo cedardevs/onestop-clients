@@ -189,20 +189,19 @@ class KafkaConsumer:
         """
         self.logger.info('Consuming from topic')
         while True:
-            try:
-                msg = metadata_consumer.poll(10)
-                self.logger.debug("Message received: "+str(msg))
+            msg = metadata_consumer.poll(10)
+            self.logger.debug("Message received: "+str(msg))
 
-                if msg is None:
-                    self.logger.info('No Messages')
-                    continue
+            if msg is None:
+                self.logger.info('No Messages')
+                continue
 
-                key = msg.key()
-                value = msg.value()
-                self.logger.debug('Message key=%s'%key)
-                self.logger.debug('Message value=%s'%value)
+            key = msg.key()
+            value = msg.value()
+            self.logger.debug('Message key=%s'%key)
+            self.logger.debug('Message value=%s'%value)
 
-                handler(key, value, self.log_level)
-            finally:
-                self.logger.debug("Closing metadata_consumer")
-                metadata_consumer.close()
+            handler(key, value, self.log_level)
+
+        self.logger.debug("Closing metadata_consumer")
+        metadata_consumer.close()
