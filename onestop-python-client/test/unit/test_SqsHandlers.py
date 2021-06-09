@@ -258,8 +258,7 @@ class test_SqsHandler(unittest.TestCase):
     @mock_sqs
     @patch('onestop.WebPublisher')
     @patch('onestop.util.S3Utils')
-    @patch('onestop.util.S3MessageAdapter')
-    def test_upload_handler_adds_uuid(self, mock_s3_utils, mock_s3_msg_adapter, mock_wp):
+    def test_upload_handler_adds_uuid(self, mock_s3_utils, mock_wp):
         bucket = self.bucket
         key = self.key
         queue_name = 'test_queue'
@@ -276,7 +275,7 @@ class test_SqsHandler(unittest.TestCase):
         )
 
         mock_s3_utils.get_uuid_metadata.return_value = None
-        cb = create_upload_handler(mock_wp, mock_s3_utils, mock_s3_msg_adapter)
+        cb = create_upload_handler(mock_wp, mock_s3_utils, self.s3_message_adapter)
 
         self.sqs_consumer.receive_messages(sqs_queue, 1, cb)
 
