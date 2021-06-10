@@ -51,11 +51,11 @@ class KafkaConsumer:
             asynchronously polls for messages in the connected topic, results vary depending on the handler function that is passed into it
     """
 
-    def __init__(self, metadata_type, brokers, group_id, auto_offset_reset, schema_registry, security, collection_topic_consume, granule_topic_consume, log_level = 'INFO', **wildargs):
+    def __init__(self, kafka_consumer_metadata_type, brokers, group_id, auto_offset_reset, schema_registry, security, collection_topic_consume, granule_topic_consume, log_level = 'INFO', **wildargs):
         """
         Attributes
         ----------
-            metadata_type: str
+            kafka_consumer_metadata_type: str
                 type of metadata (COLLECTION or GRANULE)
             brokers: str
                 brokers (kubernetes service)
@@ -79,7 +79,7 @@ class KafkaConsumer:
                     What log level to use for this class
         """
 
-        self.metadata_type = metadata_type.upper()
+        self.metadata_type = kafka_consumer_metadata_type.upper()
         self.brokers = brokers
         self.group_id = group_id
         self.auto_offset_reset = auto_offset_reset

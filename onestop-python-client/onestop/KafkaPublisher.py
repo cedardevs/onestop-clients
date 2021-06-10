@@ -52,11 +52,11 @@ class KafkaPublisher:
             Publish granule to granule topic
     """
 
-    def __init__(self, metadata_type, brokers, schema_registry, security, collection_topic_publish, granule_topic_publish, log_level='INFO', **wildargs):
+    def __init__(self, kafka_publisher_metadata_type, brokers, schema_registry, security, collection_topic_publish, granule_topic_publish, log_level='INFO', **wildargs):
         """
         Attributes
         ----------
-            metadata_type: str
+            kafka_publisher_metadata_type: str
                 type of metadata (COLLECTION or GRANULE)
             brokers: str
                 brokers (kubernetes service)
@@ -77,7 +77,7 @@ class KafkaPublisher:
             granule_topic: str
                 granule topic you want to produce to
         """
-        self.metadata_type = metadata_type.upper()
+        self.metadata_type = kafka_publisher_metadata_type.upper()
         self.brokers = brokers
         self.schema_registry = schema_registry
         self.security_enabled = security['enabled']

@@ -14,7 +14,7 @@ class test_KafkaPublisher(unittest.TestCase):
     def setUp(cls):
         print("Set it up!")
         cls.conf_w_security = {
-            "metadata_type" : "GRANULE",
+            "kafka_publisher_metadata_type" : "GRANULE",
             "brokers" : "onestop-dev-cp-kafka:9092",
             "schema_registry" : "http://onestop-dev-cp-schema-registry:8081",
             "security" : {
@@ -40,7 +40,7 @@ class test_KafkaPublisher(unittest.TestCase):
     def test_init_happy_nonconditional_params(self):
         publisher = KafkaPublisher(**self.conf_w_security)
 
-        self.assertEqual(publisher.metadata_type, self.conf_w_security['metadata_type'])
+        self.assertEqual(publisher.metadata_type, self.conf_w_security['kafka_publisher_metadata_type'])
         self.assertEqual(publisher.brokers, self.conf_w_security['brokers'])
         self.assertEqual(publisher.schema_registry, self.conf_w_security['schema_registry'])
         self.assertEqual(publisher.security_enabled, self.conf_w_security['security']['enabled'])
@@ -64,11 +64,11 @@ class test_KafkaPublisher(unittest.TestCase):
     def test_init_metadata_type_valid(self):
         publisher = KafkaPublisher(**self.conf_w_security)
 
-        self.assertEqual(publisher.metadata_type, self.conf_w_security['metadata_type'])
+        self.assertEqual(publisher.metadata_type, self.conf_w_security['kafka_publisher_metadata_type'])
 
     def test_init_metadata_type_invalid(self):
         wrong_metadata_type_config = dict(self.conf_w_security)
-        wrong_metadata_type_config['metadata_type'] = "invalid_type"
+        wrong_metadata_type_config['kafka_publisher_metadata_type'] = "invalid_type"
 
         self.assertRaises(ValueError, KafkaPublisher, **wrong_metadata_type_config)
 
@@ -115,7 +115,7 @@ class test_KafkaPublisher(unittest.TestCase):
     @patch('onestop.KafkaPublisher.SerializingProducer')
     def test_create_producer_calls_AvroSerializer(self, mock_serializing_publisher, mock_avro_serializer):
         conf_w_security_collection = dict(self.conf_w_security)
-        conf_w_security_collection['metadata_type'] = "COLLECTION"
+        conf_w_security_collection['kafka_publisher_metadata_type'] = "COLLECTION"
 
         publisher = KafkaPublisher(**conf_w_security_collection)
         reg_client = publisher.register_client()
@@ -130,7 +130,7 @@ class test_KafkaPublisher(unittest.TestCase):
     def test_create_producer_collection_w_security(self, mock_serializing_producer, mock_avro_serializer):
         conf_w_security_collection = dict(self.conf_w_security)
         topic = conf_w_security_collection['collection_topic_publish']
-        conf_w_security_collection['metadata_type'] = 'COLLECTION'
+        conf_w_security_collection['kafka_publisher_metadata_type'] = 'COLLECTION'
 
         publisher = KafkaPublisher(**conf_w_security_collection)
         reg_client = MagicMock()
@@ -157,7 +157,7 @@ class test_KafkaPublisher(unittest.TestCase):
     def test_create_producer_collection_wo_security(self, mock_serializing_producer, mock_avro_serializer):
         conf_wo_security_collection = dict(self.conf_wo_security)
         topic = conf_wo_security_collection['collection_topic_publish']
-        conf_wo_security_collection['metadata_type'] = 'COLLECTION'
+        conf_wo_security_collection['kafka_publisher_metadata_type'] = 'COLLECTION'
 
         publisher = KafkaPublisher(**conf_wo_security_collection)
         reg_client = MagicMock()
@@ -180,7 +180,7 @@ class test_KafkaPublisher(unittest.TestCase):
     def test_create_producer_granule_w_security(self, mock_serializing_producer, mock_avro_serializer):
         conf_w_security_granule = dict(self.conf_w_security)
         topic = conf_w_security_granule['granule_topic_publish']
-        conf_w_security_granule['metadata_type'] = 'GRANULE'
+        conf_w_security_granule['kafka_publisher_metadata_type'] = 'GRANULE'
 
         publisher = KafkaPublisher(**conf_w_security_granule)
         reg_client = MagicMock()
@@ -207,7 +207,7 @@ class test_KafkaPublisher(unittest.TestCase):
     def test_create_producer_granule_wo_security(self, mock_serializing_producer, mock_avro_serializer):
         conf_wo_security_granule = dict(self.conf_wo_security)
         exp_topic = conf_wo_security_granule['granule_topic_publish']
-        conf_wo_security_granule['metadata_type'] = 'GRANULE'
+        conf_wo_security_granule['kafka_publisher_metadata_type'] = 'GRANULE'
 
         publisher = KafkaPublisher(**conf_wo_security_granule)
         reg_client = MagicMock()

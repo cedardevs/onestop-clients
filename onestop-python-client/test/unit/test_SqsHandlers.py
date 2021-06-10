@@ -22,7 +22,7 @@ class test_SqsHandler(unittest.TestCase):
             'access_key': 'test_access_key',
             'secret_key': 'test_secret_key',
             'access_bucket': 'https://archive-testing-demo.s3-us-east-2.amazonaws.com',
-            'type': 'COLLECTION',
+            's3_message_adapter_metadata_type': 'COLLECTION',
             'file_id_prefix': 'gov.noaa.ncei.csb:',
             'collection_id': 'fdb56230-87f4-49f2-ab83-104cfd073177',
             'registry_base_url': 'http://localhost/onestop/api/registry',
