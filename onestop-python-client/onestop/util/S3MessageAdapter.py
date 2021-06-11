@@ -58,6 +58,9 @@ class S3MessageAdapter:
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
+        if self.metadata_type not in ['COLLECTION', 'GRANULE']:
+            raise ValueError("metadata_type of '%s' must be 'COLLECTION' or 'GRANULE'"%(self.metadata_type))
+
         if wildargs:
             self.logger.debug("Superfluous parameters in constructor call: " + str(wildargs))
 

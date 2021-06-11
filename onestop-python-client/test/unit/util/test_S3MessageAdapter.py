@@ -71,6 +71,17 @@ class S3MessageAdapterTest(unittest.TestCase):
     def tearDown(self):
         print("Tear it down!")
 
+    def test_init_metadata_type_valid(self):
+        publisher = S3MessageAdapter(**self.config_dict)
+
+        self.assertEqual(publisher.metadata_type, self.config_dict['s3_message_adapter_metadata_type'])
+
+    def test_init_metadata_type_invalid(self):
+        wrong_metadata_type_config = dict(self.config_dict)
+        wrong_metadata_type_config['s3_message_adapter_metadata_type'] = "invalid_type"
+
+        self.assertRaises(ValueError, S3MessageAdapter, **wrong_metadata_type_config)
+
     def test_metadata_type_lowercase(self):
         metadata_type = 'collection'
         uppercase_metadata_type = metadata_type.upper()
