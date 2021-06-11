@@ -144,8 +144,11 @@ class KafkaPublisher:
 
         if self.metadata_type == "GRANULE":
             topic = self.granule_topic
+        self.logger.debug("topic: "+str(topic))
 
         metadata_schema = registry_client.get_latest_version(topic + '-value').schema.schema_str
+        self.logger.debug("metadata_schema: "+metadata_schema)
+
         metadata_serializer = AvroSerializer(schema_str=metadata_schema, schema_registry_client=registry_client)
         conf = {'bootstrap.servers': self.brokers}
 
@@ -156,7 +159,7 @@ class KafkaPublisher:
             conf['ssl.certificate.location'] = self.security_certLoc
 
         conf['value.serializer'] = metadata_serializer
-
+        self.logger.debug("Serializing conf: "+str(conf))
         metadata_producer = SerializingProducer(conf)
         return metadata_producer
 
@@ -172,7 +175,7 @@ class KafkaPublisher:
         if err is not None:
             self.logger.error('Message delivery failed: {}'.format(err))
         else:
-            self.logger.error('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
+            self.logger.info('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
 
     @staticmethod
     def get_collection_key_from_uuid(collection_uuid):

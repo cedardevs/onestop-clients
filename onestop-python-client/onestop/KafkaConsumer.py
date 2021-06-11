@@ -170,9 +170,8 @@ class KafkaConsumer:
             conf['ssl.key.location'] = self.security_keyLoc
             conf['ssl.certificate.location'] = self.security_certLoc
 
-        self.logger.debug("conf: "+str(conf))
+        self.logger.debug("Deserializing conf: "+str(conf))
         metadata_consumer = DeserializingConsumer(conf)
-        self.logger.debug("topic: "+str(topic))
         metadata_consumer.subscribe([topic])
         return metadata_consumer
 
