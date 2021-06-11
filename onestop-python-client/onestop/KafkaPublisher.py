@@ -150,7 +150,9 @@ class KafkaPublisher:
         self.logger.debug("metadata_schema: "+metadata_schema)
 
         metadata_serializer = AvroSerializer(schema_str=metadata_schema, schema_registry_client=registry_client)
-        conf = {'bootstrap.servers': self.brokers}
+        conf = {
+            'bootstrap.servers': self.brokers,
+            'value.serializer': metadata_serializer}
 
         if self.security_enabled:
             conf['security.protocol'] = 'SSL'
@@ -158,7 +160,6 @@ class KafkaPublisher:
             conf['ssl.key.location'] = self.security_keyLoc
             conf['ssl.certificate.location'] = self.security_certLoc
 
-        conf['value.serializer'] = metadata_serializer
         self.logger.debug("Serializing conf: "+str(conf))
         metadata_producer = SerializingProducer(conf)
         return metadata_producer
