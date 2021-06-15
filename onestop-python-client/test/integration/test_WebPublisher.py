@@ -2,8 +2,10 @@ import yaml
 import json
 import unittest
 import time
+import os.path
 
 from onestop.WebPublisher import WebPublisher
+from os import path
 
 class WebPublisherTest(unittest.TestCase):
     wp = None
@@ -56,16 +58,26 @@ class WebPublisherTest(unittest.TestCase):
     def setUpClass(cls):
         print("Set it up!")
 
-        cred_loc = "../config/credentials.yml"
-        conf_loc = "../config/csb-data-stream-config-template.yml"
+        cred_loc = "config/credentials.yml"
+        conf_loc = "config/csb-data-stream-config-template.yml"
 
-        with open(cred_loc) as f:
-            creds = yaml.load(f, Loader=yaml.FullLoader)
+        if path.exists(cred_loc):
+            with open(cred_loc) as f:
+                creds = yaml.load(f, Loader=yaml.FullLoader)
 
-        registry_username = creds['registry']['username']
-        registry_password = creds['registry']['password']
-        access_key = creds['sandbox']['access_key']
-        access_secret = creds['sandbox']['secret_key']
+            registry_username = creds['registry']['username']
+            registry_password = creds['registry']['password']
+            access_key = creds['sandbox']['access_key']
+            access_secret = creds['sandbox']['secret_key']
+        else:
+            print("Credentials file doesn't exist at '%s', using environment variables."%cred_loc)
+            registry_username = os.environ.get('REGISTRY_USERNAME')
+            registry_password = os.environ.get("REGISTRY_PASSWORD")
+            access_key = os.environ.get("ACCESS_KEY")
+            access_secret = os.environ.get("SECRET_KEY")
+            if registry_username == None:
+                msg = "REGISTRY_USERNAME not defined as env variable. Credentials file at '" + cred_loc + "' doesn't exist."
+                raise Exception(msg)
 
         with open(conf_loc) as f:
             conf = yaml.load(f, Loader=yaml.FullLoader)
