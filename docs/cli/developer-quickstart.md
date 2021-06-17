@@ -1,4 +1,9 @@
-# OneStop CLI tool for developers
+<div align="center"><a href="/onestop-clients/">Documentation Home</a></div>
+<hr>
+# OneStop CLI tool for Developers
+
+## Table of Contents
+
 
 The `onestop-cli` tool provides a convenient command line interface for the OneStop search API. This tool is partly generated from the OpenAPI spec in the search module. We have added custom middleware for convenient syntax for frequently used filters and queries.
 
