@@ -1,8 +1,5 @@
 import setuptools
 
-with open("../docs/onestop-python-client.md", "r") as fh:
-    long_description = fh.read()
-
 setuptools.setup(
     name="onestop-python-client-cedardevs",
     version="0.2.5",
