@@ -1,6 +1,6 @@
 import setuptools
 
-with open("../docs/onestop-python-client/README.md", "r") as fh:
+with open("../docs/onestop-python-client.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
@@ -9,7 +9,7 @@ setuptools.setup(
     author="CEDARDEVS",
     author_email="cedar.cires@colorado.edu",
     description="A python package for processing messages from the NOAA OneStop event stream (aka Inventory Manager).",
-    long_description="This package provides subject matter experts an API to interact with the kafka topics backing OneStop.",
+    long_description="This package provides subject matter experts an API to interact with OneStop via kafka, cloud, and REST.",
     long_description_content_type="text/markdown",
     url="https://github.com/cedardevs/onestop-clients",
     packages=setuptools.find_packages(exclude=("tests",)),
