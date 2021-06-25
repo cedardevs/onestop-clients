@@ -1,5 +1,5 @@
 confluent-kafka
-avro-python3
+avro
 fastavro
 smart-open
 PyYAML~=5.3.1
