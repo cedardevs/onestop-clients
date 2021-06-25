@@ -134,6 +134,9 @@ class test_ParsedRecord(unittest.TestCase):
                 {
                     "id":"5b58de08-afef-49fb-99a1-9c5d5c003bde",
                     "type":"COLLECTION"
+                },
+                {
+                    "id":"6668de08-afef-49fb-99a1-9c5d5c003bde"
                 }
             ]
         }
