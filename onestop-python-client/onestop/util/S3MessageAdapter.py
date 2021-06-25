@@ -4,7 +4,7 @@ from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.parsed_record i
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_location import FileLocation,FileLocationType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_information import FileInformation
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum import Checksum, ChecksumAlgorithm
-from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.relationship import Relationship, RelationshipType
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.relationship import Relationship
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.discovery import Discovery, Link
 
 
@@ -91,8 +91,7 @@ class S3MessageAdapter:
         fileInformation = FileInformation(name=file_name, size=file_size, checksums=[checkSum], optionalAttributes={})
 
         # Relationship
-        relationshipType = RelationshipType(type=self.type)
-        relationship = Relationship(id=self.collection_id, type=relationshipType)
+        relationship = Relationship(id=self.collection_id, type=self.type)
 
         # File Location
         fileLocationType = FileLocationType(type='ARCHIVE')
