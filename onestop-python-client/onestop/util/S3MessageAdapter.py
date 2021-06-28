@@ -94,7 +94,7 @@ class S3MessageAdapter:
         fileInformation = FileInformation(name=file_name, size=file_size, checksums=[checkSum], optionalAttributes={})
 
         # Relationship
-        relationship = Relationship(id=self.collection_id, type=self.type)
+        relationship = Relationship(id=self.collection_id, type=self.metadata_type)
 
         # File Location
         fileLocationType = FileLocationType(type='ARCHIVE')
