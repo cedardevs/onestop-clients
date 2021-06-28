@@ -52,11 +52,11 @@ class KafkaPublisher:
             Publish granule to granule topic
     """
 
-    def __init__(self, metadata_type, brokers, schema_registry, security, collection_topic_publish, granule_topic_publish, log_level='INFO', **wildargs):
+    def __init__(self, kafka_publisher_metadata_type, brokers, schema_registry, security, collection_topic_publish, granule_topic_publish, log_level='INFO', **wildargs):
         """
         Attributes
         ----------
-            metadata_type: str
+            kafka_publisher_metadata_type: str
                 type of metadata (COLLECTION or GRANULE)
             brokers: str
                 brokers (kubernetes service)
@@ -77,7 +77,7 @@ class KafkaPublisher:
             granule_topic: str
                 granule topic you want to produce to
         """
-        self.metadata_type = metadata_type
+        self.metadata_type = kafka_publisher_metadata_type.upper()
         self.brokers = brokers
         self.schema_registry = schema_registry
         self.security_enabled = security['enabled']
@@ -91,13 +91,13 @@ class KafkaPublisher:
         self.granule_topic = granule_topic_publish
 
         if self.metadata_type not in ['COLLECTION', 'GRANULE']:
-            raise ValueError("metadata_type must be 'COLLECTION' or 'GRANULE'")
+            raise ValueError("metadata_type of '%s' must be 'COLLECTION' or 'GRANULE'"%(self.metadata_type))
 
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
         if wildargs:
-            self.logger.warning("There were extra constructor arguments: " + str(wildargs))
+            self.logger.debug("Superfluous parameters in constructor call: " + str(wildargs))
 
     def connect(self):
         """
@@ -144,10 +144,15 @@ class KafkaPublisher:
 
         if self.metadata_type == "GRANULE":
             topic = self.granule_topic
+        self.logger.debug("topic: "+str(topic))
 
         metadata_schema = registry_client.get_latest_version(topic + '-value').schema.schema_str
-        metadata_serializer = AvroSerializer(metadata_schema, registry_client)
-        conf = {'bootstrap.servers': self.brokers}
+        self.logger.debug("metadata_schema: "+metadata_schema)
+
+        metadata_serializer = AvroSerializer(schema_str=metadata_schema, schema_registry_client=registry_client)
+        conf = {
+            'bootstrap.servers': self.brokers,
+            'value.serializer': metadata_serializer}
 
         if self.security_enabled:
             conf['security.protocol'] = 'SSL'
@@ -155,8 +160,7 @@ class KafkaPublisher:
             conf['ssl.key.location'] = self.security_keyLoc
             conf['ssl.certificate.location'] = self.security_certLoc
 
-        conf['value.serializer'] = metadata_serializer
-
+        self.logger.debug("Serializing conf: "+str(conf))
         metadata_producer = SerializingProducer(conf)
         return metadata_producer
 
@@ -172,7 +176,7 @@ class KafkaPublisher:
         if err is not None:
             self.logger.error('Message delivery failed: {}'.format(err))
         else:
-            self.logger.error('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
+            self.logger.info('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
 
     @staticmethod
     def get_collection_key_from_uuid(collection_uuid):
@@ -214,15 +218,12 @@ class KafkaPublisher:
             'method': method,
             'source': 'unknown',
         }
-        try:
-            self.logger.debug('Publishing collection with topic='+self.collection_topic+' key='+key+' value='+str(value_dict))
-            collection_producer.produce(
-                topic=self.collection_topic,
-                value=value_dict,
-                key=key,
-                on_delivery=self.delivery_report)
-        except KafkaError:
-            raise
+        self.logger.debug('Publishing collection with topic='+self.collection_topic+' key='+key+' value='+str(value_dict))
+        collection_producer.produce(
+            topic=self.collection_topic,
+            value=value_dict,
+            key=key,
+            on_delivery=self.delivery_report)
         collection_producer.poll()
 
     def publish_granule(self, granule_producer, collection_uuid, content_dict):
@@ -274,13 +275,11 @@ class KafkaPublisher:
             'discovery': content_dict['discovery']
         }
 
-        try:
-            self.logger.debug('Publishing granule with topic='+self.granule_topic+' key='+key+' value='+str(value_dict))
-            granule_producer.produce(
-                topic=self.granule_topic,
-                value=value_dict,
-                key=key,
-                on_delivery=self.delivery_report)
-        except KafkaError:
-            raise
+        self.logger.debug('Publishing granule with topic='+self.granule_topic+' key='+key+' value='+str(value_dict))
+        granule_producer.produce(
+            topic=self.granule_topic,
+            value=value_dict,
+            key=key,
+            on_delivery=self.delivery_report)
+
         granule_producer.poll()

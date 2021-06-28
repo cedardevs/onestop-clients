@@ -13,7 +13,7 @@ class SqsConsumerTest(unittest.TestCase):
         's3_region': 'us-east-2',
         's3_bucket': 'archive-testing-demo',
         'sqs_url': 'https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs',
-        'type': 'COLLECTION',
+        'metadata_type': 'COLLECTION',
         'file_id_prefix': 'gov.noaa.ncei.csb:',
         'collection_id': 'fdb56230-87f4-49f2-ab83-104cfd073177',
         'registry_base_url': 'http://localhost/onestop/api/registry',

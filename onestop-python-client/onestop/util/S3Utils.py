@@ -76,7 +76,7 @@ class S3Utils:
         self.logger.info("Initializing " + self.__class__.__name__)
 
         if wildargs:
-            self.logger.warning("There were extra constructor arguments: " + str(wildargs))
+            self.logger.debug("Superfluous parameters in constructor call: " + str(wildargs))
 
     def connect(self, type, service_name, region):
         """
@@ -220,7 +220,7 @@ class S3Utils:
         obj_uuid = str(uuid.uuid4())
 
         if not overwrite:
-            key_exists = self.objectkey_exists(boto_client, bucket, s3_key)
+            key_exists = self.objectkey_exists(bucket, s3_key)
 
         if (not key_exists) or (key_exists and overwrite):
             try:

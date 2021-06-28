@@ -55,7 +55,6 @@ jobs:
 #      - slack/status:
 #          fail_only: false
 
-# cli build
   cli-build:
     executor: docker/docker
     steps:
@@ -75,30 +74,55 @@ jobs:
       - slack/status:
           fail_only: false
 
-# clients build
-  client-build:
+  onestop-s3-handler-build:
     executor: docker/docker
     steps:
       - setup_remote_docker
       - checkout
       - docker/check
       - docker/build:
-          path: onestop-python-client
-          image: cedardevs/onestop-python-client
-          tag: ${CIRCLE_BRANCH}-SNAPSHOT
-      - run:
-          name: "What branch am I on now?"
-          command: echo $CIRCLE_BRANCH
-#no need to push this image yet
+          path: scripts/sqs-to-registry
+          image: cedardevs/onestop-s3-handler
+          tag: latest
       - docker/push:
-          image: cedardevs/onestop-python-client
-          tag: ${CIRCLE_BRANCH}-SNAPSHOT
+          image: cedardevs/onestop-s3-handler
+          tag: latest
       - slack/status:
           fail_only: false
-  # Base test configuration for Go library tests Each distinct version should
-  # inherit this base, and override (at least) the container image used.
 
-  python-client-test: &python-client-test
+  onestop-sme-build:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/check
+      - docker/build:
+          path: scripts/sme/
+          image: cedardevs/onestop-sme
+          tag: latest
+      - docker/push:
+          image: cedardevs/onestop-sme
+          tag: latest
+      - slack/status:
+          fail_only: false
+
+  onestop-python-client-build:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/check
+      - docker/build:
+          path: ./
+          image: cedardevs/onestop-python-client
+          tag: latest
+      - docker/push:
+          image: cedardevs/onestop-python-client
+          tag: latest
+      - slack/status:
+          fail_only: false
+
+  onestop-python-client-test: &python-client-test
     executor: python/default
     steps: &steps
       - checkout
@@ -127,9 +151,15 @@ version: 2.1
 workflows:
   main:
     jobs:
-#      - "latest"
 #      - cli-test
 #      - cli-build
-#      - client-build
-       - python-client-test
-
+       - onestop-python-client-test
+       - onestop-python-client-build:
+           requires:
+             - onestop-python-client-test
+       - onestop-sme-build:
+           requires:
+             - onestop-python-client-build
+       - onestop-s3-handler-build:
+           requires:
+             - onestop-python-client-build

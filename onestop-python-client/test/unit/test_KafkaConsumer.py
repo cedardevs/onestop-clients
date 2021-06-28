@@ -13,7 +13,7 @@ class test_KafkaConsumer(unittest.TestCase):
     def setUp(cls):
         print("Set it up!")
         cls.conf_w_security = {
-            "metadata_type" : "GRANULE",
+            "kafka_consumer_metadata_type" : "GRANULE",
             "brokers" : "onestop-dev-cp-kafka:9092",
             "group_id" : "sme-test",
             "auto_offset_reset" : "earliest",
@@ -41,7 +41,7 @@ class test_KafkaConsumer(unittest.TestCase):
     def test_init_happy_nonconditional_params(self):
         consumer = KafkaConsumer(**self.conf_w_security)
 
-        self.assertEqual(consumer.metadata_type, self.conf_w_security['metadata_type'])
+        self.assertEqual(consumer.metadata_type, self.conf_w_security['kafka_consumer_metadata_type'])
         self.assertEqual(consumer.brokers, self.conf_w_security['brokers'])
         self.assertEqual(consumer.group_id, self.conf_w_security['group_id'])
         self.assertEqual(consumer.auto_offset_reset, self.conf_w_security['auto_offset_reset'])
@@ -67,11 +67,11 @@ class test_KafkaConsumer(unittest.TestCase):
     def test_init_metadata_type_valid(self):
         consumer = KafkaConsumer(**self.conf_w_security)
 
-        self.assertEqual(consumer.metadata_type, self.conf_w_security['metadata_type'])
+        self.assertEqual(consumer.metadata_type, self.conf_w_security['kafka_consumer_metadata_type'])
 
     def test_init_metadata_type_invalid(self):
         wrong_metadata_type_config = dict(self.conf_w_security)
-        wrong_metadata_type_config['metadata_type'] = "invalid_type"
+        wrong_metadata_type_config['kafka_consumer_metadata_type'] = "invalid_type"
 
         self.assertRaises(ValueError, KafkaConsumer, **wrong_metadata_type_config)
 
@@ -118,7 +118,7 @@ class test_KafkaConsumer(unittest.TestCase):
     @patch('onestop.KafkaConsumer.DeserializingConsumer')
     def test_create_consumer_calls_AvroDeserializer(self, mock_deserializing_consumer, mock_avro_deserializer):
         conf_w_security_collection = dict(self.conf_w_security)
-        conf_w_security_collection['metadata_type'] = "COLLECTION"
+        conf_w_security_collection['kafka_consumer_metadata_type'] = "COLLECTION"
 
         consumer = KafkaConsumer(**conf_w_security_collection)
         reg_client = consumer.register_client()
@@ -126,7 +126,7 @@ class test_KafkaConsumer(unittest.TestCase):
         deser_consumer = consumer.create_consumer(reg_client)
 
         # Verify AvroDeserializer called with expected registry client
-        mock_avro_deserializer.assert_called_with(ANY, reg_client)
+        mock_avro_deserializer.assert_called_with(schema_str=ANY, schema_registry_client=reg_client)
 
         self.assertIsNotNone(deser_consumer)
 
@@ -135,7 +135,7 @@ class test_KafkaConsumer(unittest.TestCase):
     def test_create_consumer_collection_w_security(self, mock_deserializing_consumer, mock_avro_deserializer):
         conf_w_security_collection = dict(self.conf_w_security)
         topic = conf_w_security_collection['collection_topic_consume']
-        conf_w_security_collection['metadata_type'] = 'COLLECTION'
+        conf_w_security_collection['kafka_consumer_metadata_type'] = 'COLLECTION'
 
         consumer = KafkaConsumer(**conf_w_security_collection)
         reg_client = MagicMock()
@@ -166,7 +166,7 @@ class test_KafkaConsumer(unittest.TestCase):
     def test_create_consumer_collection_wo_security(self, mock_deserializing_consumer, mock_avro_deserializer):
         conf_wo_security_collection = dict(self.conf_wo_security)
         topic = conf_wo_security_collection['collection_topic_consume']
-        conf_wo_security_collection['metadata_type'] = 'COLLECTION'
+        conf_wo_security_collection['kafka_consumer_metadata_type'] = 'COLLECTION'
 
         consumer = KafkaConsumer(**conf_wo_security_collection)
         reg_client = MagicMock()
@@ -193,7 +193,7 @@ class test_KafkaConsumer(unittest.TestCase):
     def test_create_consumer_granule_w_security(self, mock_deserializing_consumer, mock_avro_deserializer):
         conf_w_security_granule = dict(self.conf_w_security)
         topic = conf_w_security_granule['granule_topic_consume']
-        conf_w_security_granule['metadata_type'] = 'GRANULE'
+        conf_w_security_granule['kafka_consumer_metadata_type'] = 'GRANULE'
 
         consumer = KafkaConsumer(**conf_w_security_granule)
         reg_client = MagicMock()
@@ -224,7 +224,7 @@ class test_KafkaConsumer(unittest.TestCase):
     def test_create_consumer_granule_wo_security(self, mock_deserializing_consumer, mock_avro_deserializer):
         conf_wo_security_granule = dict(self.conf_wo_security)
         exp_topic = conf_wo_security_granule['granule_topic_consume']
-        conf_wo_security_granule['metadata_type'] = 'GRANULE'
+        conf_wo_security_granule['kafka_consumer_metadata_type'] = 'GRANULE'
 
         consumer = KafkaConsumer(**conf_wo_security_granule)
         reg_client = MagicMock()
@@ -281,7 +281,7 @@ class test_KafkaConsumer(unittest.TestCase):
 
         # Verify callback function was called once with expected message attributes
         mock_handler.assert_called_once()
-        mock_handler.assert_called_with(mock_message_key, mock_message_value)
+        mock_handler.assert_called_with(mock_message_key, mock_message_value, self.conf_w_security['log_level'])
 
 if __name__ == '__main__':
     unittest.main()

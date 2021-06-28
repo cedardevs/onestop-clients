@@ -42,7 +42,7 @@ class WebPublisher:
         self.logger.info("Initializing " + self.__class__.__name__)
 
         if kwargs:
-            self.logger.warning("There were extra constructor arguments: " + str(kwargs))
+            self.logger.debug("Superfluous parameters in constructor call: " + str(kwargs))
 
     def publish_registry(self, metadata_type, uuid, payload, method):
         """

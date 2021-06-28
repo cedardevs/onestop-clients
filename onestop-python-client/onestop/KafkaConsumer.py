@@ -51,11 +51,11 @@ class KafkaConsumer:
             asynchronously polls for messages in the connected topic, results vary depending on the handler function that is passed into it
     """
 
-    def __init__(self, metadata_type, brokers, group_id, auto_offset_reset, schema_registry, security, collection_topic_consume, granule_topic_consume, log_level = 'INFO', **wildargs):
+    def __init__(self, kafka_consumer_metadata_type, brokers, group_id, auto_offset_reset, schema_registry, security, collection_topic_consume, granule_topic_consume, log_level = 'INFO', **wildargs):
         """
         Attributes
         ----------
-            metadata_type: str
+            kafka_consumer_metadata_type: str
                 type of metadata (COLLECTION or GRANULE)
             brokers: str
                 brokers (kubernetes service)
@@ -79,7 +79,7 @@ class KafkaConsumer:
                     What log level to use for this class
         """
 
-        self.metadata_type = metadata_type
+        self.metadata_type = kafka_consumer_metadata_type.upper()
         self.brokers = brokers
         self.group_id = group_id
         self.auto_offset_reset = auto_offset_reset
@@ -95,13 +95,14 @@ class KafkaConsumer:
         self.granule_topic = granule_topic_consume
 
         if self.metadata_type not in ['COLLECTION', 'GRANULE']:
-            raise ValueError("metadata_type must be 'COLLECTION' or 'GRANULE'")
+            raise ValueError("metadata_type of '%s' must be 'COLLECTION' or 'GRANULE'"%(self.metadata_type))
 
+        self.log_level = log_level
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
         if wildargs:
-            self.logger.warning("There were extra constructor arguments: " + str(wildargs))
+            self.logger.debug("Superfluous parameters in constructor call: " + str(wildargs))
 
     def register_client(self):
         """
@@ -153,7 +154,8 @@ class KafkaConsumer:
 
         metadata_schema = latest_schema.schema.schema_str
         self.logger.debug("metadata_schema: "+metadata_schema)
-        metadata_deserializer = AvroDeserializer(metadata_schema, registry_client)
+
+        metadata_deserializer = AvroDeserializer(schema_str=metadata_schema, schema_registry_client=registry_client)
         conf = {
             'bootstrap.servers': self.brokers,
             'key.deserializer': StringDeserializer('utf-8'),
@@ -168,9 +170,8 @@ class KafkaConsumer:
             conf['ssl.key.location'] = self.security_keyLoc
             conf['ssl.certificate.location'] = self.security_certLoc
 
-        self.logger.debug("conf: "+str(conf))
+        self.logger.debug("Deserializing conf: "+str(conf))
         metadata_consumer = DeserializingConsumer(conf)
-        self.logger.debug("topic: "+str(topic))
         metadata_consumer.subscribe([topic])
         return metadata_consumer
 
@@ -187,24 +188,19 @@ class KafkaConsumer:
         """
         self.logger.info('Consuming from topic')
         while True:
-            try:
-                msg = metadata_consumer.poll(10)
-                self.logger.debug("Message received: "+str(msg))
+            msg = metadata_consumer.poll(10)
+            self.logger.debug("Message received: "+str(msg))
 
-                if msg is None:
-                    self.logger.info('No Messages')
-                    continue
+            if msg is None:
+                self.logger.info('No Messages')
+                continue
 
-                self.logger.debug("Message key="+str(msg.key())+" value="+str(msg.value()))
-                key = msg.key()
-                value = msg.value()
+            key = msg.key()
+            value = msg.value()
+            self.logger.debug('Message key=%s'%key)
+            self.logger.debug('Message value=%s'%value)
 
-            except KafkaError:
-                raise
-            try:
-                handler(key, value)
-            except Exception as e:
-                self.logger.error("Message handler failed: {}".format(e))
-                break
+            handler(key, value, self.log_level)
+
         self.logger.debug("Closing metadata_consumer")
         metadata_consumer.close()

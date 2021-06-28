@@ -70,7 +70,6 @@ data:
     csb:
       format: csv
       headers: UNIQUE_ID,FILE_UUID,LON,LAT,DEPTH,TIME,PLATFORM_NAME,PROVIDER
-      type: COLLECTION
       collection_id: fdb56230-87f4-49f2-ab83-104cfd073177
       registry_base_url: https://cedardevs.org/
       access_bucket: https://archive-testing-demo.s3-us-east-2.amazonaws.com
@@ -79,10 +78,13 @@ data:
 
     # Web Publisher
     web:
-      # COLLECTION or GRANULE
-      metadata_type: granule
       registry_base_url: https://cedardevs.org/onestop/registry-api
       onestop_base_url: https://cedardevs.org/onestop/search-api
 
       security:
         enabled: True
+
+    # COLLECTION or GRANULE
+    kafka_consumer_metadata_type: GRANULE
+    kafka_publisher_metadata_type: GRANULE
+    s3_message_adapter_metadata_type: COLLECTION

@@ -1,6 +1,10 @@
+# COLLECTION or GRANULE
+kafka_consumer_metadata_type: COLLECTION
+kafka_publisher_metadata_type: COLLECTION
+s3_message_adapter_metadata_type: COLLECTION
+
 format: csv
 headers: UNIQUE_ID,FILE_UUID,LON,LAT,DEPTH,TIME,PLATFORM_NAME,PROVIDER
-type: COLLECTION
 collection_id: fdb56230-87f4-49f2-ab83-104cfd073177
 registry_base_url: https://internal-a683c98a66fb011eaa4230e0d5e5657f-369075387.us-east-1.elb.amazonaws.com
 access_bucket: https://archive-testing-demo.s3-us-east-2.amazonaws.com

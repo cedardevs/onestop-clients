@@ -1,4 +1,7 @@
+import json
+
 from onestop.util.ClientLogger import ClientLogger
+from onestop.schemas.util.jsonEncoder import EnumEncoder
 
 def create_delete_handler(web_publisher):
     """
@@ -23,6 +26,8 @@ def create_delete_handler(web_publisher):
         if record['eventName'] != 'ObjectRemoved:Delete':
             logger.info("Ending handler, eventName=%s"%record['eventName'])
             return
+
+        logger.info('Attempting to delete record %s'%record)
 
         bucket = record['s3']['bucket']['name']
         s3_key = record['s3']['object']['key']
@@ -54,7 +59,7 @@ def create_upload_handler(web_publisher, s3_utils, s3_message_adapter):
     :param: s3ma: S3MessageAdapter object
 
     """
-    def upload(records, log_level='INFO'):
+    def upload(records, log_level='DEBUG'):
         logger = ClientLogger.get_logger('SqsHandlers.create_upload_handler.upload', log_level, False)
         logger.info("In create_upload_handler.upload() handler")
         logger.debug("Records: %s"%records)
@@ -65,9 +70,9 @@ def create_upload_handler(web_publisher, s3_utils, s3_message_adapter):
         logger.info("Event type: " + rec['eventName'])
         bucket = rec['s3']['bucket']['name']
         logger.info("BUCKET: %s"%bucket)
-        s3_resource = s3_utils.connect("s3_resource", None)
 
-        # Fetch the object to get the uuid
+        # Fetch the object's uuid from cloud object, if exists.
+        s3_resource = s3_utils.connect('resource', 's3', None)
         object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
         if object_uuid is not None:
             logger.info("Retrieved object-uuid: %s"%object_uuid)
@@ -78,17 +83,17 @@ def create_upload_handler(web_publisher, s3_utils, s3_message_adapter):
                 object_uuid = s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
         # Convert s3 message to IM message
-        json_payload = s3_message_adapter.transform(records)
+        im_message = s3_message_adapter.transform(records)
+        json_payload = json.dumps(im_message.to_dict(), cls=EnumEncoder)
         logger.debug('transformed message, json_payload: %s'%json_payload)
 
         # Send the message to registry
-        payload = json_payload.serialize()
         method = 'PATCH' # Backup location should be patched if not backup within bucket name
         if "backup" not in bucket:
             method = 'POST'
 
-        logger.debug('web_publisher.publish_registry method using "%s" with payload %s'%(method,payload))
-        registry_response = web_publisher.publish_registry("granule", object_uuid, payload, method)
+        logger.debug('web_publisher.publish_registry method using "%s" with payload %s'%(method,json_payload))
+        registry_response = web_publisher.publish_registry("granule", object_uuid, json_payload, method)
         logger.debug('web_publisher.publish_registry response=%s'%registry_response)
         logger.debug('web_publisher.publish_registry response json=%s'%registry_response.json())
 

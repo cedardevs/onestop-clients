@@ -35,13 +35,13 @@ class S3MessageAdapter:
         transform(recs)
             transforms sqs message triggered by s3 event to correct format for publishing to IM registry
     """
-    def __init__(self,  access_bucket, type, file_id_prefix, collection_id, log_level = 'INFO', **wildargs):
+    def __init__(self,  access_bucket, s3_message_adapter_metadata_type, file_id_prefix, collection_id, log_level = 'INFO', **wildargs):
         """
         Parameters
         ----------
         access_bucket: str
             access bucket to put in the links field when transformed.
-        type: str
+        s3_message_adapter_metadata_type: str
             COLLECTION or GRANULE
         file_id_prefix: str
             File prefix returned as fileIdentifier
@@ -52,14 +52,17 @@ class S3MessageAdapter:
 
         """
         self.access_bucket = access_bucket
-        self.type = type
+        self.metadata_type = s3_message_adapter_metadata_type.upper()
         self.file_id_prefix = file_id_prefix
         self.collection_id = collection_id
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
+        if self.metadata_type not in ['COLLECTION', 'GRANULE']:
+            raise ValueError("metadata_type of '%s' must be 'COLLECTION' or 'GRANULE'"%(self.metadata_type))
+
         if wildargs:
-            self.logger.warning("There were extra constructor arguments: " + str(wildargs))
+            self.logger.debug("Superfluous parameters in constructor call: " + str(wildargs))
 
     def transform(self, recs):
         """

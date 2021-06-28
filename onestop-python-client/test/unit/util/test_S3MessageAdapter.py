@@ -6,6 +6,7 @@ from onestop.util.S3MessageAdapter import S3MessageAdapter
 
 class S3MessageAdapterTest(unittest.TestCase):
     s3ma = None
+    config_dict = None
 
     recs1 = \
         [{
@@ -52,23 +53,44 @@ class S3MessageAdapterTest(unittest.TestCase):
     def setUp(self):
         print("Set it up!")
 
-        config_dict = {
+        self.config_dict = {
             'access_key': 'test_access_key',
             'secret_key': 'test_secret_key',
             'access_bucket': 'https://archive-testing-demo.s3-us-east-2.amazonaws.com',
-            'type': 'COLLECTION',
+            's3_message_adapter_metadata_type': 'COLLECTION',
             'file_id_prefix': 'gov.noaa.ncei.csb:',
             'collection_id': 'fdb56230-87f4-49f2-ab83-104cfd073177',
             'log_level': 'DEBUG'
         }
 
-        self.s3_utils = S3Utils(**config_dict)
-        self.s3ma = S3MessageAdapter(**config_dict)
+        self.s3_utils = S3Utils(**self.config_dict)
+        self.s3ma = S3MessageAdapter(**self.config_dict)
 
         self.region = 'us-east-2'
 
     def tearDown(self):
         print("Tear it down!")
+
+    def test_init_metadata_type_valid(self):
+        publisher = S3MessageAdapter(**self.config_dict)
+
+        self.assertEqual(publisher.metadata_type, self.config_dict['s3_message_adapter_metadata_type'])
+
+    def test_init_metadata_type_invalid(self):
+        wrong_metadata_type_config = dict(self.config_dict)
+        wrong_metadata_type_config['s3_message_adapter_metadata_type'] = "invalid_type"
+
+        self.assertRaises(ValueError, S3MessageAdapter, **wrong_metadata_type_config)
+
+    def test_metadata_type_lowercase(self):
+        metadata_type = 'collection'
+        uppercase_metadata_type = metadata_type.upper()
+        config = dict(self.config_dict)
+        config['s3_message_adapter_metadata_type'] = metadata_type
+
+        s3MA = S3MessageAdapter(**config)
+
+        self.assertEqual(uppercase_metadata_type, s3MA.metadata_type)
 
     @mock_s3
     def test_transform(self):
@@ -90,11 +112,8 @@ class S3MessageAdapterTest(unittest.TestCase):
 
     @mock_s3
     def test_extra_parameters_constructor(self):
-        testParams = {"access_bucket": "blah1",
-                      "type": "blah2",
-                      "file_id_prefix": "blah3",
-                      "collection_id": "blah4",
-                      "extra": "extra value"}
+        testParams = dict(self.config_dict)
+        testParams['extra'] = 'extra value'
         self.assertRaises(Exception, S3MessageAdapter(**testParams))
 
 if __name__ == '__main__':

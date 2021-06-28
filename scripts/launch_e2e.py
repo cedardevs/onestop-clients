@@ -7,11 +7,12 @@ from onestop.util.SqsConsumer import SqsConsumer
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.WebPublisher import WebPublisher
-from onestop.extract.CsbExtractor import CsbExtractor
 from onestop.schemas.util.jsonEncoder import EnumEncoder
+from onestop.util.ClientLogger import ClientLogger
 
+config_dict = {}
 
-def handler(recs):
+def handler(recs, log_level):
     '''
     Processes metadata information from sqs message triggered by S3 event and uploads to registry through web publisher (https). Also uploads s3 object to glacier.
 
@@ -22,50 +23,48 @@ def handler(recs):
         IM registry response and boto3 glacier response
     '''
 
-    print("Handler...")
+    logger = ClientLogger.get_logger('launch_e2e.handler', log_level, False)
+    logger.info('In Handler')
 
-    # Now get boto client for object-uuid retrieval
-    object_uuid = None
-    bucket = None
-    print(recs)
+    # If record exists try to get object-uuid retrieval
+    logger.debug('Records:%s'%recs)
     if recs is None:
-        print("No records retrieved")
+        logger.info('No records retrieved, doing nothing.')
+        return
+    
+    rec = recs[0]
+    logger.debug('Record: %s'%rec)
+    bucket = rec['s3']['bucket']['name']
+    s3_key = rec['s3']['object']['key']
+    logger.info("Getting uuid")
+    s3_resource = s3_utils.connect('resource', 's3', None)
+    object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
+    if object_uuid is not None:
+        logger.info('Retrieved object-uuid: %s'% object_uuid)
     else:
-        rec = recs[0]
-        print(rec)
-        bucket = rec['s3']['bucket']['name']
-        s3_key = rec['s3']['object']['key']
-        print("Getting uuid")
-        # High-level api
-        s3_resource = s3_utils.connect("s3_resource", None)
-        object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
-        if object_uuid is not None:
-            print("Retrieved object-uuid: " + object_uuid)
-        else:
-            print("Adding uuid")
-            s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
+        logger.info('UUID not found, adding uuid to bucket=%s key=%s'%(bucket, s3_key))
+        s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
+    s3ma = S3MessageAdapter(**config_dict)
     im_message = s3ma.transform(recs)
-
+    logger.debug('S3MessageAdapter.transform: %s'%im_message)
     json_payload = json.dumps(im_message.to_dict(), cls=EnumEncoder)
+    logger.debug('S3MessageAdapter.transform.json dump: %s'%json_payload)
 
-    print(json_payload)
-
-
+    wp = WebPublisher(**config_dict)
     registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
-    #print(registry_response.json())
+    logger.debug('publish_registry response: %s'%registry_response.json())
 
     # Upload to archive
     file_data = s3_utils.read_bytes_s3(s3_client, bucket, s3_key)
-    glacier = s3_utils.connect("glacier", cloud_conf['s3_region'])
-    vault_name = cloud_conf['vault_name']
-
+    glacier = s3_utils.connect('client', 'glacier', config_dict['s3_region'])
+    vault_name = config_dict['vault_name']
 
     resp_dict = s3_utils.upload_archive(glacier, vault_name, file_data)
-
-    print("archiveLocation: " + resp_dict['location'])
-    print("archiveId: " + resp_dict['archiveId'])
-    print("sha256: " + resp_dict['checksum'])
+    logger.debug('Upload response: %s'%resp_dict)
+    logger.info('upload archived location: %s'% resp_dict['location'])
+    logger.info('archiveId: %s'% resp_dict['archiveId'])
+    logger.info('sha256: %s'% resp_dict['checksum'])
 
     addlocPayload = {
         "fileLocations": {
@@ -82,116 +81,60 @@ def handler(recs):
     json_payload = json.dumps(addlocPayload, indent=2)
     # Send patch request next with archive location
     registry_response = wp.publish_registry("granule", object_uuid, json_payload, "PATCH")
-
+    logger.debug('publish to registry response: %s'% registry_response)
+    logger.info('Finished publishing to registry.')
 
 if __name__ == '__main__':
-    """
     parser = argparse.ArgumentParser(description="Launches e2e test")
-    parser.add_argument('-conf', dest="conf", required=True,
+    parser.add_argument('-conf', dest="conf", required=False, default='/etc/config/config.yml',
                         help="AWS config filepath")
     parser.add_argument('-cred', dest="cred", required=True,
                         help="Credentials filepath")
     args = vars(parser.parse_args())
-    # Get configuration file path locations
+
+    # Generate configuration dictionary
     conf_loc = args.pop('conf')
+    with open(conf_loc) as f:
+        config_dict.update(yaml.load(f, Loader=yaml.FullLoader))
+
+    # Get credentials from passed in fully qualified path or ENV.
     cred_loc = args.pop('cred')
-    # Upload a test file to s3 bucket
-    s3_utils = S3Utils(conf_loc, cred_loc)
-    # Low-level api ? Can we just use high level revisit me!
-    s3 = s3_utils.connect("s3", None)
-    registry_user = os.environ.get("REGISTRY_USERNAME")
-    registry_pwd = os.environ.get("REGISTRY_PASSWORD")
-    print(registry_user)
-    access_key = os.environ.get("AWS_ACCESS")
-    access_secret = os.environ.get("AWS_SECRET")
-    print(access_key)
+    if cred_loc is not None:
+        with open(cred_loc) as f:
+            creds = yaml.load(f, Loader=yaml.FullLoader)
+        registry_username = creds['registry']['username']
+        registry_password = creds['registry']['password']
+        access_key = creds['sandbox']['access_key']
+        access_secret = creds['sandbox']['secret_key']
+    else:
+        print("Using env variables for config parameters")
+        registry_username = os.environ.get("REGISTRY_USERNAME")
+        registry_password = os.environ.get("REGISTRY_PASSWORD")
+        access_key = os.environ.get("ACCESS_KEY")
+        access_secret = os.environ.get("SECRET_KEY")
 
-    # High-level api
-    s3_resource = s3_utils.connect("s3_resource", None)
-    bucket = cloud_conf['s3_bucket']
-    overwrite = True
-    sqs_max_polls = cloud_conf['sqs_max_polls']
-    # Add 3 files to bucket
-    local_files = ["file1.csv", "file4.csv"]
-    s3_file = None
-    for file in local_files:
-        local_file = "tests/data/" + file
-        s3_file = "csv/" + file
-        s3_utils.upload_s3(s3, local_file, bucket, s3_file, overwrite)
-    # Receive s3 message and MVM from SQS queue
-    sqs_consumer = SqsConsumer(conf_loc, cred_loc)
-    s3ma = S3MessageAdapter("scripts/config/csb-data-stream-config.yml", s3_utils)
-    # Retrieve data from s3 object
-    #csb_extractor = CsbExtractor()
-    wp = WebPublisher("config/web-publisher-config-dev.yml", cred_loc)
-    queue = sqs_consumer.connect()
-    try:
-        debug = False
-        sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
-    except Exception as e:
-        print("Message queue consumption failed: {}".format(e))
-    """
+    config_dict.update({
+        'registry_username' : registry_username,
+        'registry_password' : registry_password,
+        'access_key' : access_key,
+        'secret_key' : access_secret
+    })
 
-    parser = argparse.ArgumentParser(description="Launches e2e test")
-    parser.add_argument('-conf', dest="conf", required=True,
-                        help="AWS config filepath")
-
-    parser.add_argument('-cred', dest="cred", required=True,
-                        help="Credentials filepath")
-    args = vars(parser.parse_args())
-
-    # Get configuration file path locations
-    conf_loc = args.pop('conf')
-    cred_loc = args.pop('cred')
-    stream_conf_loc = args.pop('cred')
-
-    with open(os.path.abspath(os.path.join(os.path.dirname(__file__), cred_loc))) as f:
-        cred = yaml.load(f, Loader=yaml.FullLoader)
-    with open(os.path.abspath(os.path.join(os.path.dirname(__file__), conf_loc))) as f:
-        cloud_conf = yaml.load(f, Loader=yaml.FullLoader)
-    with open(os.path.abspath(os.path.join(os.path.dirname(__file__), stream_conf_loc))) as f:
-        stream_conf = yaml.load(f, Loader=yaml.FullLoader)
-
-    s3_utils = S3Utils(cred['sandbox']['access_key'],
-                       cred['sandbox']['secret_key'],
-                       "DEBUG")
-
-    bucket = cloud_conf['s3_bucket']
-    sqs_max_polls = cloud_conf['sqs_max_polls']
-
-    #Source
-    access_bucket = stream_conf['access_bucket']
-
-    #Onestop related
-    file_id_prefix = stream_conf['file_identifier_prefix']
-    file_format = stream_conf['format']
-    headers = stream_conf['headers']
-    type = stream_conf['type']
-
-    # Low-level api ? Can we just use high level revisit me!
-    s3_client = s3_utils.connect("s3", None)
+    s3_utils = S3Utils(**config_dict)
+    s3_client = s3_utils.connect('client', 's3', config_dict['s3_region'])
 
     # Upload test files to s3 bucket
     local_files = ["file1.csv", "file4.csv"]
     s3_file = None
     for file in local_files:
-        local_file = "data/" + file
+        local_file = "scripts/data/" + file
         # s3_file = "csv/" + file
-        s3_file = "NESDIS/CSB/" + file
-        if not s3_utils.upload_s3(s3_client, local_file, bucket, s3_file, True):
+        s3_file = "public/" + file
+        if not s3_utils.upload_s3(s3_client, local_file, config_dict['s3_bucket'], s3_file, True):
             exit("Error setting up for e2e: The test files were not uploaded to the s3 bucket therefore the tests cannot continue.")
 
-
-
     # Receive s3 message and MVM from SQS queue
-    sqs_consumer = SqsConsumer(conf_loc, cred_loc)
-    s3ma = S3MessageAdapter(access_bucket, headers, type, file_id_prefix, "DEBUG")
-    wp = WebPublisher("config/web-publisher-config-dev.yml", cred_loc)
-
-    queue = sqs_consumer.connect()
-    try:
-        debug = False
-        sqs_consumer.receive_messages(queue, sqs_max_polls, handler)
-
-    except Exception as e:
-        print("Message queue consumption failed: {}".format(e))
+    sqs_consumer = SqsConsumer(**config_dict)
+    sqs_resource = s3_utils.connect('resource', 'sqs', config_dict['s3_region'])
+    queue = sqs_consumer.connect(sqs_resource, config_dict['sqs_name'])
+    sqs_consumer.receive_messages(queue, config_dict['sqs_max_polls'], handler)
