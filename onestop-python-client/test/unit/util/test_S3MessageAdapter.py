@@ -60,7 +60,7 @@ class S3MessageAdapterTest(unittest.TestCase):
         test_params['extra'] = 'extra value'
         self.assertRaises(Exception, S3MessageAdapter(**test_params))
 
-    def test_transform(self):
+    def test_transform_happy(self):
         s3MA = S3MessageAdapter(**self.config_dict)
         payload = s3MA.transform(self.recs_minimum_fields)
 

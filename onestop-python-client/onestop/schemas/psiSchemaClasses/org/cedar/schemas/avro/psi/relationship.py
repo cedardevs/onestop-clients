@@ -2,6 +2,7 @@ from dataclasses import asdict, dataclass
 from typing import ClassVar, Dict, Optional
 
 from undictify import type_checked_constructor
+from .relationship_type import RelationshipType
 
 @type_checked_constructor()
 @dataclass
@@ -9,7 +10,7 @@ class Relationship:
     """
     Record of a relationship to another object in inventory
     """
-    type: Optional[str]
+    type: Optional[RelationshipType]
 
     #: The id of the related object
     id: str
