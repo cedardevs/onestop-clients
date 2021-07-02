@@ -1,6 +1,5 @@
 import unittest
 
-from moto import mock_s3
 from onestop.util.S3Utils import S3Utils
 from onestop.util.S3MessageAdapter import S3MessageAdapter
 
@@ -92,17 +91,7 @@ class S3MessageAdapterTest(unittest.TestCase):
 
         self.assertEqual(uppercase_metadata_type, s3MA.metadata_type)
 
-    @mock_s3
     def test_transform(self):
-        s3 = self.s3_utils.connect('client', 's3', self.region)
-        location = {'LocationConstraint': self.region}
-        bucket = 'nesdis-ncei-csb-dev'
-        key = 'csv/file1.csv'
-        key2 = 'csv/file2.csv'
-        s3.create_bucket(Bucket=bucket, CreateBucketConfiguration=location)
-        s3.put_object(Bucket=bucket, Key=key, Body="body")
-        s3.put_object(Bucket=bucket, Key=key2, Body="body")
-
         payload = self.s3ma.transform(self.recs1)
         print(payload)
 
@@ -110,7 +99,6 @@ class S3MessageAdapterTest(unittest.TestCase):
         print(payload)
         self.assertTrue(payload!=None)
 
-    @mock_s3
     def test_extra_parameters_constructor(self):
         testParams = dict(self.config_dict)
         testParams['extra'] = 'extra value'
