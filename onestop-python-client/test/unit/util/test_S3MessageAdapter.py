@@ -45,12 +45,7 @@ class S3MessageAdapterTest(unittest.TestCase):
 
         self.assertRaises(ValueError, S3MessageAdapter, **wrong_metadata_type_config)
 
-    def test_init_extra_parameters_constructor(self):
-        test_params = dict(self.config_dict)
-        test_params['extra'] = 'extra value'
-        self.assertRaises(Exception, S3MessageAdapter(**test_params))
-
-    def test_metadata_type_lowercase(self):
+    def test_init_metadata_type_lowercase(self):
         metadata_type = 'collection'
         uppercase_metadata_type = metadata_type.upper()
         config = dict(self.config_dict)
@@ -59,6 +54,11 @@ class S3MessageAdapterTest(unittest.TestCase):
         s3MA = S3MessageAdapter(**config)
 
         self.assertEqual(uppercase_metadata_type, s3MA.metadata_type)
+
+    def test_init_extra_parameters_constructor(self):
+        test_params = dict(self.config_dict)
+        test_params['extra'] = 'extra value'
+        self.assertRaises(Exception, S3MessageAdapter(**test_params))
 
     def test_transform(self):
         s3MA = S3MessageAdapter(**self.config_dict)
