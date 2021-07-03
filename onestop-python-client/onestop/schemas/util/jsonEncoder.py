@@ -1,5 +1,5 @@
 import json
-from enum import Enum
+
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum_algorithm import ChecksumAlgorithm
 
 # Diction of all the Enum Classes
