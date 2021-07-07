@@ -65,21 +65,21 @@ class S3MessageAdapter:
         if wildargs:
             self.logger.debug("Superfluous parameters in constructor call: " + str(wildargs))
 
-    def transform(self, recs):
+    def transform(self, rec):
         """
-        Transforms sqs message triggered by s3 event to correct format for publishing to IM registry
+        Transforms a single sqs message, triggered by a s3 event, to correct format for publishing to IM registry
 
         Parameters:
         ----------
-        recs: dict
-            sqs event message to transform
+        rec: dict
+            Single record in a sqs event message to transform
 
         :return: ParsedRecord Object
             The Parsed Record class is an avro schema generated class
         """
 
-        self.logger.info("Transform!")
-        rec = recs[0]  # This is standard format 1 record per message for now according to AWS docs
+        self.logger.info("Transforming Record")
+        self.logger.debug("Record: %s"%rec)
 
         s3_bucket = rec['s3']['bucket']['name']
         s3_key = rec['s3']['object']['key']
@@ -88,7 +88,6 @@ class S3MessageAdapter:
         checkSumAlgorithm = ChecksumAlgorithm(value='MD5')
         alg_value = rec['s3']['object']['eTag']
         checkSum = Checksum(algorithm=checkSumAlgorithm, value=alg_value)
-        checkSum_dict = checkSum.to_dict()
 
         file_name = str(s3_key)[pos:]
         file_size = rec['s3']['object']['size']

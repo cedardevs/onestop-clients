@@ -83,7 +83,7 @@ def create_upload_handler(web_publisher, s3_utils, s3_message_adapter):
                 object_uuid = s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
         # Convert s3 message to IM message
-        im_message = s3_message_adapter.transform(records)
+        im_message = s3_message_adapter.transform(rec)
         json_payload = json.dumps(im_message.to_dict(), cls=EnumEncoder)
         logger.debug('transformed message, json_payload: %s'%json_payload)
 

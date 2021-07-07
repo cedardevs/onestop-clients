@@ -49,7 +49,7 @@ def handler(recs, log_level):
 
     # Convert s3 message to IM message
     s3ma = S3MessageAdapter(**config_dict)
-    im_message = s3ma.transform(recs)
+    im_message = s3ma.transform(rec)
     logger.debug('S3MessageAdapter.transform: %s'%im_message)
     json_payload = json.dumps(im_message.to_dict(), cls=EnumEncoder)
     logger.debug('S3MessageAdapter.transform.json dump: %s'%json_payload)

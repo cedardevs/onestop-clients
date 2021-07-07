@@ -31,7 +31,7 @@ def handler(recs, log_level):
     if recs is None:
         logger.info('No records retrieved, doing nothing.')
         return
-    
+
     rec = recs[0]
     logger.debug('Record: %s'%rec)
     bucket = rec['s3']['bucket']['name']
@@ -46,7 +46,7 @@ def handler(recs, log_level):
         s3_utils.add_uuid_metadata(s3_resource, bucket, s3_key)
 
     s3ma = S3MessageAdapter(**config_dict)
-    im_message = s3ma.transform(recs)
+    im_message = s3ma.transform(rec)
     logger.debug('S3MessageAdapter.transform: %s'%im_message)
     json_payload = json.dumps(im_message.to_dict(), cls=EnumEncoder)
     logger.debug('S3MessageAdapter.transform.json dump: %s'%json_payload)
@@ -61,7 +61,11 @@ def handler(recs, log_level):
     vault_name = config_dict['vault_name']
 
     resp_dict = s3_utils.upload_archive(glacier, vault_name, file_data)
-    logger.debug('Upload response: %s'%resp_dict)
+    logger.debug('Upload to cloud, Response: %s'%resp_dict)
+    if resp_dict == None:
+        logger.error('Error uploading to s3 archive, see prior log statements.')
+        return
+
     logger.info('upload archived location: %s'% resp_dict['location'])
     logger.info('archiveId: %s'% resp_dict['archiveId'])
     logger.info('sha256: %s'% resp_dict['checksum'])

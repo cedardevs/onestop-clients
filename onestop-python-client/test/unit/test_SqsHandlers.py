@@ -251,7 +251,7 @@ class test_SqsHandler(unittest.TestCase):
         mock_wp.publish_registry.assert_called_with(
             'granule',
             mock_s3_utils.get_uuid_metadata(),
-            json.dumps(self.s3_message_adapter.transform(json.loads(message['Message'])['Records']).to_dict(), cls=EnumEncoder),
+            json.dumps(self.s3_message_adapter.transform(json.loads(message['Message'])['Records'][0]).to_dict(), cls=EnumEncoder),
             'POST'
         )
 
@@ -312,7 +312,7 @@ class test_SqsHandler(unittest.TestCase):
         mock_wp.publish_registry.assert_called_with(
             'granule',
             mock_s3_utils.get_uuid_metadata(),
-            json.dumps(self.s3_message_adapter.transform(json.loads(message['Message'])['Records']).to_dict(), cls=EnumEncoder),
+            json.dumps(self.s3_message_adapter.transform(json.loads(message['Message'])['Records'][0]).to_dict(), cls=EnumEncoder),
             'PATCH'
         )
 

@@ -55,7 +55,7 @@ class SqsConsumer:
         :param cb: function
             call back function
 
-        :return: If the Message has a Records key then the call back function gets called on the Message.
+        :return: If the Message has a Records key then the call back function gets called on a single message.
 
         """
         self.logger.info("Receive messages")
