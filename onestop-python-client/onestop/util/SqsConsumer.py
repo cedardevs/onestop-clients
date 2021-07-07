@@ -98,7 +98,12 @@ class SqsConsumer:
                 if 'Records' in message_content:
                     recs = message_content['Records']
                     self.logger.debug('Message "Records": %s' % recs)
-                    cb(recs, self.log_level)
+                    if len(recs) > 0:
+                        rec = recs[0]
+                        self.logger.debug('Single Message "Record": %s' % rec)
+                        cb(rec, self.log_level)
+                    else:
+                        self.logger.info("Message body's records is empty.")
                 else:
                     self.logger.info("s3 event message without 'Records' content received.")
 

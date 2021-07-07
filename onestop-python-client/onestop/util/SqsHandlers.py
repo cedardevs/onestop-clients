@@ -12,25 +12,24 @@ def create_delete_handler(web_publisher):
 
     :param: web_publisher: WebPublisher object
     """
-    def delete(records, log_level='INFO'):
+    def delete(rec, log_level='INFO'):
 
         logger = ClientLogger.get_logger('SqsHandlers.create_delete_handler.delete', log_level, False)
         logger.info("In create_delete_handler.delete() handler")
-        logger.debug("Records: %s"%records)
+        logger.debug("Record: %s"%rec)
 
-        if not records or records is None:
-            logger.info("Ending handler, records empty, records=%s"%records)
+        if not rec or rec is None:
+            logger.info("Ending handler, record empty, record=%s"%rec)
             return
 
-        record = records[0]
-        if record['eventName'] != 'ObjectRemoved:Delete':
-            logger.info("Ending handler, eventName=%s"%record['eventName'])
+        if rec['eventName'] != 'ObjectRemoved:Delete':
+            logger.info("Ending handler, eventName=%s"%rec['eventName'])
             return
 
-        logger.info('Attempting to delete record %s'%record)
+        logger.info('Attempting to delete record %s'%rec)
 
-        bucket = record['s3']['bucket']['name']
-        s3_key = record['s3']['object']['key']
+        bucket = rec['s3']['bucket']['name']
+        s3_key = rec['s3']['object']['key']
         s3_url = "s3://" + bucket + "/" + s3_key
         payload = '{"queries":[{"type": "fieldQuery", "field": "links.linkUrl", "value": "' + s3_url + '"}] }'
         search_response = web_publisher.search_onestop('granule', payload)
@@ -59,12 +58,11 @@ def create_upload_handler(web_publisher, s3_utils, s3_message_adapter):
     :param: s3ma: S3MessageAdapter object
 
     """
-    def upload(records, log_level='DEBUG'):
+    def upload(rec, log_level='DEBUG'):
         logger = ClientLogger.get_logger('SqsHandlers.create_upload_handler.upload', log_level, False)
         logger.info("In create_upload_handler.upload() handler")
-        logger.debug("Records: %s"%records)
+        logger.debug("Records: %s"%rec)
 
-        rec = records[0]
         s3_key = rec['s3']['object']['key']
         logger.info("Received message for " + s3_key)
         logger.info("Event type: " + rec['eventName'])

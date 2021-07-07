@@ -128,7 +128,7 @@ class SqsConsumerTest(unittest.TestCase):
         self.sqs_consumer.receive_messages(queue, 1, mock_cb)
 
         # Verify callback function was called once with expected message attributes
-        mock_cb.assert_called_with(self.records, ANY)
+        mock_cb.assert_called_with(self.records[0], ANY)
 
     @mock_sqs
     def test_happy_path(self):
@@ -149,7 +149,7 @@ class SqsConsumerTest(unittest.TestCase):
         self.sqs_consumer.receive_messages(queue, 1, mock_cb)
 
         # Verify callback function was called once with expected message attributes
-        mock_cb.assert_called_with(self.records, ANY)
+        mock_cb.assert_called_with(self.records[0], ANY)
 
     # An example using external send/receive methods
     @unittest.skip
