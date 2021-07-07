@@ -14,39 +14,6 @@ import argparse
 
 config_dict = {}
 
-test_message = {
-    "Type": "Notification",
-    "MessageId": "e12f0129-0236-529c-aeed-5978d181e92a",
-    "TopicArn": "arn:aws:sns:" + config_dict['s3_region'] + ":798276211865:cloud-archive-client-sns",
-    "Subject": "Amazon S3 Notification",
-    "Message": '''{
-                "Records": [{
-                    "eventVersion": "2.1", "eventSource": "aws:s3", "awsRegion": "''' + config_dict['s3_region'] + '''",
-                    "eventTime": "2020-12-14T20:56:08.725Z", 
-                    "eventName": "ObjectRemoved:Delete",
-                    "userIdentity": {"principalId": "AX8TWPQYA8JEM"},
-                    "requestParameters": {"sourceIPAddress": "65.113.158.185"},
-                    "responseElements": {"x-amz-request-id": "D8059E6A1D53597A",
-                                         "x-amz-id-2": "7DZF7MAaHztZqVMKlsK45Ogrto0945RzXSkMnmArxNCZ+4/jmXeUn9JM1NWOMeKK093vW8g5Cj5KMutID+4R3W1Rx3XDZOio"},
-                    "s3": {
-                        "s3SchemaVersion": "1.0", "configurationId": "archive-testing-demo-event",
-                        "bucket": {"name": "''' + config_dict['s3_bucket'] + '''",
-                                   "ownerIdentity": {"principalId": "AX8TWPQYA8JEM"},
-                                   "arn": "arn:aws:s3:::''' + config_dict['s3_bucket'] + '''"},
-                        "object": {"key": "123", 
-                                   "sequencer": "005FD7D1765F04D8BE",
-                                   "eTag": "44d2452e8bc2c8013e9c673086fbab7a",
-                                   "size": 1385,
-                                   "versionId": "q6ls_7mhqUbfMsoYiQSiADnHBZQ3Fbzf"}
-                    }
-                }]
-            }''',
-    "Timestamp": "2020-12-14T20:56:23.786Z",
-    "SignatureVersion": "1",
-    "Signature": "MB5P0H5R5q3zOFoo05lpL4YuZ5TJy+f2c026wBWBsQ7mbNQiVxAy4VbbK0U1N3YQwOslq5ImVjMpf26t1+zY1hoHoALfvHY9wPtc8RNlYqmupCaZgtwEl3MYQz2pHIXbcma4rt2oh+vp/n+viARCToupyysEWTvw9a9k9AZRuHhTt8NKe4gpphG0s3/C1FdvrpQUvxoSGVizkaX93clU+hAFsB7V+yTlbKP+SNAqP/PaLtai6aPY9Lb8reO2ZjucOl7EgF5IhBVT43HhjBBj4JqYBNbMPcId5vMfBX8qI8ANIVlGGCIjGo1fpU0ROxSHsltuRjkmErpxUEe3YJJM3Q==",
-    "SigningCertURL": "https://sns.us-east-2.amazonaws.com/SimpleNotificationService-010a507c1833636cd94bdb98bd93083a.pem",
-    "UnsubscribeURL": "https://sns.us-east-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-2:798276211865:cloud-archive-client-sns:461222e7-0abf-40c6-acf7-4825cef65cce"
-}
 
 def handler(recs, log_level):
     logger = ClientLogger.get_logger('s3_notification_handler.handler', log_level, False)
@@ -117,6 +84,40 @@ if __name__ == '__main__':
     queue = sqs_consumer.connect(s3_resource, config_dict['sqs_name'])
 
     # Send a test message
+    test_message = {
+        "Type": "Notification",
+        "MessageId": "e12f0129-0236-529c-aeed-5978d181e92a",
+        "TopicArn": "arn:aws:sns:" + config_dict['s3_region'] + ":798276211865:cloud-archive-client-sns",
+        "Subject": "Amazon S3 Notification",
+        "Message": '''{
+                "Records": [{
+                    "eventVersion": "2.1", "eventSource": "aws:s3", "awsRegion": "''' + config_dict['s3_region'] + '''",
+                    "eventTime": "2020-12-14T20:56:08.725Z", 
+                    "eventName": "ObjectRemoved:Delete",
+                    "userIdentity": {"principalId": "AX8TWPQYA8JEM"},
+                    "requestParameters": {"sourceIPAddress": "65.113.158.185"},
+                    "responseElements": {"x-amz-request-id": "D8059E6A1D53597A",
+                                         "x-amz-id-2": "7DZF7MAaHztZqVMKlsK45Ogrto0945RzXSkMnmArxNCZ+4/jmXeUn9JM1NWOMeKK093vW8g5Cj5KMutID+4R3W1Rx3XDZOio"},
+                    "s3": {
+                        "s3SchemaVersion": "1.0", "configurationId": "archive-testing-demo-event",
+                        "bucket": {"name": "''' + config_dict['s3_bucket'] + '''",
+                                   "ownerIdentity": {"principalId": "AX8TWPQYA8JEM"},
+                                   "arn": "arn:aws:s3:::''' + config_dict['s3_bucket'] + '''"},
+                        "object": {"key": "123", 
+                                   "sequencer": "005FD7D1765F04D8BE",
+                                   "eTag": "44d2452e8bc2c8013e9c673086fbab7a",
+                                   "size": 1385,
+                                   "versionId": "q6ls_7mhqUbfMsoYiQSiADnHBZQ3Fbzf"}
+                    }
+                }]
+            }''',
+        "Timestamp": "2020-12-14T20:56:23.786Z",
+        "SignatureVersion": "1",
+        "Signature": "MB5P0H5R5q3zOFoo05lpL4YuZ5TJy+f2c026wBWBsQ7mbNQiVxAy4VbbK0U1N3YQwOslq5ImVjMpf26t1+zY1hoHoALfvHY9wPtc8RNlYqmupCaZgtwEl3MYQz2pHIXbcma4rt2oh+vp/n+viARCToupyysEWTvw9a9k9AZRuHhTt8NKe4gpphG0s3/C1FdvrpQUvxoSGVizkaX93clU+hAFsB7V+yTlbKP+SNAqP/PaLtai6aPY9Lb8reO2ZjucOl7EgF5IhBVT43HhjBBj4JqYBNbMPcId5vMfBX8qI8ANIVlGGCIjGo1fpU0ROxSHsltuRjkmErpxUEe3YJJM3Q==",
+        "SigningCertURL": "https://sns.us-east-2.amazonaws.com/SimpleNotificationService-010a507c1833636cd94bdb98bd93083a.pem",
+        "UnsubscribeURL": "https://sns.us-east-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-2:798276211865:cloud-archive-client-sns:461222e7-0abf-40c6-acf7-4825cef65cce"
+    }
+
 #    sqs_client = s3_utils.connect('client', 'sqs' , config_dict['s3_region'])
 #    sqs_client.send_message(
 #        QueueUrl='https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs',
