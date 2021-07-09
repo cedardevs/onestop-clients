@@ -99,8 +99,14 @@ class S3MessageAdapter:
         # File Location
         fileLocationType = FileLocationType(FileLocationType.ARCHIVE)
         s3_obj_uri = "s3://" + s3_bucket + "/" + s3_key
-        fileLocation = FileLocation(uri=s3_obj_uri, type=fileLocationType, deleted=False, restricted=True,
-                                    asynchronous=False, serviceType='Amazon:AWS:S3', optionalAttributes={})
+        fileLocation = {s3_obj_uri:
+                            FileLocation(uri=s3_obj_uri,
+                                         type=fileLocationType,
+                                         deleted=False,
+                                         restricted=True,
+                                         asynchronous=False,
+                                         serviceType='Amazon:AWS:S3',
+                                         optionalAttributes={})}
 
         # Error Event
         errorEvent = ErrorEvent()
@@ -123,7 +129,9 @@ class S3MessageAdapter:
                               legalConstraints=[], dsmmAccessibility=0, dsmmDataIntegrity=0, dsmmDataQualityAssessment=0, dsmmDataQualityAssurance=0,
                               dsmmDataQualityControlMonitoring=0, dsmmPreservability=0, dsmmProductionSustainability=0, dsmmTransparencyTraceability=0,
                               dsmmUsability=0, dsmmAverage=0.0, services=[])
-
+#fileLocations=dict
+#fileLocations={'nesdis-ncei-csb-dev/csv/file2.csv': new FileLocation(...)}
+#integration/test_WebPublisher
         parsedRecord = ParsedRecord(fileInformation=fileInformation, fileLocations=fileLocation,
                                     relationships=[relationship], errors=[errorEvent], publishing=publishing,
                                     discovery=discovery)

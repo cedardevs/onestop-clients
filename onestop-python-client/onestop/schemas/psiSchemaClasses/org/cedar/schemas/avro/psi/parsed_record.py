@@ -26,11 +26,7 @@ class ParsedRecord:
     fileInformation: Optional[FileInformation]
 
     #: A list of location objects describing where the file is located
-
-    # Commenting out for now because causing errors
-    #fileLocations: Dict[str, FileLocation]
-
-    fileLocations: Optional[FileLocation]
+    fileLocations: Dict[str, FileLocation]
     publishing: Optional[Publishing]
 
     #: A record of this objects relationships to other objects in the inventory

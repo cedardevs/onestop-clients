@@ -37,7 +37,22 @@ def handler(key, value, log_level = 'INFO'):
     # This is an example for testing purposes.
     value = {
         "type": "granule",
-        "content": "{ \"discovery\": {\n            \"fileIdentifier\": \"92ade5dc-946d-11ea-abe4-0242ac120004\",\n            \"links\": [\n                {\n                    \"linkFunction\": \"download\",\n                    \"linkName\": \"Amazon S3\",\n                    \"linkProtocol\": \"HTTPS\",\n                    \"linkUrl\": \"https://s3.amazonaws.com/nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n                }\n            ],\n            \"parentIdentifier\": \"0fad03df-0805-434a-86a6-7dc42d68480f\",\n            \"spatialBounding\": null,\n            \"temporalBounding\": {\n                \"beginDate\": \"2020-05-12T16:20:15.158Z\", \n                \"endDate\": \"2020-05-12T16:21:51.494Z\"\n            },\n            \"title\": \"HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n        },\n        \"fileInformation\": {\n  \"checksums\": [{\"algorithm\": \"MD5\",\"value\": \"44d2452e8bc2c8013e9c673086fbab7a\"}]\n, \"optionalAttributes\":{},          \"format\": \"HSD\",\n            \"name\": \"HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\",\n            \"size\": 208918\n        },\n        \"fileLocations\": {\n     \"optionalAttributes\":{},       \"uri\":\"//nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\",   \"asynchronous\": false,\n                \"deleted\": false,\n                \"lastModified\": 1589300890000,\n                \"locality\": \"us-east-1\",\n                \"restricted\": false,\n                \"serviceType\": \"Amazon:AWS:S3\",\n                \"type\": {\"type\":\"ACCESS\"},\n                \"uri\": \"s3://nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n                   },\n        \"relationships\": [\n            {\n                \"id\": \"0fad03df-0805-434a-86a6-7dc42d68480f\",\n                \"type\": \"COLLECTION\"\n            }\n        ]\n    }",
+        "content": "{ \"discovery\": {\n            \"fileIdentifier\": \"92ade5dc-946d-11ea-abe4-0242ac120004\",\n            \"links\": [\n                {\n                    \"linkFunction\": \"download\",\n                    \"linkName\": \"Amazon S3\",\n                    \"linkProtocol\": \"HTTPS\",\n                    \"linkUrl\": \"https://s3.amazonaws.com/nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n                }\n            ],\n            \"parentIdentifier\": \"0fad03df-0805-434a-86a6-7dc42d68480f\",\n            \"spatialBounding\": null,\n            \"temporalBounding\": {\n                \"beginDate\": \"2020-05-12T16:20:15.158Z\", \n                \"endDate\": \"2020-05-12T16:21:51.494Z\"\n            },\n            \"title\": \"HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n        },\n        \"fileInformation\": {\n  \"checksums\": [{\"algorithm\": \"MD5\",\"value\": \"44d2452e8bc2c8013e9c673086fbab7a\"}]\n, \"optionalAttributes\":{},          \"format\": \"HSD\",\n            \"name\": \"HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\",\n            \"size\": 208918\n        },\n        "
+                   "\"fileLocations\": {\n     "
+                        "\"s3://nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\": {\n"
+                            "\"optionalAttributes\":{},       "
+                            "\"uri\":\"//nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\",   "
+                            "\"asynchronous\": false,\n                "
+                            "\"deleted\": false,\n                "
+                            "\"lastModified\": 1589300890000,\n                "
+                            "\"locality\": \"us-east-1\",\n                "
+                            "\"restricted\": false,\n                "
+                            "\"serviceType\": \"Amazon:AWS:S3\",\n                "
+                            "\"type\": {\"type\":\"ACCESS\"},\n                "
+                            "\"uri\": \"s3://nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n                   "
+                        "}\n        "
+                   "},\n        "
+                   "\"relationships\": [\n            {\n                \"id\": \"0fad03df-0805-434a-86a6-7dc42d68480f\",\n                \"type\": \"COLLECTION\"\n            }\n        ]\n    }",
         "contentType": "application/json",
         "method": "PUT",
         "source": "unknown",
@@ -84,15 +99,8 @@ def handler(key, value, log_level = 'INFO'):
     # update content dict
     parsed_record.type = value['type']
     content_dict = parsed_record.to_dict()
-    # reformat Relationship field
-#    relationship_type = content_dict['relationships'][0]['type']
-#    content_dict['relationships'][0]['type'] = relationship_type
 
-    # reformat File Locations
-    filelocation_type = content_dict['fileLocations']['type']['type']
-    content_dict['fileLocations']['type'] = filelocation_type
-
-    # Transform content_dict to appropiate payload
+    # Transform content_dict to appropriate payload
     # cls=EnumEncoderValue argument looks for instances of Enum classes and extracts only the value of the Enum
     content_dict = json.dumps(content_dict, cls=EnumEncoderValue)
     content_dict = json.loads(content_dict)
