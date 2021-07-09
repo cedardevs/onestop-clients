@@ -6,12 +6,14 @@ from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum_algori
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.relationship_type import RelationshipType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.record_type import RecordType
 from onestop.schemas.psiSchemaClasses.time_range_descriptor import TimeRangeDescriptor
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_location_type import FileLocationType
 from onestop.schemas.geojsonSchemaClasses.line_string_type import LineStringType
 from onestop.schemas.geojsonSchemaClasses.multi_line_string_type import MultiLineStringType
 from onestop.schemas.geojsonSchemaClasses.multi_point_type import MultiPointType
 from onestop.schemas.geojsonSchemaClasses.multi_polygon_type import MultiPolygonType
 from onestop.schemas.geojsonSchemaClasses.point_type import PointType
 from onestop.schemas.geojsonSchemaClasses.polygon_type import PolygonType
+
 class jsonEncoderTest(unittest.TestCase):
 
     def test_checksumalgorithm_enum_class_encodes(self):
@@ -103,3 +105,12 @@ class jsonEncoderTest(unittest.TestCase):
                              cls=EnumEncoder)
 
         self.assertEqual(jsonStr, '{"__enum__": "PolygonType.%s"}'%type)
+
+    def test_filelocationtype_enum_class_encodes(self):
+        type = FileLocationType.INGEST.value
+        obj = FileLocationType(type)
+
+        jsonStr = json.dumps(obj,
+                             cls=EnumEncoder)
+
+        self.assertEqual(jsonStr, '{"__enum__": "FileLocationType.%s"}'%type)

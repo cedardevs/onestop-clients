@@ -97,7 +97,7 @@ class S3MessageAdapter:
         relationship = Relationship(id=self.collection_id, type=RelationshipType(self.metadata_type))
 
         # File Location
-        fileLocationType = FileLocationType(type='ARCHIVE')
+        fileLocationType = FileLocationType(FileLocationType.ARCHIVE)
         s3_obj_uri = "s3://" + s3_bucket + "/" + s3_key
         fileLocation = FileLocation(uri=s3_obj_uri, type=fileLocationType, deleted=False, restricted=True,
                                     asynchronous=False, serviceType='Amazon:AWS:S3', optionalAttributes={})

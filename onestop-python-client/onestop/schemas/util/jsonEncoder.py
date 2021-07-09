@@ -4,6 +4,7 @@ from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum_algori
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.relationship_type import RelationshipType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.record_type import RecordType
 from onestop.schemas.psiSchemaClasses.time_range_descriptor import TimeRangeDescriptor
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_location_type import FileLocationType
 from onestop.schemas.geojsonSchemaClasses.line_string_type import LineStringType
 from onestop.schemas.geojsonSchemaClasses.multi_line_string_type import MultiLineStringType
 from onestop.schemas.geojsonSchemaClasses.multi_point_type import MultiPointType
@@ -22,7 +23,8 @@ ENUMS = {
     'MultiPointType': MultiPointType,
     'MultiPolygonType': MultiPolygonType,
     'PointType': PointType,
-    'PolygonType': PolygonType
+    'PolygonType': PolygonType,
+    'FileLocationType': FileLocationType
 }
 
 # Used as an argument in json.dumps, transform Enum instance for later use
