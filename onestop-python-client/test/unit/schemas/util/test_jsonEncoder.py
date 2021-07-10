@@ -5,6 +5,7 @@ from onestop.schemas.util.jsonEncoder import EnumEncoder
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum_algorithm import ChecksumAlgorithm
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.relationship_type import RelationshipType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.record_type import RecordType
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.valid_descriptor import ValidDescriptor
 from onestop.schemas.psiSchemaClasses.time_range_descriptor import TimeRangeDescriptor
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_location_type import FileLocationType
 from onestop.schemas.geojsonSchemaClasses.line_string_type import LineStringType
@@ -114,3 +115,12 @@ class jsonEncoderTest(unittest.TestCase):
                              cls=EnumEncoder)
 
         self.assertEqual(jsonStr, '{"__enum__": "FileLocationType.%s"}'%type)
+
+    def test_validdescriptor_enum_class_encodes(self):
+        type = ValidDescriptor.INVALID.value
+        obj = ValidDescriptor(type)
+
+        jsonStr = json.dumps(obj,
+                             cls=EnumEncoder)
+
+        self.assertEqual(jsonStr, '{"__enum__": "ValidDescriptor.%s"}'%type)
