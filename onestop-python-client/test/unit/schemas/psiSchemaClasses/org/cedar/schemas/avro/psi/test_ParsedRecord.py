@@ -13,6 +13,9 @@ from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.responsible_par
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.reference import Reference
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_location_type import FileLocationType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.valid_descriptor import ValidDescriptor
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.analysis import Analysis
+from onestop.schemas.psiSchemaClasses.identification_analysis import IdentificationAnalysis
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum_algorithm import ChecksumAlgorithm
 from onestop.schemas.psiSchemaClasses.operation import Operation
 from onestop.schemas.psiSchemaClasses.data_format import DataFormat
 from onestop.schemas.psiSchemaClasses.platform import Platform
@@ -269,15 +272,46 @@ class test_ParsedRecord(unittest.TestCase):
         'temporalBounding': temporalBoundingAnalysis_dict,
         'spatialBounding': spatialBounding_dict
     }
+    checksum_dict = {
+        'algorithm': ChecksumAlgorithm.MD5,
+        'value': 'value1'
+    }
+    fileInformation_dict = {
+        'name': 'file name',
+        'size': 1,
+        'checksums': [checksum_dict],
+        'format': 'format',
+        'headers': 'header',
+        'optionalAttributes': {'attr1': 'value1', 'attr2': 'value2'}
+    }
+    publishing_dict = {
+        'isPrivate': True,
+        'until': -1
+    }
+    relationships_dict = {
+        'type': RelationshipType.collection,
+        'id': 'id1'
+    }
+    errorEvent_dict = {
+        'title': 'title1',
+        'detail': 'detail1',
+        'status': 404,
+        'code': 500,
+        'source': 'source1'
+    }
     parsedRecord_dict = {
         'type': RecordType.collection,
         'discovery': discovery_dict,
         'analysis': analysis_dict,
+        'fileInformation': fileInformation_dict,
         'fileLocations': {
             's3://noaa-goes16/ABI-L1b-RadF/2019/303/09/OR_ABI-L1b-RadF-M6C10_G16_s20193030950389_e20193031000109_c20193031000158.nc': {
                 **fileLocation_dict
             }
-        }
+        },
+        'publishing': publishing_dict,
+        'relationships': [relationships_dict],
+        'errors': [errorEvent_dict]
     }
 
     # Note: Didn't make unit tests for ENUMS since they don't execute any methods.
@@ -402,30 +436,10 @@ class test_ParsedRecord(unittest.TestCase):
         self.assertEqual(reference.links[0].linkDescription, self.reference_dict['links'][0]['linkDescription'])
         self.assertEqual(reference.links[0].linkFunction, self.reference_dict['links'][0]['linkFunction'])
 
-    @unittest.skip
-    def test_fileInformation_all_vars_set(self):
-        content_dict = {
-            "fileInformation":{
-                "checksums":[
-                    {
-                        "value":"4809084627a18d54db59659819f8a4b5d2c76367",
-                        "algorithm":"SHA1"
-                    }
-                ],
-                "headers":"NetCDF file reader",
-                "size":22876986,
-                "name":"OR_ABI-L1b-RadF-M6C10_G16_s20193030950389_e20193031000109_c20193031000158.nc",
-                "format":"NetCDF",
-                "optionalAttributes":{
-                }
-            }
-        }
+    def test_analysis_all_vars_set(self):
+        analysis = Analysis(**self.analysis_dict)
 
-        parsed_record = ParsedRecord.from_dict(content_dict)
-
-        self.assertIsNotNone(parsed_record)
-
-        fileInformation = FileI
+        self.assertEqual(analysis.identification, IdentificationAnalysis(**self.identificationAnalysis_dict))
 
     def test_fileLocation_all_vars_set(self):
         fileLocations = FileLocation(**self.fileLocation_dict)
