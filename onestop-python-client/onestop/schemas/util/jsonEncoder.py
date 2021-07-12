@@ -6,6 +6,7 @@ from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.record_type imp
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.valid_descriptor import ValidDescriptor
 from onestop.schemas.psiSchemaClasses.time_range_descriptor import TimeRangeDescriptor
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_location_type import FileLocationType
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.method import Method
 from onestop.schemas.geojsonSchemaClasses.line_string_type import LineStringType
 from onestop.schemas.geojsonSchemaClasses.multi_line_string_type import MultiLineStringType
 from onestop.schemas.geojsonSchemaClasses.multi_point_type import MultiPointType
@@ -20,6 +21,7 @@ ENUMS = {
     'RecordType': RecordType,
     'TimeRangeDescriptor': TimeRangeDescriptor,
     'LineStringType': LineStringType,
+    'Method': Method,
     'MultiLineStringType': MultiLineStringType,
     'MultiPointType': MultiPointType,
     'MultiPolygonType': MultiPolygonType,

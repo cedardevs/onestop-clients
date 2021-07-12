@@ -8,6 +8,7 @@ from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.record_type imp
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.valid_descriptor import ValidDescriptor
 from onestop.schemas.psiSchemaClasses.time_range_descriptor import TimeRangeDescriptor
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_location_type import FileLocationType
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.method import Method
 from onestop.schemas.geojsonSchemaClasses.line_string_type import LineStringType
 from onestop.schemas.geojsonSchemaClasses.multi_line_string_type import MultiLineStringType
 from onestop.schemas.geojsonSchemaClasses.multi_point_type import MultiPointType
@@ -61,6 +62,15 @@ class jsonEncoderTest(unittest.TestCase):
                              cls=EnumEncoder)
 
         self.assertEqual(jsonStr, '{"__enum__": "LineStringType.%s"}'%type)
+
+    def test_method_enum_class_encodes(self):
+        type = Method.CONNECT
+        obj = Method(type)
+
+        jsonStr = json.dumps(obj,
+                             cls=EnumEncoder)
+
+        self.assertEqual(jsonStr, '{"__enum__": "%s"}'%type)
 
     def test_multilinestringtype_enum_class_encodes(self):
         type = MultiLineStringType.MultiLineString.value
