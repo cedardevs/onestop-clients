@@ -12,11 +12,11 @@ from onestop.schemas.util.jsonEncoder import EnumEncoder
 
 config_dict = {}
 
-def handler(recs, log_level):
+def handler(rec, log_level):
     '''
     Processes metadata information from sqs message triggered by S3 event and uploads to registry through web publisher (https). Utilizes helm for credentials and conf.
 
-    :param recs: dict
+    :param rec: dict
         sqs message triggered by s3 event
 
     :return: str
@@ -28,11 +28,10 @@ def handler(recs, log_level):
     # Now get boto client for object-uuid retrieval
     object_uuid = None
 
-    if recs is None:
-        logger.info('No records retrieved, doing nothing.')
+    if rec is None:
+        logger.info('No record retrieved, doing nothing.')
         return
 
-    rec = recs[0]
     bucket = rec['s3']['bucket']['name']
     s3_key = rec['s3']['object']['key']
 

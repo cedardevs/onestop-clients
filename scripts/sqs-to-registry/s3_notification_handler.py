@@ -15,21 +15,20 @@ import argparse
 config_dict = {}
 
 
-def handler(recs, log_level):
+def handler(rec, log_level):
     logger = ClientLogger.get_logger('s3_notification_handler.handler', log_level, False)
     logger.info('In Handler')
 
-    if recs is None:
-        logger.info('No records retrieved, doing nothing.')
+    if rec is None:
+        logger.info('No record retrieved, doing nothing.')
         return
 
-    rec = recs[0]
     logger.info('Record:%s'%rec)
 
     if 'ObjectRemoved' in rec['eventName']:
-        delete_handler(recs)
+        delete_handler(rec)
     else:
-        upload_handler(recs)
+        upload_handler(rec)
 
 if __name__ == '__main__':
     # Example command: python3 archive_client_integration.py -conf /Users/whoever/repo/onestop-clients/scripts/config/combined_template.yml -cred /Users/whoever/repo/onestop-clients/scripts/config/credentials.yml

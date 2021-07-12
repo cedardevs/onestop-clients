@@ -12,11 +12,11 @@ from onestop.util.ClientLogger import ClientLogger
 
 config_dict = {}
 
-def handler(recs, log_level):
+def handler(rec, log_level):
     '''
     Processes metadata information from sqs message triggered by S3 event and uploads to registry through web publisher (https). Also uploads s3 object to glacier.
 
-    :param recs: dict
+    :param rec: dict
         sqs message triggered by s3 event
 
     :return: str
@@ -27,12 +27,11 @@ def handler(recs, log_level):
     logger.info('In Handler')
 
     # If record exists try to get object-uuid retrieval
-    logger.debug('Records:%s'%recs)
-    if recs is None:
-        logger.info('No records retrieved, doing nothing.')
+    logger.debug('Record:%s'%rec)
+    if rec is None:
+        logger.info('No record retrieved, doing nothing.')
         return
 
-    rec = recs[0]
     logger.debug('Record: %s'%rec)
     bucket = rec['s3']['bucket']['name']
     s3_key = rec['s3']['object']['key']
