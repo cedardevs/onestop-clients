@@ -9,6 +9,7 @@ from onestop.util.S3MessageAdapter import S3MessageAdapter
 from onestop.WebPublisher import WebPublisher
 from onestop.util.ClientLogger import ClientLogger
 from onestop.schemas.util.jsonEncoder import EnumEncoder
+from botocore.exceptions import ClientError
 
 config_dict = {}
 
@@ -34,11 +35,15 @@ def handler(rec, log_level):
 
     bucket = rec['s3']['bucket']['name']
     s3_key = rec['s3']['object']['key']
-
+    logger.debug('Rec: %s'%rec)
     # Fetch the object to get the uuid
     logger.info("Getting uuid")
     s3_resource = s3_utils.connect('resource', 's3', None)
-    object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
+    try:
+        object_uuid = s3_utils.get_uuid_metadata(s3_resource, bucket, s3_key)
+    except ClientError as e:
+        logger.error(e)
+        return
 
     if object_uuid is not None:
         logger.info('Retrieved object-uuid: %s'% object_uuid)
