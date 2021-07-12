@@ -6,7 +6,7 @@ class RelationshipType(Enum):
     """
     The types of metadata relationships which can be represented in the PSI system
     """
-    collection = 'COLLECTION'
+    COLLECTION = 'COLLECTION'
 
     #: The Avro Schema associated to this class
     _schema: ClassVar[str] = """{

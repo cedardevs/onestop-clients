@@ -52,7 +52,7 @@ class test_ParsedRecord(unittest.TestCase):
 
     relationship_dict = {
         "id": "5b58de08-afef-49fb-99a1-9c5d5c003bde",
-        "type": RelationshipType.collection
+        "type": RelationshipType.COLLECTION
     }
     relationships_dict = {
         "relationships":[
@@ -87,27 +87,27 @@ class test_ParsedRecord(unittest.TestCase):
         'description': 'desc'
     }
     point_dict = {
-        'type': PointType.Point,
+        'type': PointType.POINT,
         'coordinates': [0.0, 1.1, 2.2, 3.3]
     }
     multiPoint_dict = {
-        'type': MultiPointType.MultiPoint,
+        'type': MultiPointType.MULTIPOINT,
         'coordinates': [[0.0, 1.0], [2.0, 1.0]]
     }
     lineString_dict = {
-        'type': LineStringType.LineString,
+        'type': LineStringType.LINESTRING,
         'coordinates': [[0.0, 1.0], [2.0, 1.0]]
     }
     multiLineString_dict = {
-        'type': MultiLineStringType.MultiLineString,
+        'type': MultiLineStringType.MULTILINESTRING,
         'coordinates': [[[0.0, 1.0], [2.0, 1.0]], [[0.0, 2.0], [2.0, 2.0]]]
     }
     polygon_dict = {
-        'type': PolygonType.Polygon,
+        'type': PolygonType.POLYGON,
         'coordinates': [[[0.0, 1.0], [2.0, 1.0]], [[0.0, 2.0], [2.0, 2.0]]]
     }
     multiPolygon_dict = {
-        'type': MultiPolygonType.MultiPolygon,
+        'type': MultiPolygonType.MULTIPOLYGON,
         'coordinates': [[[[0.0, 1.0], [2.0, 1.0]], [[0.0, 2.0], [2.0, 2.0]]], [[[1.0, 1.0], [2.0, 1.0]], [[0.0, 2.0], [2.0, 2.0]]]]
     }
     instruments_dict = {
@@ -289,7 +289,7 @@ class test_ParsedRecord(unittest.TestCase):
         'until': -1
     }
     relationships_dict = {
-        'type': RelationshipType.collection,
+        'type': RelationshipType.COLLECTION,
         'id': 'id1'
     }
     errorEvent_dict = {
@@ -300,7 +300,7 @@ class test_ParsedRecord(unittest.TestCase):
         'source': 'source1'
     }
     parsedRecord_dict = {
-        'type': RecordType.collection,
+        'type': RecordType.COLLECTION,
         'discovery': discovery_dict,
         'analysis': analysis_dict,
         'fileInformation': fileInformation_dict,

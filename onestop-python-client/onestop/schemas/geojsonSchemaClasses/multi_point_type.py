@@ -3,7 +3,7 @@ from typing import ClassVar
 
 
 class MultiPointType(Enum):
-    MultiPoint = 'MultiPoint'
+    MULTIPOINT = 'MultiPoint'
 
     #: The Avro Schema associated to this class
     _schema: ClassVar[str] = """{

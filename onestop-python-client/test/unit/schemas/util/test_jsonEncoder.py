@@ -29,7 +29,7 @@ class jsonEncoderTest(unittest.TestCase):
         self.assertEqual(jsonStr, '{"__enum__": "%s"}'%type)
 
     def test_relationshiptype_enum_class_encodes(self):
-        type = RelationshipType.collection
+        type = RelationshipType.COLLECTION
         obj = RelationshipType(type)
 
         jsonStr = json.dumps(obj,
@@ -38,7 +38,7 @@ class jsonEncoderTest(unittest.TestCase):
         self.assertEqual(jsonStr, '{"__enum__": "%s"}'%type)
 
     def test_recordtype_enum_class_encodes(self):
-        type = RecordType.granule
+        type = RecordType.GRANULE
         obj = RecordType(type)
 
         jsonStr = json.dumps(obj,
@@ -56,7 +56,7 @@ class jsonEncoderTest(unittest.TestCase):
         self.assertEqual(jsonStr, '{"__enum__": "%s"}'%type)
 
     def test_linestring_enum_class_encodes(self):
-        type = LineStringType.LineString
+        type = LineStringType.LINESTRING
         obj = LineStringType(type)
 
         jsonStr = json.dumps(obj,
@@ -74,7 +74,7 @@ class jsonEncoderTest(unittest.TestCase):
         self.assertEqual(jsonStr, '{"__enum__": "%s"}'%type)
 
     def test_multilinestringtype_enum_class_encodes(self):
-        type = MultiLineStringType.MultiLineString
+        type = MultiLineStringType.MULTILINESTRING
         obj = MultiLineStringType(type)
 
         jsonStr = json.dumps(obj,
@@ -83,7 +83,7 @@ class jsonEncoderTest(unittest.TestCase):
         self.assertEqual(jsonStr, '{"__enum__": "%s"}'%type)
 
     def test_multipointtype_enum_class_encodes(self):
-        type = MultiPointType.MultiPoint
+        type = MultiPointType.MULTIPOINT
         obj = MultiPointType(type)
 
         jsonStr = json.dumps(obj,
@@ -92,7 +92,7 @@ class jsonEncoderTest(unittest.TestCase):
         self.assertEqual(jsonStr, '{"__enum__": "%s"}'%type)
 
     def test_multipolygontype_enum_class_encodes(self):
-        type = MultiPolygonType.MultiPolygon
+        type = MultiPolygonType.MULTIPOLYGON
         obj = MultiPolygonType(type)
 
         jsonStr = json.dumps(obj,
@@ -110,7 +110,7 @@ class jsonEncoderTest(unittest.TestCase):
         self.assertEqual(jsonStr, '{"__enum__": "%s"}'%type)
 
     def test_pointtype_enum_class_encodes(self):
-        type = PointType.Point
+        type = PointType.POINT
         obj = PointType(type)
 
         jsonStr = json.dumps(obj,
@@ -119,7 +119,7 @@ class jsonEncoderTest(unittest.TestCase):
         self.assertEqual(jsonStr, '{"__enum__": "%s"}'%type)
 
     def test_polygontype_enum_class_encodes(self):
-        type = PolygonType.Polygon
+        type = PolygonType.POLYGON
         obj = PolygonType(type)
 
         jsonStr = json.dumps(obj,

@@ -3,7 +3,7 @@ from typing import ClassVar
 
 
 class MultiPolygonType(Enum):
-    MultiPolygon = 'MultiPolygon'
+    MULTIPOLYGON = 'MultiPolygon'
 
     #: The Avro Schema associated to this class
     _schema: ClassVar[str] = """{
