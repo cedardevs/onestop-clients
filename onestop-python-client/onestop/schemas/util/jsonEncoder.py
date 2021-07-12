@@ -4,6 +4,7 @@ from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum_algori
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.relationship_type import RelationshipType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.record_type import RecordType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.valid_descriptor import ValidDescriptor
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.operation_type import OperationType
 from onestop.schemas.psiSchemaClasses.time_range_descriptor import TimeRangeDescriptor
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_location_type import FileLocationType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.method import Method
@@ -25,6 +26,7 @@ ENUMS = {
     'MultiLineStringType': MultiLineStringType,
     'MultiPointType': MultiPointType,
     'MultiPolygonType': MultiPolygonType,
+    'OperationType': OperationType,
     'PointType': PointType,
     'PolygonType': PolygonType,
     'FileLocationType': FileLocationType,

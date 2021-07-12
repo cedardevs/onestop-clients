@@ -6,6 +6,7 @@ from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum_algori
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.relationship_type import RelationshipType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.record_type import RecordType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.valid_descriptor import ValidDescriptor
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.operation_type import OperationType
 from onestop.schemas.psiSchemaClasses.time_range_descriptor import TimeRangeDescriptor
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_location_type import FileLocationType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.method import Method
@@ -93,6 +94,15 @@ class jsonEncoderTest(unittest.TestCase):
     def test_multipolygontype_enum_class_encodes(self):
         type = MultiPolygonType.MultiPolygon
         obj = MultiPolygonType(type)
+
+        jsonStr = json.dumps(obj,
+                             cls=EnumEncoder)
+
+        self.assertEqual(jsonStr, '{"__enum__": "%s"}'%type)
+
+    def test_operationtype_enum_class_encodes(self):
+        type = OperationType.ADD
+        obj = OperationType(type)
 
         jsonStr = json.dumps(obj,
                              cls=EnumEncoder)
