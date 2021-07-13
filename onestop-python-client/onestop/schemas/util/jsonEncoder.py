@@ -18,7 +18,7 @@ from onestop.schemas.geojsonSchemaClasses.polygon_type import PolygonType
 # Diction of all the Enum Classes
 ENUMS = {
     'ChecksumAlgorithm': ChecksumAlgorithm,
-    'RELATIONSHIPTYPE': RelationshipType,
+    'RelationshipType': RelationshipType,
     'RecordType': RecordType,
     'TimeRangeDescriptor': TimeRangeDescriptor,
     'LineStringType': LineStringType,
