@@ -10,9 +10,8 @@ from onestop.util.S3Utils import S3Utils
 from onestop.schemas.geojsonSchemaClasses.org.cedar.schemas.avro.geojson.point import Point
 from onestop.schemas.geojsonSchemaClasses.point_type import PointType
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.parsed_record import ParsedRecord
-#from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum_algorithm import ChecksumAlgorithm
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.temporal_bounding import TemporalBounding
-from onestop.schemas.util.jsonEncoder import EnumEncoder, as_enum, EnumEncoderValue
+from onestop.schemas.util.jsonEncoder import as_enum, EnumEncoderValue
 from onestop.KafkaPublisher import KafkaPublisher
 #from spatial import script_generation, postgres_insert
 from onestop.util.ClientLogger import ClientLogger
@@ -33,12 +32,39 @@ def handler(key, value, log_level = 'INFO'):
     '''
     # Grabs the contents of the message and turns the dict string into a dictionary using json.loads
     logger = ClientLogger.get_logger('sme.handler', log_level, False)
-    logger.info('In Handler')
+    logger.info('In Handler: key=%s value=%s'%(key, value))
+
     # This is an example for testing purposes.
-    value = {
+    test_value = {
         "type": "granule",
-        "content": "{ \"discovery\": {\n            \"fileIdentifier\": \"92ade5dc-946d-11ea-abe4-0242ac120004\",\n            \"links\": [\n                {\n                    \"linkFunction\": \"download\",\n                    \"linkName\": \"Amazon S3\",\n                    \"linkProtocol\": \"HTTPS\",\n                    \"linkUrl\": \"https://s3.amazonaws.com/nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n                }\n            ],\n            \"parentIdentifier\": \"0fad03df-0805-434a-86a6-7dc42d68480f\",\n            \"spatialBounding\": null,\n            \"temporalBounding\": {\n                \"beginDate\": \"2020-05-12T16:20:15.158Z\", \n                \"endDate\": \"2020-05-12T16:21:51.494Z\"\n            },\n            \"title\": \"HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n        },\n        \"fileInformation\": {\n  \"checksums\": [{\"algorithm\": \"MD5\",\"value\": \"44d2452e8bc2c8013e9c673086fbab7a\"}]\n, \"optionalAttributes\":{},          \"format\": \"HSD\",\n            \"name\": \"HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\",\n            \"size\": 208918\n        },\n        "
-                   "\"fileLocations\": {\n     "
+        "content": "{"
+                   "\"discovery\": {\n            "
+                       "\"fileIdentifier\": \"92ade5dc-946d-11ea-abe4-0242ac120004\",\n            "
+                       "\"links\": [\n                {\n                    "
+                           "\"linkFunction\": \"download\",\n                    "
+                           "\"linkName\": \"Amazon S3\",\n                    "
+                           "\"linkProtocol\": \"HTTPS\",\n                    "
+                           "\"linkUrl\": \"https://s3.amazonaws.com/nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n                "
+                       "}\n            ],\n            "
+                       "\"parentIdentifier\": \"0fad03df-0805-434a-86a6-7dc42d68480f\",\n            "
+                       "\"spatialBounding\": null,\n            "
+                       "\"temporalBounding\": {\n                "
+                          "\"beginDate\": \"2020-05-12T16:20:15.158Z\", \n                "
+                          "\"endDate\": \"2020-05-12T16:21:51.494Z\"\n            "
+                       "},\n            "
+                          "\"title\": \"HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n        "
+                    "},\n        "
+                    "\"fileInformation\": {\n  "
+                       "\"checksums\": [{"
+                           "\"algorithm\": \"MD5\","
+                           "\"value\": \"44d2452e8bc2c8013e9c673086fbab7a\""
+                       "}]\n, "
+                       "\"optionalAttributes\":{},          "
+                       "\"format\": \"HSD\",\n            "
+                       "\"name\": \"HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\",\n            "
+                       "\"size\": 208918\n        "
+                    "},\n        "
+                    "\"fileLocations\": {\n     "
                         "\"s3://nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\": {\n"
                             "\"optionalAttributes\":{},       "
                             "\"uri\":\"//nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\",   "
@@ -48,21 +74,23 @@ def handler(key, value, log_level = 'INFO'):
                             "\"locality\": \"us-east-1\",\n                "
                             "\"restricted\": false,\n                "
                             "\"serviceType\": \"Amazon:AWS:S3\",\n                "
-                            "\"type\": {\"type\":\"ACCESS\"},\n                "
+                            "\"type\": {\"__enum__\": \"FileLocationType.INGEST\"},\n                "
                             "\"uri\": \"s3://nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n                   "
                         "}\n        "
                    "},\n        "
-                   "\"relationships\": [\n            {\n                \"id\": \"0fad03df-0805-434a-86a6-7dc42d68480f\",\n                \"type\": \"COLLECTION\"\n            }\n        ]\n    }",
+                   "\"relationships\": [\n            {\n                "
+                       "\"id\": \"0fad03df-0805-434a-86a6-7dc42d68480f\",\n                "
+                       "\"type\": {\"__enum__\": \"RelationshipType.COLLECTION\"}           }\n        ]\n    "
+                   "}",
         "contentType": "application/json",
         "method": "PUT",
         "source": "unknown",
         "operation": "ADD"
     }
     logger.debug('content: %s'%value['content'])
-
-    content_dict = json.loads(value['content'], object_hook=as_enum)
+    content_dict = json.loads(value['content'], object_hook=as_enum) # this can fail if input values fail to map to avro ENUM values.
     logger.debug('content_dict: %s'%content_dict)
-    parsed_record = ParsedRecord().from_dict(content_dict)
+    parsed_record = ParsedRecord.from_dict(content_dict) # or ParsedRecord(**content_dict) # this can fail if input values fail to map to avro class values.
 
     # Geospatial Extraction
     bucket_key = content_dict['discovery']['links'][0]['linkUrl'].split('.com/')[1]
@@ -82,6 +110,7 @@ def handler(key, value, log_level = 'INFO'):
         content_dict['discovery']['spatialBounding']['type'] = pointType.value
 
         # Create temp bounding obj
+        logger.debug('beginDate=%s endDate=%s'%(begin_date, end_date))
         tempBounding = TemporalBounding(beginDate=begin_date, endDate=end_date)
 
         # Update parsed record object with geospatial data

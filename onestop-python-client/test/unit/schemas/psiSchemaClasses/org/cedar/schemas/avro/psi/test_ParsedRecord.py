@@ -33,7 +33,8 @@ from onestop.schemas.geojsonSchemaClasses.org.cedar.schemas.avro.geojson.line_st
 from onestop.schemas.geojsonSchemaClasses.org.cedar.schemas.avro.geojson.multi_line_string import MultiLineString
 from onestop.schemas.geojsonSchemaClasses.org.cedar.schemas.avro.geojson.polygon import Polygon
 from onestop.schemas.geojsonSchemaClasses.org.cedar.schemas.avro.geojson.multi_polygon import MultiPolygon
-
+from onestop.schemas.util.jsonEncoder import EnumEncoder, as_enum, EnumEncoderValue
+import json
 
 class test_ParsedRecord(unittest.TestCase):
 
@@ -313,6 +314,65 @@ class test_ParsedRecord(unittest.TestCase):
         'relationships': [relationships_dict],
         'errors': [errorEvent_dict]
     }
+
+    def test_parsed_record_corner_case(self):
+        value = {
+            "type": "granule",
+            "content": "{"
+                       "\"discovery\": {\n            "
+                       "\"fileIdentifier\": \"92ade5dc-946d-11ea-abe4-0242ac120004\",\n            "
+                       "\"links\": [\n                {\n                    "
+                       "\"linkFunction\": \"download\",\n                    "
+                       "\"linkName\": \"Amazon S3\",\n                    "
+                       "\"linkProtocol\": \"HTTPS\",\n                    "
+                       "\"linkUrl\": \"https://s3.amazonaws.com/nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n                "
+                       "}\n            ],\n            "
+                       "\"parentIdentifier\": \"0fad03df-0805-434a-86a6-7dc42d68480f\",\n            "
+                       "\"spatialBounding\": null,\n            "
+                       "\"temporalBounding\": {\n                "
+                       "\"beginDate\": \"2020-05-12T16:20:15.158Z\", \n                "
+                       "\"endDate\": \"2020-05-12T16:21:51.494Z\"\n            "
+                       "},\n            "
+                       "\"title\": \"HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n        "
+                       "},\n        "
+                       "\"fileInformation\": {\n  "
+                       "\"checksums\": [{"
+                       "\"algorithm\": \"MD5\","
+                       "\"value\": \"44d2452e8bc2c8013e9c673086fbab7a\""
+                       "}]\n, "
+                       "\"optionalAttributes\":{},          "
+                       "\"format\": \"HSD\",\n            "
+                       "\"name\": \"HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\",\n            "
+                       "\"size\": 208918\n        "
+                       "},\n        "
+                       "\"fileLocations\": {\n     "
+                       "\"s3://nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\": {\n"
+                       "\"optionalAttributes\":{},       "
+                       "\"uri\":\"//nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\",   "
+                       "\"asynchronous\": false,\n                "
+                       "\"deleted\": false,\n                "
+                       "\"lastModified\": 1589300890000,\n                "
+                       "\"locality\": \"us-east-1\",\n                "
+                       "\"restricted\": false,\n                "
+                       "\"serviceType\": \"Amazon:AWS:S3\",\n                "
+                       "\"type\": {\"__enum__\": \"FileLocationType.INGEST\"},\n                "
+                       "\"uri\": \"s3://nesdis-incoming-data/Himawari-8/AHI-L1b-Japan/2020/05/12/1620/HS_H08_20200512_1620_B05_JP01_R20_S0101.DAT.bz2\"\n                   "
+                       "}\n        "
+                       "},\n        "
+                       "\"relationships\": [\n            {\n                "
+                       "\"id\": \"0fad03df-0805-434a-86a6-7dc42d68480f\",\n                "
+                       "\"type\": {\"__enum__\": \"RelationshipType.COLLECTION\"}           }\n        ]\n    "
+                       "}",
+            "contentType": "application/json",
+            "method": "PUT",
+            "source": "unknown",
+            "operation": "ADD"
+        }
+
+        content_dict = json.loads(value['content'], object_hook=as_enum)
+
+        ParsedRecord(**content_dict)
+        ParsedRecord.from_dict(content_dict)
 
     # Note: Didn't make unit tests for ENUMS since they don't execute any methods.
     def test_parsed_record_all_vars_set(self):
