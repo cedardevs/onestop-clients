@@ -209,52 +209,6 @@ class S3UtilsTest(unittest.TestCase):
 
         self.assertTrue(self.s3_utils.s3_restore(s3, self.bucket, key, days) != None)
 
-    @mock_glacier
-    def test_retrieve_inventory(self):
-        """
-        Initiates job for archive retrieval. Takes 3-5 hours to complete if not mocked.
-        """
-
-        # Using glacier api initiates job and returns archive results
-        # Connect to your glacier vault for retrieval
-        glacier = self.s3_utils.connect('client', 'glacier', self.region2)
-        vault_name = 'archive-vault-new'
-        glacier.create_vault(vaultName=vault_name)
-
-        response = self.s3_utils.retrieve_inventory(glacier, vault_name)
-        print('jobid %s'%response['jobId'])
-        self.assertTrue(response['jobId'] != None)
-
-    @mock_glacier
-    @mock_s3
-    def test_retrieve_inventory_results(self):
-        """
-        Once the job has been completed, use the job id to retrieve archive results
-        """
-
-        # Connect to your glacier vault for retrieval
-        glacier = mock.Mock(spec=Layer1)#self.s3_utils.connect('client', 'glacier', self.region)
-        vault_name = 'archive-vault-new'
-        glacier.create_vault(vaultName=vault_name)
-
-        body_json = {'Body': [{'test':'value'}]}
-        body_encoded = json.dumps(body_json)#.encode("utf-16")
-
-        body = StreamingBody(
-            StringIO(str(body_encoded)),
-            len(str(body_encoded))
-        )
-
-        mocked_response = {
-            'body': body
-        }
-        glacier.get_job_output.return_value = mocked_response
-        with mock.patch('boto.glacier.job.tree_hash_from_str') as t:
-            t.return_value = 'tree_hash'
-            inventory = self.s3_utils.retrieve_inventory_results(vault_name, glacier, 'ASDF78')
-
-        self.assertEqual(body_json, inventory)
-
     @mock_s3
     def test_extra_parameters_constructor(self):
         testParams = {"access_key": "blah",

@@ -3,7 +3,6 @@ import logging
 import uuid
 import boto3
 import botocore
-import json
 from smart_open import open as sm_open
 from botocore.exceptions import ClientError
 from onestop.util.ClientLogger import ClientLogger
@@ -61,12 +60,6 @@ class S3Utils:
 
         s3_restore(boto_client, bucket_name, key, days)
             Restores an object in S3 glacier back to S3 for specified amount of days
-
-        retrieve_inventory(boto_client, vault_name)
-            Initiate an Amazon Glacier inventory-retrieval job
-
-        retrieve_inventory_results(vault_name, boto_client, job_id)
-            Retrieve the results of an Amazon Glacier inventory-retrieval job
     """
 
     def __init__(self, access_key, secret_key, log_level = 'INFO', **wildargs):
@@ -391,55 +384,3 @@ class S3Utils:
 
         # returns status of object retrieval
         return obj.restore
-
-    def retrieve_inventory(self, boto_client, vault_name):
-        """
-        Initiate an Amazon Glacier inventory-retrieval job
-
-        To check the status of the job, call Glacier.Client.describe_job()
-        To retrieve the output of the job, call Glacier.Client.get_job_output()
-
-        :param boto_client: glacier boto client
-            utilizes boto glacier client
-        :param vault_name: string
-            name of vault that you want to retrieve information from
-
-        :return: Dictionary of information related to the initiated job. If error,
-        returns None.
-        """
-
-        # Construct job parameters
-        job_parms = {'Type': 'inventory-retrieval'}
-
-        try:
-            response = boto_client.initiate_job(vaultName=vault_name,
-                                            jobParameters=job_parms)
-        except ClientError as e:
-            logging.error(e)
-            return None
-        print('Retrieval Response: ', response)
-        return response
-
-    def retrieve_inventory_results(self, vault_name, boto_client, job_id):
-        """
-        Retrieve the results of an Amazon Glacier inventory-retrieval job
-
-        :param vault_name: string
-            name of vault in which you want to retrieve information
-        :param boto_client: glacier boto
-            utilizes glacier boto client type
-        :param job_id: string
-            The job ID was returned by Glacier.Client.initiate_job()
-
-        :return: Dictionary containing the results of the inventory-retrieval job.
-        If error, return None.
-        """
-
-        try:
-            response = boto_client.get_job_output(vaultName=vault_name, jobId=job_id)
-        except ClientError as e:
-            logging.error(e)
-            return None
-
-        # Read the streaming results into a dictionary
-        return json.loads(response['body'].read())
