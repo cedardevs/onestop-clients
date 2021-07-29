@@ -16,13 +16,11 @@ config: |-
   # AWS config values
   sqs_name: cloud-archive-client-sqs
   s3_region: us-east-2
+  s3_region2: archive-testing-testing-test
   s3_bucket: archive-testing-demo
-  sqs_max_polls: 100
-
-  #AWS config values for 2nd vault in different region
-  vault_name: archive-vault-new
-  s3_region2: us-east-2
   s3_bucket2: archive-testing-testing-test
+  vault_name: archive-vault-new
+  sqs_max_polls: 100
 
   #CSB stream config
   format: csv
