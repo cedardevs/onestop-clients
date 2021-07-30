@@ -61,7 +61,7 @@ config: |-
   s3_region: us-east-2
   s3_region2: archive-testing-testing-test
   s3_bucket: archive-testing-demo
-  vault_name: archive-vault-new
+  vault_name: archive-vault
   sqs_max_polls: 100
 
   #CSB stream config
