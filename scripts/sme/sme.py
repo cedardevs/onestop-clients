@@ -87,17 +87,22 @@ def handler(key, value, log_level = 'INFO'):
         "source": "unknown",
         "operation": "ADD"
     }
-    logger.debug('content: %s'%value['content'])
-    content_dict = json.loads(value['content'], object_hook=as_enum) # this can fail if input values fail to map to avro ENUM values.
-    logger.debug('content_dict: %s'%content_dict)
-    parsed_record = ParsedRecord.from_dict(content_dict) # or ParsedRecord(**content_dict) # this can fail if input values fail to map to avro class values.
+    try:
+        logger.debug('content: %s'%value['content'])
+        content_dict = json.loads(value['content'], object_hook=as_enum) # this can fail if input values fail to map to avro ENUM values.
+        logger.debug('content_dict: %s'%content_dict)
+        parsed_record = ParsedRecord.from_dict(content_dict) # or ParsedRecord(**content_dict) # this can fail if input values fail to map to avro class values.
+    except Exception as e:
+        logger.exception('Skipping publishing kafka record, as could not json translate or turn into a ParsedRecord.', e)
+        return
 
     # Geospatial Extraction
     bucket_key = content_dict['discovery']['links'][0]['linkUrl'].split('.com/')[1]
     logger.info("Bucket key="+bucket_key)
     if CsbExtractor.is_csv(bucket_key):
         logger.info('Extracting geospatial information')
-        sm_open_file = su.get_csv_s3(su.connect("session", None), config_dict['s3_bucket'], bucket_key)
+        s3_session = su.connect("session", None, config_dict['s3_region'])
+        sm_open_file = su.get_csv_s3(s3_session, config_dict['s3_bucket'], bucket_key)
         geospatial = CsbExtractor.get_spatial_temporal_bounds(sm_open_file, 'LON', 'LAT', 'TIME')
         begin_date, end_date = geospatial['temporal'][0], geospatial['temporal'][1]
         max_lon, max_lat, min_lon, min_lat = geospatial['geospatial'][2], geospatial['geospatial'][3], \
@@ -107,7 +112,6 @@ def handler(key, value, log_level = 'INFO'):
         # Create spatial bounding types based on the given coords
         pointType = PointType('Point')
         point = Point(coordinates=coords[0], type=pointType)
-        content_dict['discovery']['spatialBounding']['type'] = pointType.value
 
         # Create temp bounding obj
         logger.debug('beginDate=%s endDate=%s'%(begin_date, end_date))
@@ -127,12 +131,16 @@ def handler(key, value, log_level = 'INFO'):
 
     # update content dict
     parsed_record.type = value['type']
+    logger.debug('parsed_record: %s'%parsed_record)
     content_dict = parsed_record.to_dict()
+    logger.debug('content_dict of parsed_record, to_dict(): %s'%content_dict)
 
     # Transform content_dict to appropriate payload
     # cls=EnumEncoderValue argument looks for instances of Enum classes and extracts only the value of the Enum
     content_dict = json.dumps(content_dict, cls=EnumEncoderValue)
+    logger.debug('content_dict of json.dumps: %s'%content_dict)
     content_dict = json.loads(content_dict)
+    logger.debug('content_dict of json.loads: %s'%content_dict)
 
     # Produce new information to publish to kafka, TODO: Be wary of cyclical publish/consuming here, since the consumer calls this handler.
     kafka_publisher = KafkaPublisher(**config_dict)
