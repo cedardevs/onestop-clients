@@ -115,6 +115,7 @@ class DataLakeExtractor():
         dl_mes.service_type = "Amazon:AWS:S3"
         dl_mes.asynchronous = False
         dl_mes.deleted = False
+        #TODO set parent id to default here, use source_dict other spot
         #dl_mes.parentDoi ="5b58de08-afef-49fb-99a1-9c5d5c003bde"
         dl_mes.parentIdentifier = "6b4f0954-628e-486e-914e-ce2dffffca90"
         west = meta_dict.get('west', None)
@@ -296,7 +297,7 @@ class DataLakeExtractor():
             dl_mes.s3Key = s3Key
             dl_mes.s3Dir = 's3://' + s3Bucket + '/' + s3Key.rsplit('/',1)[0] + '/'
             dl_mes.s3Path = dl_mes.s3Dir + filename
-
+            #TODO: set parent id and parentuuid with source_dict
             s3UrlStr = '{}/{}/{}'.format(endpoint_url, dl_mes.s3Bucket, dl_mes.s3Key)
             dl_mes.s3Url =s3UrlStr
             link = Link("download", "Amazon S3", "HTTPS", s3UrlStr)
@@ -317,12 +318,15 @@ class DataLakeExtractor():
         dl_target_dict = self.conf["targets"]
         for key in dl_target_dict:
             target_dict = dl_target_dict[key]
-            self.copy_object_to_target(s3Bucket, s3Key, target_dict, tag_dict)
-            if dl_mes.alg_value is not None:
-                is_ok = self.verify_checksum(dl_mes.s3Bucket, s3Key, dl_mes.alg_value)
-                if not is_ok:
-                    self.logger.error(dl_mes.uri + " sha256 error")
-            
+            try:
+                self.copy_object_to_target(s3Bucket, s3Key, target_dict, tag_dict)
+                if dl_mes.alg_value is not None:
+                    is_ok = self.verify_checksum(dl_mes.s3Bucket, s3Key, dl_mes.alg_value)
+                    if not is_ok:
+                        self.logger.error(dl_mes.uri + " sha256 error")
+            except Exception as e:
+                self.logger.error("Exception copying: " + s3Bucket + ", " + s3Key)
+                self.logger.error(e)
        
         return dl_mes
 
@@ -364,6 +368,9 @@ class DataLakeExtractor():
                 ext_secret_access_key = self.get_secret_value(ext_secret_key, self.region)
             s3_resource = boto3.resource("s3", aws_access_key_id=ext_access_key_id, \
                 aws_secret_access_key=ext_secret_access_key)
+            print(len(ext_secret_access_key))
+            print(len(ext_access_key_id))
+            print("*******************************************")
         else:
             s3_resource = boto3.resource('s3')
         copy_source = {
@@ -397,7 +404,10 @@ class DataLakeExtractor():
             s3Bucket = record.get("s3").get("bucket").get("name")
             s3Key = record.get("s3").get("object").get("key")
             #file size in bytes
+            s3Key = s3Key.replace("%3A",":")
             s3Filesize = record.get('s3').get('object').get('size')
+            print(s3Bucket)
+            print(s3Key)
             s3CatalogHead = s3_client.head_object(Bucket = s3Bucket, Key = s3Key)
             lastModified = int(s3CatalogHead['LastModified'].timestamp()*1000)
             print(s3CatalogHead)
@@ -487,6 +497,7 @@ class DataLakeExtractor():
                 #object_uuid = self.s3_utils.get_uuid_metadata(s3_resource, dl_mes.s3Bucket, dl_mes.s3Key)
                 object_uuid = dl_mes.fileIdentifier
                 registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
+                print("REGISTRY RESPONSE")
                 print(registry_response.json())
                 #is_success logic
                 is_success = True
@@ -546,6 +557,17 @@ class DataLakeExtractor():
         
         print(indx_proc)
 
+    def run_search_process(self):
+        """
+        Run main logic: retrieve messages from S3/SNS/SQS, extract file 
+        information from messages, download file, extract metadata, reformat
+        metadata to required template, and send to OneStop SNS
+        """
+        wp = WebPublisher(self.wp_config_file, self.cred_file)
+        response = wp.get_granules_onestop("granule", "6b4f0954-628e-486e-914e-ce2dffffca90")
+        print("RESPONSE")
+        print(response.__dict__)
+
     def run_interval_tracker(self):
         """
         Wake up logic, entry point for class
@@ -554,7 +576,7 @@ class DataLakeExtractor():
         self.logger.info('starting GEFS extraction')
         while True:
             wake_up_interval = self.conf['sleep']  #seconds
-            s.enter(wake_up_interval, 1, self.run_process, ())
+            s.enter(wake_up_interval, 1, self.run_search_process, ())
             # I didn't see enter used in a loop like this in documentation
             # so I was checking to see scheduler object size changes
             self.logger.debug(str( getsizeof(s)) + str(s))

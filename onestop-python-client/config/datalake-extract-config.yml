@@ -37,11 +37,11 @@ source_lookup:
   INITCO/:
     type: initco
 targets:
-  #bdp:
-    #external: True
-    #ext_access_key: NOAA_WOC_DL/BdpAccessKey
-    #ext_secret_key: NOAA_WOC_DL/BdpSecretKey
-    #bucket: bdpbucket
+  bdp:
+    external: True
+    ext_access_key: NOAA_WOC_DL/BdpAccessKey
+    ext_secret_key: NOAA_WOC_DL/BdpSecretKey
+    bucket: bdpbucket
   target_datalake:
     bucket: noaa-woc-datalake-dev-target
 tag-lookup:
