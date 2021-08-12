@@ -1,3 +1,4 @@
+import csv
 import unittest
 import uuid
 from moto import mock_s3
@@ -12,7 +13,7 @@ class S3UtilsTest(unittest.TestCase):
     def setUp(self):
         print("Set it up!")
         self.su = S3Utils(abspath_from_relative(__file__, "../../config/aws-util-config-dev.yml"),
-                          abspath_from_relative(__file__, "../../config/credentials-template.yml"))
+                          abspath_from_relative(__file__, "../../config/credentials.yml"))
 
     def tearDown(self):
         print("Tear it down!")
@@ -51,8 +52,8 @@ class S3UtilsTest(unittest.TestCase):
     @mock_s3
     def test_add_file_s3(self):
         boto_client = self.su.connect("s3", None)
-        local_file = abspath_from_relative(__file__, "../data/file1.csv")
-        s3_key= "csv/file1.csv"
+        local_file = abspath_from_relative(__file__, "../data/file4.csv")
+        s3_key = "csv/file4.csv"
         bucket = self.su.conf['s3_bucket']
         region = self.su.conf['s3_region']
         location = {'LocationConstraint': region}
@@ -60,6 +61,23 @@ class S3UtilsTest(unittest.TestCase):
         overwrite = True
 
         self.assertTrue(self.su.upload_s3(boto_client, local_file, bucket, s3_key, overwrite))
+
+    def test_get_csv_s3(self):
+        boto_client = self.su.connect("session", None)
+        s3_key = "csv/file1.csv"
+        bucket = self.su.conf['s3_bucket']
+        sm_open_file = self.su.get_csv_s3(boto_client, bucket, s3_key)
+
+        # print("reading csv:" + line.decode('utf-8'))
+        csv_reader = csv.DictReader(sm_open_file)
+        for row in csv_reader:
+            print(str(row["LON"]))
+
+    def test_read_bytes_s3(self):
+        boto_client = self.su.connect("s3", None)
+        s3_key = "csv/file1.csv"
+        bucket = self.su.conf['s3_bucket']
+        self.assertTrue(self.su.read_bytes_s3(boto_client, bucket, s3_key))
 
     @mock_s3
     def test_add_files(self):

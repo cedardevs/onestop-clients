@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "onestop-sqs-consumer.fullname" . }}
+  labels:
+{{ include "onestop-sqs-consumer.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "onestop-sqs-consumer.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "onestop-sqs-consumer.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        checksum/config: {{ toYaml .Values.aws | sha256sum }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: {{ include "onestop-sqs-consumer.configname" . }}-volume
+              mountPath: /etc/config
+              readOnly: true
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: REGISTRY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "onestop-sqs-consumer.fullname" . }}-secret
+                  key: registry_username
+            - name: REGISTRY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "onestop-sqs-consumer.fullname" . }}-secret
+                  key: registry_password
+            - name: ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "onestop-sqs-consumer.fullname" . }}-secret
+                  key: access_key
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "onestop-sqs-consumer.fullname" . }}-secret
+                  key: secret_key
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      volumes:
+      - name: {{ include "onestop-sqs-consumer.configname" . }}-volume
+        configMap:
+          name: {{ include "onestop-sqs-consumer.configname" . }}
+

@@ -9,5 +9,5 @@ s3_bucket: archive-testing-demo
 
 #AWS config values for 2nd vault in different region
 vault_name: archive-vault-new
-s3_region2: 'us-west-2'
-s3_bucket2: noaa-nccf-dev-archive
+glacier_region: "us-west-2"
+

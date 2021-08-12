@@ -1,12 +1,22 @@
 import unittest
 from onestop.extract.CsbExtractor import CsbExtractor
+from onestop.util.S3Utils import S3Utils
+from tests.utils import abspath_from_relative
+
 
 class CsbExtractorTest(unittest.TestCase):
+
+    # def setUp(self):
+    #     print("Set it up!")
+    #     file_name = '../data/file4.csv'
+    #     self.csb_extractor = CsbExtractor(file_name)
+
     def setUp(self):
         print("Set it up!")
-        file_name = '../data/file4.csv'
-        self.csb_extractor = CsbExtractor(file_name)
-
+        key = "public/NESDIS/CSB/file4.csv"
+        self.su = S3Utils( abspath_from_relative( __file__, "../../config/aws-util-config-dev.yml" ),
+                                   abspath_from_relative(__file__, "../../config/credentials.yml") )
+        self.csb_extractor = CsbExtractor(self.su, key)
 
     def tearDown(self):
         print("Tear it down!")
@@ -17,7 +27,6 @@ class CsbExtractorTest(unittest.TestCase):
 
 
     def test_get_geospatial_temporal_bounds(self):
-        #max_lon = self.csb_extractor.get_max_numeric('LON')
         bounds_dict = self.csb_extractor.get_spatial_temporal_bounds('LON', 'LAT', 'TIME')
         coords = bounds_dict["geospatial"]
         print(str(coords))

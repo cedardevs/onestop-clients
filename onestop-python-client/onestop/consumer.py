@@ -32,7 +32,6 @@ def consume(config, topic, handler):
         c_conf['group.id'] = 'sme_test'
 
     c = Consumer(c_conf)
-
     c.subscribe([topic])
 
     sr_conf = {key.replace("schema.registry.", ""): value.strip()
@@ -45,6 +44,7 @@ def consume(config, topic, handler):
         try:
             msg = c.poll(10)
             if msg is None:
+                print('No Messages')
                 continue
             if msg.error():
                 log.error("Consumer error: {}".format(msg.error()))
@@ -60,3 +60,4 @@ def consume(config, topic, handler):
             log.error("Message handler failed: {}".format(e))
             break
     c.close()
+

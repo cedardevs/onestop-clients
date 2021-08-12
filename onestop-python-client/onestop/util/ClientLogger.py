@@ -2,9 +2,27 @@ import logging
 
 
 class ClientLogger:
+    """
+    Logging class utilizing python logging library
 
-    @staticmethod
+    Methods
+    -------
+    get_logger(log_name, log_level, create_file=False)
+        creates a logger for debugging and info purposes
+
+    """
     def get_logger(log_name, log_level, create_file=False):
+        """
+
+        :param log_name: str
+            defined logging name
+        :param log_level: str
+            type of logging you want (DEBUG, INFO, etc)
+        :param create_file: boolean
+            defines whether or not you want a file to be created for the log statements
+
+        :return: logging object
+        """
 
         # create logger
         logger = logging.getLogger(log_name)

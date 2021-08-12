@@ -53,7 +53,7 @@ class S3MessageAdapterTest(unittest.TestCase):
         print("Set it up!")
         self.s3_utils = S3Utils(abspath_from_relative(__file__, "../../config/aws-util-config-dev.yml"),
                                 abspath_from_relative(__file__, "../../config/credentials-template.yml"))
-        self.s3ma = S3MessageAdapter(abspath_from_relative(__file__, "../../config/csb-data-stream-config.yml"),
+        self.s3ma = S3MessageAdapter(abspath_from_relative(__file__, "../../config/csb-data-stream-config-template.yml"),
                                      self.s3_utils)
 
     def tearDown(self):

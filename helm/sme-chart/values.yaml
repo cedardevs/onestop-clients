@@ -1,0 +1,42 @@
+image:
+  repository: cedardevs/onestop-e2e-demo
+  tag: latest
+  pullPolicy: IfNotPresent
+
+secret:
+  registry_username: <value>
+  registry_password: <value>
+  access_key: <value>
+  secret_key: <value>
+
+config: |-
+  ---
+  log_level: INFO
+
+  # AWS config values
+  sqs_url: https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs
+  sqs_max_polls: 100
+  s3_region: us-east-2
+  s3_bucket: archive-testing-demo
+
+  #AWS config values for 2nd vault in different region
+  vault_name: archive-vault-new
+  s3_region2: us-east-2
+  s3_bucket2: noaa-nccf-dev-archive
+
+  #CSB stream config
+  format: csv
+  headers: UNIQUE_ID,FILE_UUID,LON,LAT,DEPTH,TIME,PLATFORM_NAME,PROVIDER
+  type: COLLECTION
+  collection_id: fdb56230-87f4-49f2-ab83-104cfd073177
+  access_bucket: https://archive-testing-demo.s3-us-east-2.amazonaws.com
+  #access_bucket: https://odp-noaa-nesdis-ncei-test.s3-us-west-2.amazonaws.com
+  file_identifier_prefix: "gov.noaa.ncei.csb:"
+
+  # COLLECTION or GRANULE
+  metadata_type: granule
+  registry_base_url: http://onestop-registry:80
+  onestop_base_url: http://onestop-search:8080
+
+  security:
+    enabled: True

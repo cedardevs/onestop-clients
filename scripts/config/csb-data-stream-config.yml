@@ -1,0 +1,15 @@
+log_level: INFO
+format: csv
+headers: UNIQUE_ID,FILE_UUID,LON,LAT,DEPTH,TIME,PLATFORM_NAME,PROVIDER
+type: COLLECTION
+collection_id: fdb56230-87f4-49f2-ab83-104cfd073177
+psi_registry_url: https://internal-a683c98a66fb011eaa4230e0d5e5657f-369075387.us-east-1.elb.amazonaws.com
+access_bucket: https://archive-testing-demo.s3-us-east-2.amazonaws.com
+#access_bucket: https://odp-noaa-nesdis-ncei-test.s3-us-west-2.amazonaws.com
+file_identifier_prefix: "gov.noaa.ncei.csb:"
+
+prefixMap:
+  NESDIS/CSB: 'fdb56230-87f4-49f2-ab83-104cfd073177'
+  NESDIS/H8: '0fad03df-0805-434a-86a6-7dc42d68480e'
+  NESDIS/GOES: '11111111-1111-1111-1111-111111111111'
+  NESDIS/SAB: '98e03b47-069a-4f2c-8071-649e8c4254d6'
