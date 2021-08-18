@@ -576,7 +576,7 @@ class DataLakeExtractor():
         self.logger.info('starting GEFS extraction')
         while True:
             wake_up_interval = self.conf['sleep']  #seconds
-            s.enter(wake_up_interval, 1, self.run_search_process, ())
+            s.enter(wake_up_interval, 1, self.run_process, ())
             # I didn't see enter used in a loop like this in documentation
             # so I was checking to see scheduler object size changes
             self.logger.debug(str( getsizeof(s)) + str(s))
