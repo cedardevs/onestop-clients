@@ -42,8 +42,8 @@ class DataLakeExtractor():
         try:
             with open(conf_loc) as f:
                 self.conf = yaml.load(f, Loader=yaml.FullLoader)
-                print(self.conf)
-                print(type(self.conf))
+                print("conf:" + self.conf)
+                print("conf type:" + str(type(self.conf)))
                 self.queue_url = self.conf['queue_url']
                 self.region = self.conf['region']
             self.wp_config_file = wp_config_file
@@ -80,7 +80,7 @@ class DataLakeExtractor():
         meta_dict = {}
         gefs = re.match(gefs_regex, filename)
         print("testing regex")
-        print(filename)
+        print("filename:" + filename)
         if gefs:
 
             meta_dict = self.parse_gefs_filename(gefs)
@@ -215,21 +215,22 @@ class DataLakeExtractor():
             print("indx = " + str(indx))
             if 'Body' in messages[indx]:
                 body = json.loads(messages[indx]['Body'])
-                #print(type(body))
-                #print(body)
+                print("body type = " + str(type(body)))
+                print("body val = " + str(body))
                 if 'Message' in body:
                     body_message = json.loads(body['Message'])
-                    #print(type(body_message))
-                    #print(body_message)
+                    print("message type = " + str(type(body_message)))
+                    print("message val = " + str(body_message))
                     if 'Records' in body_message:
-                        #print(type(body_message['Records']))
+                        print("type(body_message['Records']):" + str(type(body_message['Records'])))
                         msg_records = body_message['Records']
                         #print(len(msg_records))
-                        #print(msg_records)
+                        print("msg_records:")
+                        print(msg_records)
                         #uncomment first line, comment second line to clear SQS queue
                         #is_success = True 
                         is_success = self.process_msg_records(msg_records)
-                        print(is_success)
+                        print("is_success:" + str(is_success))
                         indx_process = indx_process + 1
                     else:
                         print("no records in body message")
@@ -239,7 +240,7 @@ class DataLakeExtractor():
                 if is_success:
                     print("deleting message:" + messages[indx]["ReceiptHandle"])
                     response = sqs_client.delete_message(QueueUrl=self.queue_url,ReceiptHandle=messages[indx]["ReceiptHandle"])
-                    #print(response)
+                    print("delete message response:" + str(response))
             else:
                 print('no body in outer message')
         return indx_process
@@ -355,7 +356,7 @@ class DataLakeExtractor():
         """
         
         self.logger.info("copy_object_to_target")
-        print(target_dict)
+        print("target_dict:" + str(target_dict))
         target_bucket = target_dict.get("bucket", None)
         is_external = target_dict.get("external", False)
         if is_external:
@@ -368,6 +369,7 @@ class DataLakeExtractor():
                 ext_secret_access_key = self.get_secret_value(ext_secret_key, self.region)
             s3_resource = boto3.resource("s3", aws_access_key_id=ext_access_key_id, \
                 aws_secret_access_key=ext_secret_access_key)
+            print("length of keys, should not be 0")
             print(len(ext_secret_access_key))
             print(len(ext_access_key_id))
             print("*******************************************")
@@ -377,9 +379,9 @@ class DataLakeExtractor():
             'Bucket': s3_bucket,
             'Key': s3_key
              }
-        print(s3_key)
-        print(target_bucket)
-        print(s3_bucket)
+        print("s3_key:" + s3_key)
+        print("target_bucket:" + target_bucket)
+        print("s3_bucket:" + s3_bucket)
         bucket = s3_resource.Bucket(target_bucket)
         response = bucket.copy(copy_source, s3_key)
         print("response:")
@@ -406,11 +408,12 @@ class DataLakeExtractor():
             #file size in bytes
             s3Key = s3Key.replace("%3A",":")
             s3Filesize = record.get('s3').get('object').get('size')
-            print(s3Bucket)
-            print(s3Key)
+            print("s3Bucket: " + s3Bucket)
+            print("s3Key: " + s3Key)
             s3CatalogHead = s3_client.head_object(Bucket = s3Bucket, Key = s3Key)
             lastModified = int(s3CatalogHead['LastModified'].timestamp()*1000)
-            print(s3CatalogHead)
+
+            print("s3CatalogHead: " + s3CatalogHead)
             sha256 = s3CatalogHead["Metadata"].get("sha256", None)
             if sha256 is None:
                 self.logger.error("sha256 not found for " + s3Bucket + "/" + s3Key)
@@ -489,7 +492,7 @@ class DataLakeExtractor():
             payload = dl_mes.serialize()
 
             json_payload = json.dumps(payload, indent=2)
-            print(json_payload)
+            print("json_payload:" + json_payload)
             if send_to_onestop:
                 print("sending to OneStop")
                 wp = WebPublisher(self.wp_config_file, self.cred_file)
@@ -533,7 +536,7 @@ class DataLakeExtractor():
         
         
         tag_list = [{'Key': str(k), 'Value': str(v)} for k, v in tag_dict.items()]
-        print(tag_list)
+        print("tag_list:" + str(tag_list))
         response = s3_client.put_object_tagging(
             Bucket=target_bucket,
             Key=s3_key,
@@ -552,16 +555,14 @@ class DataLakeExtractor():
         """
         sqs_client = boto3.client('sqs',  region_name=self.region)
         messages = self.receive_messages(sqs_client)
-        #print(messages)
+        print("messages: " + str(messages))
         indx_proc = self.get_records_from_messages(sqs_client, messages)
         
-        print(indx_proc)
+        print("indx_proc:" + indx_proc)
 
     def run_search_process(self):
         """
-        Run main logic: retrieve messages from S3/SNS/SQS, extract file 
-        information from messages, download file, extract metadata, reformat
-        metadata to required template, and send to OneStop SNS
+        Call search URL on OneStop
         """
         wp = WebPublisher(self.wp_config_file, self.cred_file)
         response = wp.get_granules_onestop("granule", "6b4f0954-628e-486e-914e-ce2dffffca90")
