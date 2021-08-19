@@ -16,6 +16,8 @@ from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.valid_descripto
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.analysis import Analysis
 from onestop.schemas.psiSchemaClasses.identification_analysis import IdentificationAnalysis
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum_algorithm import ChecksumAlgorithm
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum import Checksum
+from onestop.schemas.psiSchemaClasses.temporal_bounding_analysis import TemporalBoundingAnalysis
 from onestop.schemas.psiSchemaClasses.operation import Operation
 from onestop.schemas.psiSchemaClasses.data_format import DataFormat
 from onestop.schemas.psiSchemaClasses.platform import Platform
@@ -313,7 +315,6 @@ class test_ParsedRecord(unittest.TestCase):
         'errors': [errorEvent_dict]
     }
 
-    # Note: Didn't make unit tests for ENUMS since they don't execute any methods.
     def test_parsed_record_all_vars_set(self):
         parsedRecord = ParsedRecord(**self.parsedRecord_dict)
 
@@ -527,3 +528,76 @@ class test_ParsedRecord(unittest.TestCase):
         relationship = Relationship(id=id, type=None)
 
         self.assertEqual(relationship.id, id)
+
+    # Negative Tests
+    def test_lineString_type_fails_bad_type(self):
+        local_dict = dict(self.lineString_dict)
+        local_dict['type'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, LineString, **local_dict)
+
+    def test_multiLineString_type_fails_bad_type(self):
+        local_dict = dict(self.multiLineString_dict)
+        local_dict['type'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, MultiLineString, **local_dict)
+
+    def test_multiPoint_type_fails_bad_type(self):
+        local_dict = dict(self.multiPoint_dict)
+        local_dict['type'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, MultiPoint, **local_dict)
+
+    def test_multiPolygon_type_fails_bad_type(self):
+        local_dict = dict(self.multiPolygon_dict)
+        local_dict['type'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, MultiPolygon, **local_dict)
+
+    def test_point_type_fails_bad_type(self):
+        local_dict = dict(self.point_dict)
+        local_dict['type'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, Point, **local_dict)
+
+    def test_polygon_type_fails_bad_type(self):
+        local_dict = dict(self.polygon_dict)
+        local_dict['type'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, Polygon, **local_dict)
+
+    def test_temporalBoundingAnalysis_rangeDescriptor_fails_bad_type(self):
+        local_dict = dict(self.temporalBoundingAnalysis_dict)
+        local_dict['rangeDescriptor'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, TemporalBoundingAnalysis, **local_dict)
+
+    def test_checksum_algorithm_fails_bad_type(self):
+        local_dict = dict(self.checksum_dict)
+        local_dict['algorithm'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, Checksum, **local_dict)
+
+    def test_fileLocation_type_fails_bad_type(self):
+        local_dict = dict(self.fileLocation_dict)
+        local_dict['type'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, FileLocation, **local_dict)
+
+    def test_parsedRecord_type_fails_bad_type(self):
+        local_dict = dict(self.parsedRecord_dict)
+        local_dict['type'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, ParsedRecord, **local_dict)
+
+    def test_relationship_type_fails_bad_type(self):
+        local_dict = dict(self.relationship_dict)
+        local_dict['type'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, Relationship, **local_dict)
+
+    def test_temporalBoundingAnalysis_validDescriptor_fails_bad_type(self):
+        local_dict = dict(self.temporalBoundingAnalysis_dict)
+        local_dict['endDescriptor'] = 'BadEnumTypeString'
+
+        self.assertRaises(TypeError, TemporalBoundingAnalysis, **local_dict)
