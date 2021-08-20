@@ -42,7 +42,7 @@ class DataLakeExtractor():
         try:
             with open(conf_loc) as f:
                 self.conf = yaml.load(f, Loader=yaml.FullLoader)
-                print("conf:" + self.conf)
+                print("conf:" + str(self.conf))
                 print("conf type:" + str(type(self.conf)))
                 self.queue_url = self.conf['queue_url']
                 self.region = self.conf['region']
@@ -189,7 +189,7 @@ class DataLakeExtractor():
             AttributeNames=[
                 'All'
             ],
-            MaxNumberOfMessages=10,
+            MaxNumberOfMessages=1,
             MessageAttributeNames=[
                 'All'
             ]
@@ -384,8 +384,7 @@ class DataLakeExtractor():
         print("s3_bucket:" + s3_bucket)
         bucket = s3_resource.Bucket(target_bucket)
         response = bucket.copy(copy_source, s3_key)
-        print("response:")
-        print(response)
+        print("response from bucket copy: " + str(response))
         #TODO: copy metadata
         #TODO: check sha256
         self.updateObjectTagsWithMetadata(target_dict, s3_key, tag_dict)
@@ -413,7 +412,7 @@ class DataLakeExtractor():
             s3CatalogHead = s3_client.head_object(Bucket = s3Bucket, Key = s3Key)
             lastModified = int(s3CatalogHead['LastModified'].timestamp()*1000)
 
-            print("s3CatalogHead: " + s3CatalogHead)
+            print("s3CatalogHead: " + str(s3CatalogHead))
             sha256 = s3CatalogHead["Metadata"].get("sha256", None)
             if sha256 is None:
                 self.logger.error("sha256 not found for " + s3Bucket + "/" + s3Key)
@@ -500,10 +499,16 @@ class DataLakeExtractor():
                 #object_uuid = self.s3_utils.get_uuid_metadata(s3_resource, dl_mes.s3Bucket, dl_mes.s3Key)
                 object_uuid = dl_mes.fileIdentifier
                 registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
-                print("REGISTRY RESPONSE")
-                print(registry_response.json())
-                #is_success logic
-                is_success = True
+                if registry_response.status_code == 200:
+                    print("REGISTRY RESPONSE")
+                    print(registry_response.json())
+                    print("registry dict" + str(registry_response.__dict__))
+                    #is_success logic
+                    is_success = True
+                else:
+                    is_success = False
+                    print("Onestop response error")
+                    print("registry dict" + str(registry_response.__dict__))
             else:
                 print("not sending to OneStop")
                 is_success = True
@@ -558,7 +563,7 @@ class DataLakeExtractor():
         print("messages: " + str(messages))
         indx_proc = self.get_records_from_messages(sqs_client, messages)
         
-        print("indx_proc:" + indx_proc)
+        print("indx_proc:" + str(indx_proc))
 
     def run_search_process(self):
         """
@@ -566,7 +571,7 @@ class DataLakeExtractor():
         """
         wp = WebPublisher(self.wp_config_file, self.cred_file)
         response = wp.get_granules_onestop("granule", "6b4f0954-628e-486e-914e-ce2dffffca90")
-        print("RESPONSE")
+        print("SEARCH RESPONSE")
         print(response.__dict__)
 
     def run_interval_tracker(self):
@@ -575,7 +580,9 @@ class DataLakeExtractor():
         """
         s = sched.scheduler(tm.time, tm.sleep)
         self.logger.info('starting GEFS extraction')
-        while True:
+        self.run_process()
+        self.run_search_process()
+        while False:
             wake_up_interval = self.conf['sleep']  #seconds
             s.enter(wake_up_interval, 1, self.run_process, ())
             # I didn't see enter used in a loop like this in documentation
