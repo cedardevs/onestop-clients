@@ -259,12 +259,13 @@ class DataLakeExtractor():
             is_success = True
         return is_success
 
-    def process_file(self, localfile, s3Key, s3Bucket, endpoint_url, lastModified, file_size=None, sha256=None):
+    def process_file(self, localfile, s3Key, s3Bucket, S3Region, endpoint_url, lastModified, file_size=None, sha256=None):
         """
         Perform metadata extraction for file, type information or AWS metadata
         :param localfile: string for path to source file
         :param s3Key: AWS S3 Key for source file (contains path or original file name if tar file)
         :param s3Bucket: AWS S3 Bucket for source file
+        :param s3Region: AWS S3 region for source file
         :param endpoint_url: string representing endpoint for source AWS S3 bucket
         :param lastModified: timestamp for time source s3Key file was last modified
         :param file_size: file size in byte of source S3Key file
@@ -320,9 +321,9 @@ class DataLakeExtractor():
         for key in dl_target_dict:
             target_dict = dl_target_dict[key]
             try:
-                self.copy_object_to_target(s3Bucket, s3Key, target_dict, tag_dict)
+                self.copy_object_to_target(s3Bucket, s3Key, S3Region, target_dict, tag_dict)
                 if dl_mes.alg_value is not None:
-                    is_ok = self.verify_checksum(dl_mes.s3Bucket, s3Key, dl_mes.alg_value)
+                    is_ok = self.verify_checksum(dl_mes.s3Bucket, s3Key,  S3Region, dl_mes.alg_value)
                     if not is_ok:
                         self.logger.error(dl_mes.uri + " sha256 error")
             except Exception as e:
@@ -359,22 +360,24 @@ class DataLakeExtractor():
         print("target_dict:" + str(target_dict))
         target_bucket = target_dict.get("bucket", None)
         is_external = target_dict.get("external", False)
+        target_region = target_dict.get("region", None)
         if is_external:
-        
             ext_access_key = target_dict.get("ext_access_key", None)
             ext_secret_key = target_dict.get("ext_secret_key", None)
+            
             if ext_access_key is not None:
                 ext_access_key_id = self.get_secret_value(ext_access_key, self.region)
             if ext_secret_key is not None:
                 ext_secret_access_key = self.get_secret_value(ext_secret_key, self.region)
             s3_resource = boto3.resource("s3", aws_access_key_id=ext_access_key_id, \
-                aws_secret_access_key=ext_secret_access_key)
+                aws_secret_access_key=ext_secret_access_key,
+                region_name=target_region)
             print("length of keys, should not be 0")
             print(len(ext_secret_access_key))
             print(len(ext_access_key_id))
             print("*******************************************")
         else:
-            s3_resource = boto3.resource('s3')
+            s3_resource = boto3.resource('s3', region_name=target_region)
         copy_source = {
             'Bucket': s3_bucket,
             'Key': s3_key
@@ -404,6 +407,7 @@ class DataLakeExtractor():
         for record in records:
             s3Bucket = record.get("s3").get("bucket").get("name")
             s3Key = record.get("s3").get("object").get("key")
+            s3Region = record.get("s3").get("object").get("region")
             #file size in bytes
             s3Key = s3Key.replace("%3A",":")
             s3Filesize = record.get('s3').get('object').get('size')
@@ -439,12 +443,12 @@ class DataLakeExtractor():
                             #memberFile = os.path.join(self.conf['temp_dir'], member.name)
                             #print(memberFile)
                             dl_mes = self.process_file(filename, s3Key, s3Bucket, \
-                                endpoint_url, lastModified)
+                                s3Region, endpoint_url, lastModified)
 
                             if dl_mes is not None:
                                 dl_mes_list.append(dl_mes)
                 else:
-                    dl_mes = self.process_file(filename, s3Key, s3Bucket, endpoint_url, lastModified)
+                    dl_mes = self.process_file(filename, s3Key, s3Bucket, s3Region, endpoint_url, lastModified)
                     if dl_mes is not None:
                         dl_mes_list.append(dl_mes)
 
@@ -455,17 +459,18 @@ class DataLakeExtractor():
             
         return dl_mes_list
 
-    def verify_checksum(self, s3Bucket, dest_path, sha256):
+    def verify_checksum(self, s3Bucket, dest_path, s3Region, sha256):
         """
         from NCCF base class, SHA1 algorithm
         :param s3Bucket: string for target S3 bucket name of file
         :param dest_path: string for target S3 key of file
+        :param s3Region: string for region for target S3
         :param sha256: string for sha256 hash for file
         :return: dictionary of checksum information
         """
         #TODO: convert to SHA256?
         #TODO: retrieve value in place in bucket
-        s3_client = boto3.client('s3', region_name='us-east-1')
+        s3_client = boto3.client('s3', region_name=s3Region)
         fileobj = s3_client.get_object(
             Bucket=s3Bucket,
             Key=dest_path
@@ -525,19 +530,20 @@ class DataLakeExtractor():
         is_success = True
         is_external = target_dict.get("external", False)
         target_bucket = target_dict.get("bucket")
+        target_region = target_dict.get("region")
         if is_external:
         
             ext_access_key = target_dict.get("ext_access_key", None)
             ext_secret_key = target_dict.get("ext_secret_key", None)
             if ext_access_key is not None:
-                ext_access_key_id = self.get_secret_value(ext_access_key, region)
+                ext_access_key_id = self.get_secret_value(ext_access_key, self.region)
             if ext_secret_key is not None:
-                ext_secret_access_key = self.get_secret_value(ext_secret_key, region)
-            s3_client = boto3.client('s3',  region_name=self.region,\
+                ext_secret_access_key = self.get_secret_value(ext_secret_key, self.region)
+            s3_client = boto3.client('s3',  region_name=target_region,\
                 aws_access_key_id=ext_access_key_id, \
                 aws_secret_access_key=ext_secret_access_key)
         else:
-            s3_client = boto3.client('s3',  region_name=self.region)
+            s3_client = boto3.client('s3',  region_name=target_region)
         
         
         tag_list = [{'Key': str(k), 'Value': str(v)} for k, v in tag_dict.items()]
