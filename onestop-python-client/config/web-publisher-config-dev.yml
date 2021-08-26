@@ -4,7 +4,8 @@ log_level: INFO
 # COLLECTION or GRANULE
 metadata_type: granule
 registry_base_url: http://internal-aedcb94123a514f679c943e66cb7d3c0-979069726.us-east-1.elb.amazonaws.com
-onestop_base_url: http://internal-aedcb94123a514f679c943e66cb7d3c0-979069726.us-east-1.elb.amazonaws.com/search
+onestop_base_url: http://a926a000f6c834778aeebe1c0bdbe90f-73d2145a08123133.elb.us-east-1.amazonaws.com/onestop/api/search
+host: datalake.woc.noaa.gov
 
 security:
   enabled: True

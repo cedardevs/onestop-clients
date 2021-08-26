@@ -33,12 +33,12 @@ class WebPublisher:
     """
     conf = None
 
-    def __init__(self, registry_base_url, registry_username, registry_password, onestop_base_url, log_level="INFO", **kwargs):
+    def __init__(self, registry_base_url, registry_username, registry_password, onestop_base_url, log_level="INFO", host="", **kwargs):
         self.registry_base_url = registry_base_url
         self.registry_username = registry_username
         self.registry_password = registry_password
         self.onestop_base_url = onestop_base_url
-
+        self.host = host
         self.logger = ClientLogger.get_logger(self.__class__.__name__, log_level, False)
         self.logger.info("Initializing " + self.__class__.__name__)
 
@@ -137,6 +137,10 @@ class WebPublisher:
             response message of search result
         """
         headers = {'Content-Type': 'application/json'}
+        if self.host != '':
+            headers['Host'] = self.host
+        print("heeeeeeeeeeeeeeeeeeeeere")
+        self.logger.info("HEADERS:" + str(headers))
         onestop_url = self.onestop_base_url + "/" + metadata_type
 
         self.logger.info("Searching Onestop via GET by ID to: " + onestop_url)

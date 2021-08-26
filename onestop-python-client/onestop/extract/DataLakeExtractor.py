@@ -49,11 +49,42 @@ class DataLakeExtractor():
             self.wp_config_file = wp_config_file
             self.cred_file = cred_file
             self.s3_utils = S3Utils(wp_config_file, cred_file)
+                      
         except Exception as ex:
             print('exception')
             self.logger.error("Exception occured while opening config file")
             self.logger.error(sys.exc_info())
-       
+        self.set_web_publisher()
+
+    def set_web_publisher(self):
+        """
+        Set WebPublisher instance for class
+        """
+        try:
+            with open(self.cred_file) as f:
+                creds = yaml.load(f, Loader=yaml.FullLoader)
+                registry_username = creds['registry']['username']
+                registry_password = creds['registry']['password']
+        except Exception as ex:
+            print('exception')
+            self.logger.error("Exception occured while opening credentials file")
+            self.logger.error(sys.exc_info())
+        try:
+            with open(self.wp_config_file) as f:
+                conf = yaml.load(f, Loader=yaml.FullLoader)
+                registry_base_url = conf['registry_base_url']
+                onestop_base_url = conf['onestop_base_url']
+                host_name = conf.get("host","")
+        except Exception as ex:
+            print('exception')
+            self.logger.error("Exception occured while opening wp config file")
+            self.logger.error(sys.exc_info())
+        try:
+            self.wp = WebPublisher(registry_base_url, registry_username, registry_password, onestop_base_url, log_level="INFO", host=host_name)
+        except Exception as ex:
+            self.logger.error("Exception occured while creating wp")
+            self.logger.error(sys.exc_info())
+            print("ERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRROR")
 
     def get_secret_value(self, secret_key, region):
         """
@@ -321,7 +352,7 @@ class DataLakeExtractor():
         for key in dl_target_dict:
             target_dict = dl_target_dict[key]
             try:
-                self.copy_object_to_target(s3Bucket, s3Key, S3Region, target_dict, tag_dict)
+                self.copy_object_to_target(s3Bucket, s3Key, target_dict, tag_dict)
                 if dl_mes.alg_value is not None:
                     is_ok = self.verify_checksum(dl_mes.s3Bucket, s3Key,  S3Region, dl_mes.alg_value)
                     if not is_ok:
@@ -499,11 +530,10 @@ class DataLakeExtractor():
             print("json_payload:" + json_payload)
             if send_to_onestop:
                 print("sending to OneStop")
-                wp = WebPublisher(self.wp_config_file, self.cred_file)
                 s3_resource = self.s3_utils.connect("s3_resource", None)
                 #object_uuid = self.s3_utils.get_uuid_metadata(s3_resource, dl_mes.s3Bucket, dl_mes.s3Key)
                 object_uuid = dl_mes.fileIdentifier
-                registry_response = wp.publish_registry("granule", object_uuid, json_payload, "POST")
+                registry_response = self.wp.publish_registry("granule", object_uuid, json_payload, "POST")
                 if registry_response.status_code == 200:
                     print("REGISTRY RESPONSE")
                     print(registry_response.json())
@@ -575,10 +605,26 @@ class DataLakeExtractor():
         """
         Call search URL on OneStop
         """
-        wp = WebPublisher(self.wp_config_file, self.cred_file)
-        response = wp.get_granules_onestop("granule", "6b4f0954-628e-486e-914e-ce2dffffca90")
-        print("SEARCH RESPONSE")
-        print(response.__dict__)
+        print("get_granules_onestop")
+        par_id = "6b4f0954-628e-486e-914e-ce2dffffca90"
+        response = self.wp.get_granules_onestop(par_id)
+        print("SEARCH get_granules RESPONSE")
+        print(response.text)
+        print("******************************")
+        print("search registry, collection")
+        response = self.wp.search_registry("collection", par_id)
+        print("SEARCH registry RESPONSE")
+        print(response.status_code)
+        print("***************************")
+        payload = '{"queries":[],"filters":[{"type":"collection","values":["' + par_id +  '"]}],"facets":true,"page":{"max":50,"offset":0}}'
+        self.logger.info("Getting granules for id=" + par_id)
+
+        response = self.wp.search_onestop("collection", payload)
+        self.logger.info("Response: "+str(response))
+        print("SEARCH collection registry RESPONSE")
+        print(response.text)
+
+
 
     def run_interval_tracker(self):
         """
