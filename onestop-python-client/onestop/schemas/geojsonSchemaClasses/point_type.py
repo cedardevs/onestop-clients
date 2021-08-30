@@ -3,7 +3,7 @@ from typing import ClassVar
 
 
 class PointType(Enum):
-    Point = 'Point'
+    POINT = 'Point'
 
     #: The Avro Schema associated to this class
     _schema: ClassVar[str] = """{

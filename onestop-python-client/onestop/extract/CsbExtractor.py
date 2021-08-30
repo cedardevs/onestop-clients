@@ -2,61 +2,33 @@ import csv
 from datetime import datetime
 
 class CsbExtractor:
+
     """
     A class used to extract geospatial data from csv files in an s3 bucket
-
-    Attributes
-    ----------
-    su : S3 Utils object
-        an instance of the s3 utils class used to connect to the corresponding s3 bucket to get access to the csv file for extraction
-    boto_client: boto3 client
-        specific boto3 client type (s3, s3_resource, glacier, session) used to access aws resources
-    bucket: str
-        the name of the s3 bucket in which you want to access
-    key: str
-        the name of key path for the specific item you want to access in the bucket
-
 
     Methods
     -------
     is_csv(file_name)
-        checks to see if the given file is of type csv
+        Verifies a file name ends with '.csv'
 
     get_spatial_temporal_bounds(lon_column_name, lat_column_name, date_column_name)
-        extracts min/max longitude and latitude values as well as beginning and ending dates from specified csv file
+        Gets the spacial bounding box for the open file. This seeks to the start of the file at start and the end.
 
     extract_coords(max_lon, max_lat, min_lon, min_lat)
-        extracts specific coordinates corresponding to min/max longitude and latitude values given from get_spatial_temporal_bounds(....) method
+        Given the max/min lon and lat, the function will parse the csv file to extract the coordinates within the given bounding box.
     """
 
-    def __init__(self, su, key):
+    @staticmethod
+    def is_csv(file_name):
         """
-        :param su: S3 Utils object
-            an instance of the s3 utils class used to connect to the corresponding s3 bucket to get access to the csv file for extraction
-        :param key: str
-            the name of key path for the specific item you want to access in the bucket
-
-        Other Attributes
-        ________________
-        boto_client: boto3 client
-            specific boto3 client type (s3, s3_resource, glacier, session) used to access aws resources
-        bucket: str
-            the name of the s3 bucket in which you want to access
-        """
-        self.su = su
-        boto_client = self.su.connect("session", None)
-        bucket = self.su.conf['s3_bucket']
-        self.key = key
-
-    def is_csv(self, file_name):
-        """
-        Checks to see if the given file is of type csv
+        Verifies a file name ends with '.csv'
 
         :param file_name: str
-            the name of the file in the s3 bucket  i.e. file1.csv
+            File name with extension on the end.
 
-        :return: boolean
-            True if the file name contains .csv and False otherwise
+        :return: str
+            True if ends with csv
+            False if doesn't end with csv
         """
         csv_str = '.csv'
         if file_name.endswith(csv_str):
@@ -64,28 +36,22 @@ class CsbExtractor:
 
         return False
 
-    # def smart_open_read(self, key):
-    #     boto_client = self.su.connect("session", None)
-    #     bucket = self.su.conf['s3_bucket']
-    #     self.su.read_csv_s3(boto_client, bucket, key)
-
-
-    def get_spatial_temporal_bounds(self, lon_column_name, lat_column_name, date_column_name):
+    @staticmethod
+    def get_spatial_temporal_bounds(sm_open_file, lon_column_name, lat_column_name, date_column_name):
         """
-        Extracts min/max longitude and latitude values as well as beginning and ending dates from specified csv file
+        Gets the spacial bounding box for the open file. This seeks to the start of the file at start and the end.
 
+        :param sm_open_file: file-like object
+            A file-like object that is open, say from smart_open's sm_open.
         :param lon_column_name: str
-            name of longitude column in the csv file
+            Longitude column name
         :param lat_column_name: str
-            name of the latitude column in the csv file
+            Latitude column name
         :param date_column_name: str
-            name of the date column in the csv file
+            Date column name
 
         :return: dict
-            Key : Value
-            geospatial (str)  ->  List[float] containing min/max longitude and latitude values
-            temporal (str) -> List[str] containing beginning and end dates
-
+            geospatial and temporal fields of the bounding box for given constraints.
         """
         lon_min_val = None
         lon_max_val = None
@@ -99,9 +65,7 @@ class CsbExtractor:
         # variable to be returned in string format
         begin_date_str = ''
 
-        boto_client = self.su.connect("session", None)
-        bucket = self.su.conf['s3_bucket']
-        sm_open_file = self.su.get_csv_s3(boto_client, bucket, self.key)
+        sm_open_file.seek(0)
         csv_reader = csv.DictReader(sm_open_file)
 
         for row in csv_reader:
@@ -151,43 +115,40 @@ class CsbExtractor:
             "temporal": [begin_date_str, end_date_str]
         }
 
+        sm_open_file.seek(0)
         return geospatial_temporal_bounds
 
-
-    def extract_coords(self, max_lon, max_lat, min_lon, min_lat):
+    @staticmethod
+    def extract_coords(sm_open_file, max_lon, max_lat, min_lon, min_lat):
         """
-        Extracts specific coordinates corresponding to min/max longitude and latitude values given from get_spatial_temporal_bounds(....) method
+        Given the max/min lon and lat, the function will parse the csv file to extract the coordinates within the given bounding box.
 
-        :param max_lon: float
-            maximum longitude value
-        :param max_lat: float
-            maximum latitude value
-        :param min_lon: float
-            minimum longitude value
-        :param min_lat: float
-            minimum latitude value
+        :param sm_open_file: file-like object
+            A file-like object that is open, say from smart_open's sm_open.
+        :param max_lon: str
+            Maximum longitude
+        :param max_lat: str
+            Maximum latitude
+        :param min_lon: str
+            Minimum longitude
+        :param min_lat: str
+            Minimum latitude
 
-        :return: List[ List[Float] ]
-            Returns a list of lists. Each list contains floats (longitude and latitude ) value pairs corresponding to
-            one of the min/max latitude and longitude values that were extracted previously from get_spatial_temporal_bounds (...)
+        :return: list
+            List of the the coordinates (no duplicates) within the file that are within the given bounding box.
         """
 
-        # Keeps track of all coordinates that needs to be added to json payload
         coords = []
 
-        boto_client = self.su.connect("session", None)
-        bucket = self.su.conf['s3_bucket']
-        sm_open_file = self.su.get_csv_s3(boto_client, bucket, self.key)
+        sm_open_file.seek(0)
         csv_reader = csv.DictReader(sm_open_file)
-
         for row in csv_reader:
-            if float( row['LAT'] ) == min_lat or float( row['LAT'] ) == max_lat or float(
-                    row['LON'] ) == min_lon or float( row['LON'] ) == max_lon:
+            if float( row['LAT'] ) == min_lat or float( row['LAT'] ) == max_lat or \
+               float( row['LON'] ) == min_lon or float( row['LON'] ) == max_lon:
                 coord = [float( row['LON'] ), float( row['LAT'] )]
-
-                # check to see if that coordinate has already been appended to the list that is keeping track of our coordinates
+                # if this coordinate has already been appended to the list to return (no duplicates)
                 if coord not in coords:
                     coords.append( coord )
 
+        sm_open_file.seek(0)
         return coords
-

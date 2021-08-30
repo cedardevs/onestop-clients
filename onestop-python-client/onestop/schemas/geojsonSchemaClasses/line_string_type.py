@@ -3,7 +3,7 @@ from typing import ClassVar
 
 
 class LineStringType(Enum):
-    LineString = 'LineString'
+    LINESTRING = 'LineString'
 
     #: The Avro Schema associated to this class
     _schema: ClassVar[str] = """{

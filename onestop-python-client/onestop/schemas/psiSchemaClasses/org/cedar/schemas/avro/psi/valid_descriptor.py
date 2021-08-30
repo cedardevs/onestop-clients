@@ -1,26 +1,21 @@
-from dataclasses import asdict, dataclass
-from typing import Dict
-
-from undictify import type_checked_constructor
+from enum import Enum
+from typing import ClassVar
 
 
-@type_checked_constructor()
-@dataclass
-class ValidDescriptor:
-    def to_dict(self) -> Dict:
-        """
-        Returns a dictionary version of this instance.
-        """
-        return asdict(self)
+class ValidDescriptor(Enum):
+    VALID = 'VALID'
+    INVALID = 'INVALID'
+    UNDEFINED = 'UNDEFINED'
 
-    @classmethod
-    def from_dict(
-            cls,
-            the_dict: Dict
-    ) -> 'ValidDescriptor':
-        """
-        Returns an instance of this class from a dictionary.
-
-        :param the_dict: The dictionary from which to create an instance of this class.
-        """
-        return cls(**the_dict)
+    #: The Avro Schema associated to this class
+    _schema: ClassVar[str] = """{
+        "name": "ValidDescriptor",
+        "namespace": "org.cedar.schemas.avro.psi",
+        "type": "enum",
+        "doc": "The types of metadata records which can be represented in the PSI system",
+        "symbols": [
+            "VALID",
+            "INVALID",
+            "UNDEFINED"
+        ]
+    }"""

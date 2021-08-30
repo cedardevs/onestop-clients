@@ -1,11 +1,36 @@
 import json
-from enum import Enum
+
 from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.checksum_algorithm import ChecksumAlgorithm
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.relationship_type import RelationshipType
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.record_type import RecordType
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.valid_descriptor import ValidDescriptor
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.operation_type import OperationType
+from onestop.schemas.psiSchemaClasses.time_range_descriptor import TimeRangeDescriptor
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.file_location_type import FileLocationType
+from onestop.schemas.psiSchemaClasses.org.cedar.schemas.avro.psi.method import Method
+from onestop.schemas.geojsonSchemaClasses.line_string_type import LineStringType
+from onestop.schemas.geojsonSchemaClasses.multi_line_string_type import MultiLineStringType
+from onestop.schemas.geojsonSchemaClasses.multi_point_type import MultiPointType
+from onestop.schemas.geojsonSchemaClasses.multi_polygon_type import MultiPolygonType
+from onestop.schemas.geojsonSchemaClasses.point_type import PointType
+from onestop.schemas.geojsonSchemaClasses.polygon_type import PolygonType
 
 # Diction of all the Enum Classes
 ENUMS = {
     'ChecksumAlgorithm': ChecksumAlgorithm,
-
+    'RelationshipType': RelationshipType,
+    'RecordType': RecordType,
+    'TimeRangeDescriptor': TimeRangeDescriptor,
+    'LineStringType': LineStringType,
+    'Method': Method,
+    'MultiLineStringType': MultiLineStringType,
+    'MultiPointType': MultiPointType,
+    'MultiPolygonType': MultiPolygonType,
+    'OperationType': OperationType,
+    'PointType': PointType,
+    'PolygonType': PolygonType,
+    'FileLocationType': FileLocationType,
+    'ValidDescriptor': ValidDescriptor
 }
 
 # Used as an argument in json.dumps, transform Enum instance for later use

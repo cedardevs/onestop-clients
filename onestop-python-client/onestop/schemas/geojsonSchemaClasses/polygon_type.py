@@ -3,7 +3,7 @@ from typing import ClassVar
 
 
 class PolygonType(Enum):
-    Polygon = 'Polygon'
+    POLYGON = 'Polygon'
     #: The Avro Schema associated to this class
     _schema: ClassVar[str] = """{
         "name": "PolygonType",

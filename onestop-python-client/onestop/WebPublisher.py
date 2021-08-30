@@ -7,31 +7,30 @@ class WebPublisher:
 
     Attributes
     ----------
-    registry_base_url: str
-        url for registry endpoint
-    registry_username: str
-        username for posting metadata to registry
-    registry_password: str
-        password for posting metadata to registry
-    onestop_base_url: str
-        url for onestop endpoint
-    logger.info: str
-        logging level
+        registry_base_url: str
+            URL for registry endpoint
+        registry_username: str
+            Registry username where credentials needed
+        registry_password: str
+            Registry password where credentials needed
+        onestop_base_url: str
+            URL for OneStop endpoint
+        logger.info: str
+            logging level
 
     Methods
     -------
-    publish_registry(metadata_type, uuid, payload, method)
-        Publish to registry with either POST,PUT, OR PATCH methods
-    delete_registry(metadata_type, uuid)
-        Deletes item from registry
-    search_registry(metadata_type, uuid)
-        Searches for an item in registry given its metadata type and uuid
-    search_onestop(metadata_type, payload)
-        Acquires the item, collection or granule, from OneStop
-    get_granules_onestop(self, uuid)
-        Acquires granules from OneStop given the uuid
+        publish_registry(metadata_type, uuid, payload, method)
+            Publish an item to registry with either POST, PUT, OR PATCH methods
+        delete_registry(metadata_type, uuid)
+            Delete an item from registry
+        search_registry(metadata_type, uuid)
+            Search for an item in registry given its metadata type and uuid
+        search_onestop(metadata_type, payload)
+            Search for an item in OneStop given its metadata type and payload search criteria
+        get_granules_onestop(self, uuid)
+            Search for a granule in OneStop given its uuid
     """
-    conf = None
 
     def __init__(self, registry_base_url, registry_username, registry_password, onestop_base_url, log_level="INFO", **kwargs):
         self.registry_base_url = registry_base_url
@@ -43,7 +42,7 @@ class WebPublisher:
         self.logger.info("Initializing " + self.__class__.__name__)
 
         if kwargs:
-            self.logger.info("There were extra constructor arguments: " + str(kwargs))
+            self.logger.debug("Superfluous parameters in constructor call: " + str(kwargs))
 
     def publish_registry(self, metadata_type, uuid, payload, method):
         """
@@ -84,12 +83,12 @@ class WebPublisher:
 
     def delete_registry(self, metadata_type, uuid):
         """
-        Deletes item from registry
+        Delete an item from registry
 
         :param metadata_type: str
             metadata type (GRANULE/COLLECTION)
         :param uuid: str
-            uuid you want to publish with
+            uuid you want to delete
 
         :return: str
             response message indicating if delete was successful
@@ -105,7 +104,7 @@ class WebPublisher:
 
     def search_registry(self, metadata_type, uuid):
         """
-        Searches for an item in registry given its metadata type and uuid
+        Search for an item in registry given its metadata type and uuid
 
         :param metadata_type: str
             metadata type (GRANULE/COLLECTION)
@@ -126,7 +125,7 @@ class WebPublisher:
 
     def search_onestop(self, metadata_type, payload):
         """
-        Searches for an item in OneStop given its metadata type and payload search criteria.
+        Search for an item in OneStop given its metadata type and payload search criteria.
 
         :param metadata_type: str
             metadata type (GRANULE/COLLECTION)
@@ -147,7 +146,7 @@ class WebPublisher:
 
     def get_granules_onestop(self, uuid):
         """
-        Searches for a granule in OneStop given its uuid
+        Search for a granule in OneStop given its uuid
 
         :param uuid: str
             uuid you want search for
