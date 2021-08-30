@@ -633,7 +633,7 @@ class DataLakeExtractor():
         s = sched.scheduler(tm.time, tm.sleep)
         self.logger.info('starting GEFS extraction')
         self.run_process()
-        self.run_search_process()
+        #self.run_search_process()
         while False:
             wake_up_interval = self.conf['sleep']  #seconds
             s.enter(wake_up_interval, 1, self.run_process, ())
