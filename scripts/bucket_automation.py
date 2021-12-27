@@ -1,6 +1,11 @@
 import argparse
 import json
+import os
+import yaml
+
 from onestop.util.S3Utils import S3Utils
+
+config_dict = {}
 
 def handler():
     '''
@@ -10,43 +15,42 @@ def handler():
         Returns boto3 response indicating if bucket creation was successful
     '''
     # connect to low level api
-    s3 = s3_utils.connect("s3", s3_utils.conf['s3_region'])
+    s3 = s3_utils.connect('client', 's3', config_dict['s3_region'])
 
     # use s3_resource api to check if the bucket exists
-    s3_resource = s3_utils.connect("s3_resource", s3_utils.conf['s3_region'])
+    s3_resource = s3_utils.connect('resource', 's3', config_dict['s3_region'])
 
     # Create bucket name
     bucket_name = "noaa-nccf-dev"
 
-    # checks to see if the bucket is already created, if it isn't create yet then it will create the bucket, set bucket policy, and create key paths
+    # Create bucket policy
+    bucket_policy = {
+        "Version": "2012-10-17",
+        "Id": "noaa-nccf-dev-policy",
+        "Statement": [
+            {
+                "Sid": "PublicRead",
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "s3:GetObject",
+                "Resource": f'arn:aws:s3:::{bucket_name}/public/*'
+            }]
+    }
+    # Convert the policy from JSON dict to string
+    bucket_policy_str = json.dumps(bucket_policy)
+
+    # checks to see if the bucket is already created, if it isn't create it, then it will create the bucket, set bucket policy, and create key paths
     if not s3_resource.Bucket(bucket_name) in s3_resource.buckets.all():
         """
         - Create bucket
         - need to specify bucket location for every region except us-east-1 -> https://github.com/aws/aws-cli/issues/2603
         """
         s3.create_bucket(Bucket=bucket_name,
-                         CreateBucketConfiguration={'LocationConstraint': s3_utils.conf['s3_region']},
+                         CreateBucketConfiguration={'LocationConstraint': config_dict['s3_region']},
                          ObjectLockEnabledForBucket=True)
 
-        # Create bucket policy
-        bucket_policy = {
-            "Version": "2012-10-17",
-            "Id": "noaa-nccf-dev-policy",
-            "Statement": [
-                {
-                    "Sid": "PublicRead",
-                    "Effect": "Allow",
-                    "Principal": "*",
-                    "Action": "s3:GetObject",
-                    "Resource": f'arn:aws:s3:::{bucket_name}/public/*'
-                }]
-        }
-
-        # Convert the policy from JSON dict to string
-        bucket_policy = json.dumps(bucket_policy)
-
         # Set new bucket policy
-        s3.put_bucket_policy(Bucket=bucket_name, Policy=bucket_policy)
+        s3.put_bucket_policy(Bucket=bucket_name, Policy=bucket_policy_str)
 
         """
         - Create Public Key Paths
@@ -86,6 +90,9 @@ def handler():
         s3.put_object(Bucket=bucket_name, Body='', Key='private/OMAO/')
         s3.put_object(Bucket=bucket_name, Body='', Key='private/OAR/')
 
+    else:
+        #Set bucket policy
+        s3.put_bucket_policy(Bucket=bucket_name, Policy=bucket_policy_str)
 
     # Set CORS bucket config
     cors_config = {
@@ -109,12 +116,6 @@ def handler():
     }
     s3.put_bucket_cors(Bucket=bucket_name, CORSConfiguration=cors_config)
 
-    # Convert the policy from JSON dict to string
-    bucket_policy = json.dumps(bucket_policy)
-
-    #Set new bucket policy
-    s3.put_bucket_policy(Bucket=bucket_name, Policy=bucket_policy)
-
     """
     - Set ACL for public read
     """
@@ -131,18 +132,42 @@ def handler():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Launches e2e test")
-    parser.add_argument('-conf', dest="conf", required=True,
+    # Set default config location to the Helm mounted pod configuration location
+    parser.add_argument('-conf', dest="conf", required=False, default='/etc/config/config.yml',
                         help="AWS config filepath")
-
     parser.add_argument('-cred', dest="cred", required=True,
                         help="Credentials filepath")
     args = vars(parser.parse_args())
 
-    # Get configuration file path locations
+    # Generate configuration dictionary
     conf_loc = args.pop('conf')
+    with open(conf_loc) as f:
+        config_dict.update(yaml.load(f, Loader=yaml.FullLoader))
+
+    # Get credentials from passed in fully qualified path or ENV.
     cred_loc = args.pop('cred')
+    if cred_loc is not None:
+        with open(cred_loc) as f:
+            creds = yaml.load(f, Loader=yaml.FullLoader)
+        registry_username = creds['registry']['username']
+        registry_password = creds['registry']['password']
+        access_key = creds['sandbox']['access_key']
+        access_secret = creds['sandbox']['secret_key']
+    else:
+        print("Using env variables for config parameters")
+        registry_username = os.environ.get("REGISTRY_USERNAME")
+        registry_password = os.environ.get("REGISTRY_PASSWORD")
+        access_key = os.environ.get("ACCESS_KEY")
+        access_secret = os.environ.get("SECRET_KEY")
+
+    config_dict.update({
+        'registry_username' : registry_username,
+        'registry_password' : registry_password,
+        'access_key' : access_key,
+        'secret_key' : access_secret
+    })
 
     # Create S3Utils instance
-    s3_utils = S3Utils(conf_loc, cred_loc)
+    s3_utils = S3Utils(**config_dict)
 
     handler()

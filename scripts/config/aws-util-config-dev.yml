@@ -1,5 +1,4 @@
 # Example config values for osim client
-log_level: INFO
 
 # AWS config values
 sqs_url: https://sqs.us-east-2.amazonaws.com/798276211865/cloud-archive-client-sqs
@@ -9,6 +8,6 @@ s3_bucket: archive-testing-demo
 #s3_bucket: noaa-nccf-dev
 
 #AWS config values for 2nd vault in different region
-vault_name: archive-vault-new
+vault_name: archive-vault
 s3_region2: 'us-west-2'
 s3_bucket2: noaa-nccf-dev-archive

@@ -1,5 +1,4 @@
 # Example config values for osim client
-log_level: DEBUG
 
 # AWS config values
 sqs_url: 'test-queue'

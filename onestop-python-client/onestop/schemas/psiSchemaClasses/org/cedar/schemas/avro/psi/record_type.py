@@ -6,8 +6,8 @@ class RecordType(Enum):
     """
     The types of metadata records which can be represented in the PSI system
     """
-    collection = 'collection'
-    granule = 'granule'
+    COLLECTION = 'collection'
+    GRANULE = 'granule'
 
     #: The Avro Schema associated to this class
     _schema: ClassVar[str] = """{

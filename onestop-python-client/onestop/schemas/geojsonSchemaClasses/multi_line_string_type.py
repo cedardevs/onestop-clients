@@ -3,7 +3,7 @@ from typing import ClassVar
 
 
 class MultiLineStringType(Enum):
-    MultiLineString = 'MultiLineString'
+    MULTILINESTRING = 'MultiLineString'
 
     #: The Avro Schema associated to this class
     _schema: ClassVar[str] = """{

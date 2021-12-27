@@ -1,8 +1,11 @@
+import yaml
 import argparse
-import json
 from onestop.KafkaConsumer import KafkaConsumer
+from onestop.util.ClientLogger import ClientLogger
 
-def handler(key,value):
+config_dict = {}
+
+def handler(key, value, log_level = 'INFO'):
     '''
     Prints key, value pair of items in topic
 
@@ -13,9 +16,10 @@ def handler(key,value):
 
     :return: None
     '''
-    print(key)
-    print('VALUE-------')
-    print(value)
+    logger = ClientLogger.get_logger('smeFunc.handler', log_level, False)
+    logger.info('In Handler')
+    logger.info('key=%s value=%s'%(key, value))
+
     """
     if (value['type'] == 'collection' or not bool(value['fileInformation'])):
         print(value['discovery']['fileIdentifier'])
@@ -25,51 +29,20 @@ def handler(key,value):
 
 
 if __name__ == '__main__':
+    # Example command: python3 smeFunc.py -conf /Users/whoever/repo/onestop-clients/scripts/config/combined_template.yml
+    #    python3 smeFunc.py
+    parser = argparse.ArgumentParser(description="Launches smeFunc test")
+    # Set default config location to the Helm mounted pod configuration location
+    parser.add_argument('-conf', dest="conf", required=False, default='/etc/config/config.yml',
+                        help="AWS config filepath")
+    args = vars(parser.parse_args())
 
-    kafka_consumer = KafkaConsumer("scripts/config/kafka-publisher-config-dev.yml")
-    kafka_consumer.granule_topic = 'psi-granule-parsed'
+    # Generate configuration dictionary
+    conf_loc = args.pop('conf')
+    with open(conf_loc) as f:
+        config_dict.update(yaml.load(f, Loader=yaml.FullLoader))
+
+    kafka_consumer = KafkaConsumer(**config_dict)
+    kafka_consumer.granule_topic_consume = 'psi-granule-parsed'
     metadata_consumer = kafka_consumer.connect()
-    kafka_consumer.consume(metadata_consumer, lambda k, v: handler(k, v))
-    """
-    parser = argparse.ArgumentParser(description="Allows smeFunc to produce or consume messagges from kafkda topics")
-    parser.add_argument('-cmd', dest="command", required=True,
-                        help="Command (produce/consume)")
-    
-    parser.add_argument('-b', dest="bootstrap.servers", required=True,
-                        help="Bootstrap broker(s) (host[:port])")
-    parser.add_argument('-s', dest="schema.registry.url", required=True,
-                        help="Schema Registry (http(s)://host[:port]")
-    parser.add_argument('-t', dest="topic", required=True,
-                        help="Topic name")
-    parser.add_argument('-g', dest="group.id", required=False,
-                        help="Consumer group")
-    parser.add_argument('-o', dest="auto.offset.reset", required=False,
-                        help="offset")
-
-    config = vars(parser.parse_args())
-    topic = config.pop('topic')
-    cmd = config.pop('command')
-    
-    if (cmd=="consume"):
-        consume(config, topic, lambda k, v: handler(k, v))
-        
-        
-    if (cmd=="produce"):
-        
-        #Example content
-        value = {
-            "type": "collection",
-            "content": "Update!",
-            "contentType": "application/json",
-            "method": "PUT",
-            "source": "unknown",
-            "operation": "ADD"
-        }
-
-        key = "3ee5976e-789a-41d5-9cae-d51e7b92a247"
-
-        data = {key: value}
-
-        produce(config, topic, data)
-    """
-
+    kafka_consumer.consume(metadata_consumer, handler)

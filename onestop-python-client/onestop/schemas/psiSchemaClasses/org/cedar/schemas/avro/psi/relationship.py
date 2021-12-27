@@ -2,9 +2,7 @@ from dataclasses import asdict, dataclass
 from typing import ClassVar, Dict, Optional
 
 from undictify import type_checked_constructor
-
 from .relationship_type import RelationshipType
-
 
 @type_checked_constructor()
 @dataclass

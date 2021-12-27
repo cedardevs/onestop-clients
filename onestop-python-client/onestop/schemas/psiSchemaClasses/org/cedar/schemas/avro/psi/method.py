@@ -1,26 +1,36 @@
-from dataclasses import asdict, dataclass
-from typing import Dict
-
-from undictify import type_checked_constructor
+from enum import Enum
+from typing import ClassVar
 
 
-@type_checked_constructor()
-@dataclass
-class Method:
-    def to_dict(self) -> Dict:
-        """
-        Returns a dictionary version of this instance.
-        """
-        return asdict(self)
+class Method(Enum):
+    """
+    The types of metadata relationships which can be represented in the PSI system
+    """
+    HEAD = 'HEAD'
+    OPTIONS = 'OPTIONS'
+    GET = 'GET'
+    POST = 'POST'
+    PUT = 'PUT'
+    PATCH = 'PATCH'
+    DELETE = 'DELETE'
+    TRACE = 'TRACE'
+    CONNECT = 'CONNECT'
 
-    @classmethod
-    def from_dict(
-            cls,
-            the_dict: Dict
-    ) -> 'Method':
-        """
-        Returns an instance of this class from a dictionary.
-
-        :param the_dict: The dictionary from which to create an instance of this class.
-        """
-        return cls(**the_dict)
+    #: The Avro Schema associated to this class
+    _schema: ClassVar[str] = """{
+        "type": "enum",
+        "namespace": "org.cedar.schemas.avro.psi",
+        "name": "Method",
+        "doc": "An HTTP request method",
+        "symbols": [
+            "HEAD",
+            "OPTIONS",
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "TRACE",
+            "CONNECT"
+        ]
+    }"""

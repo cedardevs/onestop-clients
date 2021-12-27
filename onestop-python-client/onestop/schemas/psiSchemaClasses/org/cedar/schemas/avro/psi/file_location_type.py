@@ -1,29 +1,23 @@
-from dataclasses import asdict, dataclass
-from typing import Dict
-
-from undictify import type_checked_constructor
+from enum import Enum
+from typing import ClassVar
 
 
-@type_checked_constructor()
-@dataclass
-class FileLocationType:
-    # manually added this
-    type: str
+class FileLocationType(Enum):
+    INGEST = 'INGEST'
+    ARCHIVE = 'ARCHIVE'
+    ACCESS = 'ACCESS'
+    WORKING = 'WORKING'
 
-    def to_dict(self) -> Dict:
-        """
-        Returns a dictionary version of this instance.
-        """
-        return asdict(self)
-
-    @classmethod
-    def from_dict(
-            cls,
-            the_dict: Dict
-    ) -> 'FileLocationType':
-        """
-        Returns an instance of this class from a dictionary.
-
-        :param the_dict: The dictionary from which to create an instance of this class.
-        """
-        return cls(**the_dict)
+    #: The Avro Schema associated to this class
+    _schema: ClassVar[str] = """{
+        "type": "enum",
+        "namespace": "org.cedar.schemas.avro.psi",
+        "name": "FileLocationType",
+        "doc": "The type of the file location, e.g. an ingest location, access location, etc.",
+        "symbols": [
+            "INGEST",
+            "ARCHIVE",
+            "ACCESS",
+            "WORKING"
+        ]
+    }"""

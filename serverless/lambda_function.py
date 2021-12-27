@@ -9,7 +9,7 @@ from Link import Link
 
 
 def lambda_handler(event, context):
-    registry_url = conf.PSI_REGISTRY_URL + "/metadata/granule"
+    registry_url = conf.REGISTRY_BASE_URL + "/metadata/granule"
 
     for rec in event['Records']:
 
