@@ -1,5 +1,4 @@
 # Example config values for osim client
-log_level: DEBUG
 
 # COLLECTION or GRANULE
 metadata_type: GRANULE
@@ -7,8 +6,8 @@ metadata_type: GRANULE
 # Kafka config values
 brokers: onestop-dev-cp-kafka:9092
 schema_registry: http://onestop-dev-cp-schema-registry:8081
-collection_topic_produce: psi-granules-by-collection
-granule_topic_produce: psi-granule-parsed
+collection_topic_publish: psi-granules-by-collection
+granule_topic_publish: psi-granule-parsed
 collection_topic_consume: psi-collection-input-unknown
 granule_topic_consume: psi-granule-input-unknown
 group_id: sme-test

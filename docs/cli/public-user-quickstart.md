@@ -1,13 +1,35 @@
+<div align="center"><a href="/onestop-clients/">Documentation Home</a></div>
+<hr>
 # OneStop CLI tool
 
+## Table of Contents
+* [OneStop Info](#onestop-info)
+* [Installation](#installation)
+    * [Requirements](#requirements)
+    * [Install and run using a docker container (golang not required)](#install-and-run-using-a-docker-container-golang-not-required)
+    * [Download and use as Go package](#download-and-use-as-go-package)
+* [Configuration](#configuration)
+* [Usage](#usage)
+    * [Verbose](#verbose)
+    * [Run against a test or local API](#run-against-a-test-or-local-api)
+    * [Get](#get)
+    * [Search](#search)
+        * [by identifier](#by-identifier)
+        * [by parent identifier](#by-parent-identifier)
+        * [by date](#by-date)
+        * [by geometry](#by-geometry)
+        * [combinations](#combinations)
+    
 The `onestop-cli` tool provides a convenient command line interface for the OneStop search API.
+There are three primary methods to search the data contained within onestop via the command line interface (CLI) tool.
+If you're new to the OneStop ecosystem, you should interact with one or both of the running instances of the UI to get some familiarity with basic search features. Then if you choose to be more of a power user, we encourage you to explore the ins and outs of our API and CLI.
 
-Read the [OneStop OpenAPI spec 2.0.0](https://app.swaggerhub.com/apis/cedardevs/one-stop_search_api/2.0.0).
-Or check the [OneStop OpenAPI spec 2.4.0](https://app.swaggerhub.com/apis/cedarbot/OneStop/2.4.0).
+## OneStop Info
+* [OneStop OpenAPI spec 2.0.0](https://app.swaggerhub.com/apis/cedardevs/one-stop_search_api/2.0.0)
+* [OneStop OpenAPI spec 2.4.0](https://app.swaggerhub.com/apis/cedarbot/OneStop/2.4.0)
 
 ## Installation
-
-### Requirements -
+### Requirements
 
 Either golang, or docker. Direct downloads of binaries will be available in the future.
 
@@ -157,6 +179,3 @@ Longhand query, including the `--verbose` flag to provide more logging:
 For complex query and filter structure, refer to the [short hand documentation](https://github.com/danielgtaylor/openapi-cli-generator/tree/master/shorthand).
 
 Note: As it is now, you cannot combine the flags with json shorthand. e.g. This will not work - `onestop searchcollection --area="POLYGON(( 22.686768 34.051522, 30.606537 34.051522, 30.606537 41.280903,  22.686768 41.280903, 22.686768 34.051522 ))" --query="satellite" filters[]{ type:datetime, after:2017-01-01T00:00:00Z, before:2017-02-01T00:00:00Z} `
-
-<hr>
-<div align="center"><a href="/onestop/public-user">Previous</a> | <a href="#">Top of Page</a> | <a href="/onestop/public-user/cli/scdr-files">Next</a></div>

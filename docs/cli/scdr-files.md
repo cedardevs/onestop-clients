@@ -4,8 +4,6 @@
 
 ## scdr-files configurations
 
-Config locations -
-
 Users can supply a configuration to map scdr-file type short names to OneStop IDs. See default config in [default config](cli/scdr-files-config.yaml). File can be yaml or json, but must be named "scdr-files-config" and placed in one of the following locations-  project directory, current working directory, /etc/scdr-files/, or $HOME/.scdr-files.
 
 

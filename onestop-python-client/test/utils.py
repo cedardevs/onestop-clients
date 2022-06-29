@@ -15,7 +15,8 @@ def create_delete_message(region, bucket, key):
         "Message": '''{
                 "Records": [{
                     "eventVersion": "2.1", "eventSource": "aws:s3", "awsRegion": "''' + region + '''",
-                    "eventTime": "2020-12-14T20:56:08.725Z", "eventName": "ObjectRemoved:Delete",
+                    "eventTime": "2020-12-14T20:56:08.725Z", 
+                    "eventName": "ObjectRemoved:Delete",
                     "userIdentity": {"principalId": "AX8TWPQYA8JEM"},
                     "requestParameters": {"sourceIPAddress": "65.113.158.185"},
                     "responseElements": {"x-amz-request-id": "D8059E6A1D53597A",
@@ -25,7 +26,11 @@ def create_delete_message(region, bucket, key):
                         "bucket": {"name": "''' + bucket + '''",
                                    "ownerIdentity": {"principalId": "AX8TWPQYA8JEM"},
                                    "arn": "arn:aws:s3:::''' + bucket + '''"},
-                        "object": {"key": "''' + key + '''", "sequencer": "005FD7D1765F04D8BE"}
+                        "object": {"key": "''' + key + '''", 
+                                   "sequencer": "005FD7D1765F04D8BE",
+                                   "eTag": "44d2452e8bc2c8013e9c673086fbab7a",
+                                   "size": 1385,
+                                   "versionId": "q6ls_7mhqUbfMsoYiQSiADnHBZQ3Fbzf"}
                     }
                 }]
             }''',
